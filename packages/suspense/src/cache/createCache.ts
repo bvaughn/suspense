@@ -1,5 +1,5 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
-import { createWakeable } from "./createWakeable";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import { createWakeable } from "../utils/createWakeable";
 import {
   Cache,
   Record,
@@ -7,8 +7,9 @@ import {
   StatusCallback,
   Thennable,
   UnsubscribeCallback,
-} from "./types";
-import { assertPendingRecord, isThennable } from "./utils";
+} from "../types";
+import { assertPendingRecord } from "../utils/assertPendingRecord";
+import { isThennable } from "../utils/isThennable";
 
 export function createCache<Params extends Array<any>, Value>(
   getKey: (...params: Params) => string,

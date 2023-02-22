@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { Cache, Status } from "./types";
+import { Cache, Status } from "../types";
 
 export function useCacheStatus<Params extends Array<any>>(
   cache: Cache<Params, any>,

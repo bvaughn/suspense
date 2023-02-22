@@ -5,9 +5,9 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
-import { createCache } from "./createCache";
-import { Cache, Status } from "./types";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import { createCache } from "../cache/createCache";
+import { Cache, Status } from "../types";
 import { useCacheStatus } from "./useCacheStatus";
 
 describe("useCacheStatus", () => {

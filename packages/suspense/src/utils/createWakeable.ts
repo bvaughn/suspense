@@ -1,4 +1,4 @@
-import { Wakeable } from "./types";
+import { Wakeable } from "../types";
 
 let MAX_LOOP_COUNT = 1_000;
 

@@ -1,6 +1,6 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
 import { createStreamingCache } from "./createStreamingCache";
-import { StreamingCache, StreamingProgressNotifier } from "./types";
+import { StreamingCache, StreamingProgressNotifier } from "../types";
 
 describe("createStreamingCache", () => {
   let cache: StreamingCache<[string], string>;

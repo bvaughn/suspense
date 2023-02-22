@@ -1,7 +1,7 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
 import { createCache } from "./createCache";
-import { Cache } from "./types";
-import { isThennable } from "./utils";
+import { Cache } from "../types";
+import { isThennable } from "../utils/isThennable";
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;

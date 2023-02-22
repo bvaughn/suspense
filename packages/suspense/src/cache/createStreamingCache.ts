@@ -1,12 +1,12 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
-import { createWakeable } from "./createWakeable";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import { createWakeable } from "../utils/createWakeable";
 import {
   StreamingCache,
   StreamingProgressNotifier,
   StreamingSubscribeCallback,
   StreamingValues,
-} from "./types";
-import { warnInDev } from "./utils";
+} from "../types";
+import { warnInDev } from "../utils/warnInDev";
 
 // TODO Support debouncing updates
 

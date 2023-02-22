@@ -1,6 +1,6 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
-import { StreamingValues } from "./types";
+import { StreamingValues } from "../types";
 
 export type ReturnType<Value, AdditionalData> = Pick<
   StreamingValues<Value, AdditionalData>,

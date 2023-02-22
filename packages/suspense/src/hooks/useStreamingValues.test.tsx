@@ -4,8 +4,8 @@
 
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import { createStreamingCache } from "./createStreamingCache";
-import { StreamingCache, StreamingProgressNotifier } from "./types";
+import { createStreamingCache } from "../cache/createStreamingCache";
+import { StreamingCache, StreamingProgressNotifier } from "../types";
 import { ReturnType, useStreamingValues } from "./useStreamingValues";
 
 describe("useStreamingValue", () => {
