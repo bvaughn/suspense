@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "lib": ["ES2015", "DOM"],
+    "module": "es2020",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "jsx": "react-jsx",
+    "types": ["jest", "node"]
+  },
+  "exclude": ["node_modules"],
+  "include": ["declaration.d.ts", "packages/**/*.ts", "packages/**/*.tsx"],
+  "strict": true,
+  "target": "es2018"
+}

@@ -1,0 +1,15 @@
+name: "Tests: E2E"
+on: [pull_request]
+jobs:
+  tests_e2e:
+    name: Run end-to-end tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - name: Initialize Yarn and install package dependencies
+        run: yarn
+      - name: Build NPM package
+        run: yarn prerelease
+      - name: Run Playwright tests
+        run: cd packages/suspense-website && yarn test:e2e

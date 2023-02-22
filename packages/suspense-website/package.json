@@ -1,0 +1,33 @@
+{
+  "name": "suspense-website",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "parcel build 'index.html'",
+    "kill-port": "kill-port ${PORT:-1234}",
+    "test:e2e": "playwright test",
+    "test:e2e:debug": "DEBUG=true playwright test",
+    "watch": "parcel 'index.html'"
+  },
+  "devDependencies": {
+    "kill-port": "latest"
+  },
+  "dependencies": {
+    "@codemirror/lang-css": "latest",
+    "@codemirror/lang-html": "latest",
+    "@codemirror/lang-javascript": "latest",
+    "@codemirror/language": "latest",
+    "@codemirror/lang-markdown": "latest",
+    "@codemirror/state": "latest",
+    "@lezer/highlight": "latest",
+    "@playwright/test": "latest",
+    "localforage": "latest",
+    "match-sorter": "latest",
+    "playwright": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "react-virtualized-auto-sizer": "latest",
+    "sort-by": "latest"
+  }
+}

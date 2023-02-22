@@ -1,0 +1,5 @@
+.parcel-cache
+node_modules
+packages/suspense/dist
+packages/suspense-website/.cache
+packages/suspense-website/dist
