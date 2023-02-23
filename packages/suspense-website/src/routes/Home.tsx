@@ -41,11 +41,11 @@ export default function HomeRoute() {
           </a>
           .
         </p>
+        <Warning>
+          Suspense is an <strong>experimental pre-release feature</strong>;
+          these APIs will change.
+        </Warning>
       </Block>
-      <Warning>
-        Suspense is an <strong>experimental pre-release feature</strong>; these
-        APIs will change.
-      </Warning>
       <Block>
         <SubHeading title="Installation" />
         <InstallationPanel />
