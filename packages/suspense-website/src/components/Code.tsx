@@ -8,6 +8,7 @@ import {
 import { ParsedTokens } from "../suspense/SyntaxParsingCache";
 
 import styles from "./Code.module.css";
+import Icon from "./Icon";
 
 export default function Code({
   className = "",
@@ -21,7 +22,7 @@ export default function Code({
   showLineNumbers?: boolean;
 }) {
   return (
-    <Suspense>
+    <Suspense fallback={<Loader />}>
       <Parser
         className={className}
         code={code}
@@ -29,6 +30,14 @@ export default function Code({
         showLineNumbers={showLineNumbers}
       />
     </Suspense>
+  );
+}
+
+function Loader() {
+  return (
+    <div className={styles.Loader}>
+      <Icon type="loading" /> Loading
+    </div>
   );
 }
 

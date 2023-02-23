@@ -8,4 +8,12 @@
   border-radius: 0.5rem;
   background-color: var(--color-warning-background);
   margin-bottom: 1rem;
+
+  font-size: 16px;
+}
+
+.Icon {
+  height: 1.5rem;
+  width: 1.5rem;
+  flex: 0 0 1.5rem;
 }

@@ -41,7 +41,6 @@ export default function HomeRoute() {
         </p>
       </Block>
       <Warning>
-        <Icon type="warn" />
         Because Suspense is in an <strong>experimental</strong> pre-release
         state, these APIs may change.
       </Warning>
@@ -99,13 +98,13 @@ function InstallationPanel() {
       <span className="tok-comment"># npm</span>
       <br />
       <span className="tok-operator">npm install </span>
-      <span className="tok-variableName">react-resizable-panels</span>
+      <span className="tok-variableName">suspense</span>
       <br />
       <br />
       <span className="tok-comment"># yarn</span>
       <br />
       <span className="tok-operator">yarn add </span>
-      <span className="tok-variableName">react-resizable-panels</span>
+      <span className="tok-variableName">suspense</span>
     </code>
   );
 }
