@@ -7,7 +7,7 @@ export type Status = StatusPending | StatusRejected | StatusResolved;
 
 export type PendingRecord<T> = {
   status: StatusPending;
-  value: Wakeable<T>;
+  value: Deferred<T>;
 };
 
 export type ResolvedRecord<T> = {
@@ -38,7 +38,7 @@ export interface Thennable<T> {
 
 // Convenience type used by Suspense caches.
 // Adds the ability to resolve or reject a pending Thennable.
-export interface Wakeable<T> extends Thennable<T> {
+export interface Deferred<T> extends Thennable<T> {
   reject(error: any): void;
   resolve(value: T): void;
 }

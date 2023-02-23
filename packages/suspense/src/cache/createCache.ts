@@ -1,5 +1,5 @@
 import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
-import { createWakeable } from "../utils/createWakeable";
+import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
   Record,
@@ -40,13 +40,13 @@ export function createCache<Params extends Array<any>, Value>(
 
     let record = recordMap.get(cacheKey);
     if (record == null) {
-      const wakeable = createWakeable<Value>(
+      const deferred = createDeferred<Value>(
         debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
       );
 
       record = {
         status: STATUS_PENDING,
-        value: wakeable,
+        value: deferred,
       } as Record<Value>;
 
       recordMap.set(cacheKey, record);
@@ -131,7 +131,7 @@ export function createCache<Params extends Array<any>, Value>(
   ) {
     assertPendingRecord(record);
 
-    const wakeable = record.value;
+    const deferred = record.value;
 
     try {
       const valueOrThennable = load(...params);
@@ -142,12 +142,12 @@ export function createCache<Params extends Array<any>, Value>(
       record.status = STATUS_RESOLVED;
       record.value = value;
 
-      wakeable.resolve(value);
+      deferred.resolve(value);
     } catch (error) {
       record.status = STATUS_REJECTED;
       record.value = error;
 
-      wakeable.reject(error);
+      deferred.reject(error);
     } finally {
       notifySubscribers(...(params as unknown as Params));
     }

@@ -1,5 +1,5 @@
 import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
-import { createWakeable } from "../utils/createWakeable";
+import { createDeferred } from "../utils/createDeferred";
 import {
   StreamingCache,
   StreamingProgressNotifier,
@@ -35,7 +35,7 @@ export function createStreamingCache<
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
-      const resolver = createWakeable<StreamingValues<Value, AdditionalData>>(
+      const resolver = createDeferred<StreamingValues<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
       );
 

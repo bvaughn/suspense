@@ -1,9 +1,9 @@
-import { createWakeable } from "suspense";
+import { createDeferred } from "suspense";
 
-const wakeable = createWakeable<string>();
+const deferred = createDeferred<string>();
 
 // REMOVE_BEFORE
-wakeable.then(
+deferred.then(
   function onFulfill(value: string) {
     // ..
   },

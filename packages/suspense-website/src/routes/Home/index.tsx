@@ -52,8 +52,8 @@ export default function HomeRoute() {
           </Link>
         </li>
         <li>
-          <Link to="/examples/createWakeable">
-            <code>createWakeable</code>
+          <Link to="/examples/createDeferred">
+            <code>createDeferred</code>
           </Link>
         </li>
         <li>

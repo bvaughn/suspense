@@ -1,4 +1,4 @@
-import { Wakeable } from "../types";
+import { Deferred } from "../types";
 
 let MAX_LOOP_COUNT = 1_000;
 
@@ -6,8 +6,8 @@ let MAX_LOOP_COUNT = 1_000;
 // We could use a Promise as thennable, but Promises have a downside: they use the microtask queue.
 // An advantage to creating a custom thennable is synchronous resolution (or rejection).
 //
-// A "wakeable" is a "thennable" that has convenience resolve/reject methods.
-export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
+// A "deferred" is a "thennable" that has convenience resolve/reject methods.
+export function createDeferred<T>(debugLabel?: string): Deferred<T> {
   const resolveCallbacks: Set<(value: T) => void> = new Set();
   const rejectCallbacks: Set<(error: Error) => void> = new Set();
 
@@ -16,10 +16,10 @@ export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
 
   let callbacksRegisteredAfterResolutionCount = 0;
 
-  // Guard against a case where promise resolution results in a new wakeable listener being added.
+  // Guard against a case where promise resolution results in a new deferred listener being added.
   // That cause would result in an infinite loop.
   // Note that our guard counter should be somewhat high to avoid false positives.
-  // It is a legitimate use-case to register handlers after a wakeable has been resolved or rejected.
+  // It is a legitimate use-case to register handlers after a deferred has been resolved or rejected.
   const checkCircularThenableChain = () => {
     if (++callbacksRegisteredAfterResolutionCount > MAX_LOOP_COUNT) {
       throw Error(
@@ -28,7 +28,7 @@ export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
     }
   };
 
-  const wakeable: Wakeable<T> = {
+  const deferred: Deferred<T> = {
     then(
       resolveCallback: (value: T) => void,
       rejectCallback: (error: Error) => void
@@ -50,7 +50,7 @@ export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
     },
     reject(error: Error) {
       if (status !== "unresolved") {
-        throw Error(`Wakeable has already been ${status}`);
+        throw Error(`Deferred has already been ${status}`);
       }
 
       status = "rejected";
@@ -75,7 +75,7 @@ export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
     },
     resolve(value: T) {
       if (status !== "unresolved") {
-        throw Error(`Wakeable has already been ${status}`);
+        throw Error(`Deferred has already been ${status}`);
       }
 
       status = "resolved";
@@ -100,5 +100,5 @@ export function createWakeable<T>(debugLabel?: string): Wakeable<T> {
     },
   };
 
-  return wakeable;
+  return deferred;
 }
