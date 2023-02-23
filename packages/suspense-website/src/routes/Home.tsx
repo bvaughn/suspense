@@ -40,7 +40,7 @@ export default function HomeRoute() {
       </Block>
       <Warning>
         Because Suspense is in an <strong>experimental</strong> pre-release
-        state, these APIs may change.
+        state, these APIs will change.
       </Warning>
       <Block>
         <SubHeading title="Installation" />
