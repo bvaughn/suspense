@@ -12,20 +12,22 @@ export default function CreateStreamingCacheRoute() {
     <Container>
       <Header title="createStreamingCache" />
       <Block>
+        <SubHeading title="Creating a streaming cache" />
         <p>
           A "streaming cache" fits a different use case than a normal cache.
           Rather than <em>suspending</em> until a value has been fully loaded,
           it provides a subscription interface that can be used to re-render as
           data incrementally loads.
         </p>
-      </Block>
-      <Block>
-        <SubHeading title="Creating a streaming cache" />
-        <p>
-          Implementing a streaming cache only requires two methods: one to
-          compute a <em>unique key</em> from cache parameters and one to stream
-          the data using an API like a <code>WebSocket</code>.
-        </p>
+        <p>Implementing a streaming cache requires two methods:</p>
+        <ul>
+          <li>
+            One to compute a <em>unique key</em> from cache parameters, and
+          </li>
+          <li>
+            One to stream the data using an API like a <code>WebSocket</code>
+          </li>
+        </ul>
         <Code code={createStreamingCache.cache} />
       </Block>
       <Block>

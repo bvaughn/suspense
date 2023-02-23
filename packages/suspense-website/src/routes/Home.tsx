@@ -35,12 +35,16 @@ export default function HomeRoute() {
         />
         <p>
           APIs to simplify data loading and caching. Primarily intended for use
-          with React Suspense.
+          with{" "}
+          <a href="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
+            React Suspense
+          </a>
+          .
         </p>
       </Block>
       <Warning>
-        Because Suspense is in an <strong>experimental</strong> pre-release
-        state, these APIs will change.
+        Suspense is an <strong>experimental pre-release feature</strong>; these
+        APIs will change.
       </Warning>
       <Block>
         <SubHeading title="Installation" />

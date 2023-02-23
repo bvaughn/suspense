@@ -16,3 +16,7 @@
   width: 1.5rem;
   flex: 0 0 1.5rem;
 }
+
+.Warning code {
+  color: inherit;
+}

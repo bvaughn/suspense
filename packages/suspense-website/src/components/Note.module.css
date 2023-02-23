@@ -1,0 +1,17 @@
+.Note {
+  display: inline-block;
+  width: fit-content;
+
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+
+  background-color: var(--color-loader-background);
+  color: var(--color-loader);
+
+  font-size: 16px;
+}
+
+.Icon {
+  color: var(--color-default);
+}
