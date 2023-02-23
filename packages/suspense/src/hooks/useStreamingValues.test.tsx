@@ -13,14 +13,24 @@ describe("useStreamingValue", () => {
   let notifiers: Map<string, StreamingProgressNotifier<string, any>>;
   let lastRendered: ReturnType<string, undefined> | undefined = undefined;
 
-  function Component({ string }: { string: string }): any {
-    lastRendered = useStreamingValues(cache.stream(string));
+  function Component({
+    string,
+    throttleUpdatesBy,
+  }: {
+    string: string;
+    throttleUpdatesBy?: number;
+  }): any {
+    lastRendered = useStreamingValues(cache.stream(string), {
+      throttleUpdatesBy,
+    });
     return null;
   }
 
   beforeEach(() => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
+
+    jest.useFakeTimers();
 
     notifiers = new Map();
 
@@ -36,7 +46,7 @@ describe("useStreamingValue", () => {
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
-      root.render(<Component string="test" />);
+      root.render(<Component string="test" throttleUpdatesBy={0} />);
     });
 
     expect(lastRendered?.values).toEqual(undefined);
@@ -64,5 +74,37 @@ describe("useStreamingValue", () => {
     });
   });
 
-  // TODO Error case
+  it("should throttle updates to avoid overwhelming React's scheduler", () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component string="test" throttleUpdatesBy={1_000} />);
+    });
+
+    expect(lastRendered?.values).toEqual(undefined);
+
+    const notifier = notifiers.get("test")!;
+    act(() => {
+      notifier.update(["a"], 0.25);
+    });
+    expect(lastRendered.values).toEqual(["a"]);
+
+    act(() => {
+      notifier.update(["b"], 0.5);
+    });
+    expect(lastRendered.values).toEqual(["a"]);
+
+    jest.advanceTimersByTime(500);
+
+    act(() => {
+      notifier.update(["c"], 0.75);
+    });
+    expect(lastRendered.values).toEqual(["a"]);
+
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    expect(lastRendered.values).toEqual(["a", "b", "c"]);
+  });
 });

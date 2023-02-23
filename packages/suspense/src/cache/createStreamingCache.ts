@@ -8,8 +8,6 @@ import {
 } from "../types";
 import { warnInDev } from "../utils/warnInDev";
 
-// TODO Support debouncing updates
-
 export function createStreamingCache<
   Params extends Array<any>,
   Value,
