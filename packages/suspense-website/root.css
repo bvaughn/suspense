@@ -14,13 +14,14 @@
   --color-input-border: #39414d;
   --color-input-border-focused: #dcadff;
   --color-link: #dcadff;
+  --color-loader: #91a0ba;
+  --color-loader-background: #2a3343;
   --color-panel-background: #192230;
   --color-panel-background-alternate: #202124;
   --color-solid-resize-bar: #39414d;
   --color-scroll-thumb: #39414d;
   --color-warning-background: #7400cc;
 
-  --color-logo-background: #2a3343;
   --color-logo-chip-1: #dcadff;
   --color-logo-chip-2: #ff79ad;
   --color-logo-chip-3: #ffdc7a;

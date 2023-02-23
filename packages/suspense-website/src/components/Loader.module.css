@@ -1,0 +1,9 @@
+.Loader {
+  background-color: var(--color-loader-background);
+  color: var(--color-loader);
+  display: inline-flex;
+  align-items: center;
+  gap: 1ch;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
