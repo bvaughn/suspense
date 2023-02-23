@@ -33,6 +33,8 @@ export default function CreateCacheRoute() {
           the component will <em>suspend</em> while the data is fetched.
         </p>
         <Code code={createCache.suspense} />
+      </Block>
+      <Block>
         <SubHeading title="Using a cache in an async function" />
         <p>For convenience, caches can also be used within async methods.</p>
         <Code code={createCache.async} />

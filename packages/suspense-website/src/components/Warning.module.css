@@ -1,8 +1,5 @@
 .Warning {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 1ch;
+  display: inline-block;
 
   padding: 0.5rem;
   border-radius: 0.5rem;

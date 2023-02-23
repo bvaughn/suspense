@@ -6,7 +6,10 @@ export const exampleStreamingCache = createStreamingCache<
   [path: string],
   string
 >(
+  // Create unique key for params
   (path: string) => path,
+
+  // Stream data for params
   async (notifier: StreamingProgressNotifier<string>, path: string) => {
     let loadedLines = 0;
     let totalLineCount = 0;
