@@ -5,6 +5,14 @@ import Container from "../components/Container";
 import Icon from "../components/Icon";
 import SubHeading from "../components/SubHeading";
 import Warning from "../components/Warning";
+import {
+  CREATE_CACHE,
+  CREATE_DEFERRED,
+  CREATE_STREAMING_CACHE,
+  IS_THENNABLE,
+  USE_CACHE_STATUS,
+  USE_STREAMING_CACHE,
+} from "./config";
 
 import styles from "./Home.module.css";
 
@@ -44,21 +52,18 @@ export default function HomeRoute() {
       <Block>
         <SubHeading title="Caches" />
         <ul>
-          <LinkListItem title="createCache" to="/examples/createCache" />
+          <LinkListItem title="createCache" to={CREATE_CACHE} />
           <LinkListItem
             title="createStreamingCache"
-            to="/examples/createStreamingCache"
+            to={CREATE_STREAMING_CACHE}
           />
         </ul>
       </Block>
       <Block>
         <SubHeading title="Hooks" />
         <ul>
-          <LinkListItem title="useCacheStatus" to="/examples/useCacheStatus" />
-          <LinkListItem
-            title="useStreamingCache"
-            to="/examples/useStreamingCache"
-          />
+          <LinkListItem title="useCacheStatus" to={USE_CACHE_STATUS} />
+          <LinkListItem title="useStreamingCache" to={USE_STREAMING_CACHE} />
         </ul>
       </Block>
       <Block>
@@ -68,10 +73,10 @@ export default function HomeRoute() {
           scenarios.
         </p>
         <ul>
-          {/*<LinkListItem title="createInfallibleCache" to="/examples/createInfallibleCache" />*/}
-          <LinkListItem title="createDeferred" to="/examples/createDeferred" />
-          <LinkListItem title="isThennable" to="/examples/isThennable" />
-          {/*<LinkListItem title="parallelize" to="/examples/parallelize" />*/}
+          {/*<LinkListItem title="createInfallibleCache" to="/createInfallibleCache" />*/}
+          <LinkListItem title="createDeferred" to={CREATE_DEFERRED} />
+          <LinkListItem title="isThennable" to={IS_THENNABLE} />
+          {/*<LinkListItem title="parallelize" to="/parallelize" />*/}
         </ul>
       </Block>
     </Container>

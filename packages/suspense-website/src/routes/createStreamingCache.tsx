@@ -4,6 +4,8 @@ import { createStreamingCache } from "../examples/";
 import Header from "../components/Header";
 import Block from "../components/Block";
 import SubHeading from "../components/SubHeading";
+import { Link } from "react-router-dom";
+import { USE_STREAMING_CACHE } from "./config";
 
 export default function CreateStreamingCacheRoute() {
   return (
@@ -30,7 +32,10 @@ export default function CreateStreamingCacheRoute() {
         <SubHeading title="Using a streaming cache" />
         <p>
           The easiest way to use a streaming cache is with the{" "}
-          <code>useStreamingCache</code> hook.
+          <Link to={USE_STREAMING_CACHE}>
+            <code>useStreamingCache</code>
+          </Link>{" "}
+          hook.
         </p>
         <Code code={createStreamingCache.hook} />
       </Block>

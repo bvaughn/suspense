@@ -4,6 +4,8 @@ import Code from "../components/Code";
 import { createCache } from "../examples/";
 import Header from "../components/Header";
 import SubHeading from "../components/SubHeading";
+import { Link } from "react-router-dom";
+import { USE_CACHE_STATUS } from "./config";
 
 export default function CreateCacheRoute() {
   return (
@@ -60,7 +62,10 @@ export default function CreateCacheRoute() {
           A value's <em>status</em> ("pending", "resolved", or "rejected") can
           be queried as well using <code>cache.getStatus</code>– although the
           recommended way to subscribe to this value is using the{" "}
-          <code>useCacheStatus</code> hooke:
+          <Link to={USE_CACHE_STATUS}>
+            <code>useCacheStatus</code>
+          </Link>{" "}
+          hook:
         </p>
         <Code code={createCache.hook} />
       </Block>
