@@ -8,6 +8,7 @@
 }
 
 .GitHub {
+  color: var(--color-dim);
   flex: 0 0 1.5rem !important;
   width: 1.5rem !important;
   height: 1.5rem !important;
@@ -15,4 +16,11 @@
 
 .Link {
   color: var(--color-default);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+}
+.Link:hover {
+  text-decoration: underline;
 }

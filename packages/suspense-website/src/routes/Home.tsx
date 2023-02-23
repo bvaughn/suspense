@@ -22,17 +22,15 @@ export default function HomeRoute() {
       <Block>
         <SubHeading
           title={
-            <>
+            <a
+              className={styles.Link}
+              href="https://github.com/bvaughn/suspense/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Suspense
-              <a
-                className={styles.Link}
-                href="https://github.com/bvaughn/suspense/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Icon className={styles.GitHub} type="github" />
-              </a>
-            </>
+              <Icon className={styles.GitHub} type="github" />
+            </a>
           }
         />
         <p>
