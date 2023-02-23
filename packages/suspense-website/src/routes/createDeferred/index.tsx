@@ -8,14 +8,14 @@ export default function CreateDeferredRoute() {
     <Container>
       <Header title="createDeferred" />
       <p>
-        "Deferreds" are a lower level concept that the caches in this package
-        are built on top of.
+        Deferred objects are a lower level concept that the caches in this
+        package are built on top of.
       </p>
       <Code code={create} />
-      <p>Like promises, deferreds can be observed:</p>
+      <p>Like promises, deferred objects can be observed:</p>
       <Code code={observe} />
       <p>
-        Unlike promises, wakables can also be resolved or rejected{" "}
+        Unlike promises, deferred objects can also be resolved or rejected{" "}
         <em>by external code</em> (e.g. by a cache):
       </p>
       <Code code={control} />
