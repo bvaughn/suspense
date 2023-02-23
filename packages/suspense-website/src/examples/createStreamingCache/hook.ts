@@ -1,5 +1,6 @@
-import { useStreamingValues } from "suspense";
 import { exampleStreamingCache } from "./cache";
+// REMOVE_BEFORE
+import { useStreamingValues } from "suspense";
 
 function ReactComponent({ path }: { path: string }) {
   const stream = exampleStreamingCache.stream(path);

@@ -1,4 +1,15 @@
 import { exampleCache } from "./cache";
 
-const userId = "123";
+function getQueryParam(key: string): string {
+  return "dummy";
+}
+
+// REMOVE_BEFORE
+const userId = getQueryParam("userId");
+
+// Start loading user data eagerly, while route renders.
 exampleCache.prefetch(userId);
+
+function UserProfileRoute() {
+  // ...
+}

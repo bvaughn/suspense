@@ -2,7 +2,7 @@ type AnyFunction<ReturnType> = (...args: any[]) => ReturnType;
 
 // Helper function to read from multiple Suspense caches in parallel.
 // This method will re-throw any thrown value, but only after also calling subsequent caches.
-export function suspendInParallel<T extends AnyFunction<any>[]>(
+export function parallelize<T extends AnyFunction<any>[]>(
   ...callbacks: [...T]
 ): { [K in keyof T]: ReturnType<Extract<T[K], AnyFunction<any>>> } {
   const values: any[] = [];

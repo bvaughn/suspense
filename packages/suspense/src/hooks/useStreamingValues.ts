@@ -3,7 +3,7 @@ import { useCallback, useRef, useSyncExternalStore } from "react";
 import { StreamingValues } from "../types";
 import { throttle } from "../utils/throttle";
 
-export type ReturnType<Value, AdditionalData> = Pick<
+export type StreamingValuesPartial<Value, AdditionalData> = Pick<
   StreamingValues<Value, AdditionalData>,
   "complete" | "data" | "progress" | "values"
 >;
@@ -13,10 +13,10 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
   options: {
     throttleUpdatesBy?: number;
   } = {}
-): ReturnType<Value, AdditionalData> {
+): StreamingValuesPartial<Value, AdditionalData> {
   const { throttleUpdatesBy = 500 } = options;
 
-  const ref = useRef<ReturnType<Value, AdditionalData>>({
+  const ref = useRef<StreamingValuesPartial<Value, AdditionalData>>({
     complete: false,
     data: undefined,
     progress: 0,
@@ -51,7 +51,7 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
     [streamingValues.subscribe, throttleUpdatesBy]
   );
 
-  return useSyncExternalStore<ReturnType<Value, AdditionalData>>(
+  return useSyncExternalStore<StreamingValuesPartial<Value, AdditionalData>>(
     throttledSubscribe,
     getValue,
     getValue

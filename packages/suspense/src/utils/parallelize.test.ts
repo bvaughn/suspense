@@ -1,6 +1,6 @@
-import { suspendInParallel } from "./suspendInParallel";
+import { parallelize } from "./parallelize";
 
-describe("suspendInParallel", () => {
+describe("parallelize", () => {
   it("should call all callbacks before re-throwing any thrown value", () => {
     const callbackA = jest.fn();
     const callbackB = jest.fn().mockImplementation(() => {
@@ -9,7 +9,7 @@ describe("suspendInParallel", () => {
     const callbackC = jest.fn();
 
     expect(() => {
-      suspendInParallel(callbackA, callbackB, callbackC);
+      parallelize(callbackA, callbackB, callbackC);
     }).toThrow("Expected error");
 
     expect(callbackA).toHaveBeenCalled();
@@ -21,7 +21,7 @@ describe("suspendInParallel", () => {
     const callbackA = () => 123;
     const callbackB = () => "abc";
 
-    const [a, b] = suspendInParallel(callbackA, callbackB);
+    const [a, b] = parallelize(callbackA, callbackB);
 
     expect(a).toEqual(123);
     expect(b).toEqual("abc");

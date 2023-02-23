@@ -1,8 +1,6 @@
 import { createCache } from "suspense";
 
-type UserData = JSON;
-
-export const exampleCache = createCache<[userId: string], UserData>(
+export const exampleCache = createCache<[userId: string], JSON>(
   (userId: string) => userId,
   async (userId: string) => {
     const response = await fetch(`https://example.com/user?id=${userId}`);

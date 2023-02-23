@@ -6,12 +6,16 @@ import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createStreamingCache } from "../cache/createStreamingCache";
 import { StreamingCache, StreamingProgressNotifier } from "../types";
-import { ReturnType, useStreamingValues } from "./useStreamingValues";
+import {
+  StreamingValuesPartial,
+  useStreamingValues,
+} from "./useStreamingValues";
 
 describe("useStreamingValue", () => {
   let cache: StreamingCache<[string], string>;
   let notifiers: Map<string, StreamingProgressNotifier<string, any>>;
-  let lastRendered: ReturnType<string, undefined> | undefined = undefined;
+  let lastRendered: StreamingValuesPartial<string, undefined> | undefined =
+    undefined;
 
   function Component({
     string,

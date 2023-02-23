@@ -1,6 +1,13 @@
 import Container from "../../components/Container";
 import Code from "../../components/Code";
-import { async, cache, prefetch, suspense } from "../../examples/createCache";
+import {
+  async,
+  cache,
+  evict,
+  hook,
+  prefetch,
+  suspense,
+} from "../../examples/createCache";
 import Header from "../../components/Header";
 
 export default function CreateCacheRoute() {
@@ -8,10 +15,15 @@ export default function CreateCacheRoute() {
     <Container>
       <Header title="createCache" />
       <h2>Creating a cache</h2>
+      <p>Implementing a cache requires two methods:</p>
+      <ul>
+        <li>
+          One to compute a <em>unique key</em> from cache parameters, and
+        </li>
+        <li>One to load the data</li>
+      </ul>
       <p>
-        Implementing a cache only requires two methods: one to compute a{" "}
-        <em>unique key</em> from cache parameters and one to load the data. For
-        example, loading user data from a JSON API might look like this:
+        For example, loading user data from a JSON API might look like this:
       </p>
       <Code code={cache} />
       <h2>Using a cache with suspense</h2>
@@ -33,7 +45,20 @@ export default function CreateCacheRoute() {
         .
       </p>
       <Code code={prefetch} />
-      <p>For more cache methods, see the README.</p>
+      <h2>Evicting stale values</h2>
+      <p>
+        Stale values can be evicted from a cache (although note that this does
+        not currently schedule an update with React).
+      </p>
+      <Code code={evict} />
+      <h2>Observing status</h2>
+      <p>
+        A value's <em>status</em> ("pending", "resolved", or "rejected") can be
+        queried as well using <code>cache.getStatus</code>– although the
+        recommended way to subscribe to this value is using the{" "}
+        <code>useCacheStatus</code> hooke:
+      </p>
+      <Code code={hook} />
     </Container>
   );
 }
