@@ -1,0 +1,11 @@
+.Warning {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1ch;
+
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-warning-background);
+  margin-bottom: 1rem;
+}

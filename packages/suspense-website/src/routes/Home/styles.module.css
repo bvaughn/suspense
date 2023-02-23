@@ -1,0 +1,18 @@
+.Code {
+  background-color: var(--color-background-code);
+  color: var(--color-default);
+  display: inline-block;
+  white-space: pre;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.GitHub {
+  flex: 0 0 1.5rem !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.Link {
+  color: var(--color-default);
+}

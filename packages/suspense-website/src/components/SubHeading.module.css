@@ -1,0 +1,9 @@
+.SubHeading {
+  font-size: 1.5rem;
+  line-height: 1.5rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1ch;
+}

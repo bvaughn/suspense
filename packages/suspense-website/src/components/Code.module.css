@@ -1,4 +1,5 @@
 .Code {
+  background-color: var(--color-background-code);
   color: var(--color-default);
   display: inline-block;
   white-space: pre;
