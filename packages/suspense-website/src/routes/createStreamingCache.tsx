@@ -1,9 +1,9 @@
-import Container from "../../components/Container";
-import Code from "../../components/Code";
-import { createStreamingCache } from "../../examples/";
-import Header from "../../components/Header";
-import Block from "../../components/Block";
-import SubHeading from "../../components/SubHeading";
+import Container from "../components/Container";
+import Code from "../components/Code";
+import { createStreamingCache } from "../examples/";
+import Header from "../components/Header";
+import Block from "../components/Block";
+import SubHeading from "../components/SubHeading";
 
 export default function CreateStreamingCacheRoute() {
   return (

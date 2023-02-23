@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 
-import Block from "../../components/Block";
-import Container from "../../components/Container";
-import Icon from "../../components/Icon";
-import SubHeading from "../../components/SubHeading";
-import Warning from "../../components/Warning";
+import Block from "../components/Block";
+import Container from "../components/Container";
+import Icon from "../components/Icon";
+import SubHeading from "../components/SubHeading";
+import Warning from "../components/Warning";
 
-import styles from "./styles.module.css";
+import styles from "./Home.module.css";
 
 export default function HomeRoute() {
   return (

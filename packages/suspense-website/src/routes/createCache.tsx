@@ -1,9 +1,9 @@
-import Block from "../../components/Block";
-import Container from "../../components/Container";
-import Code from "../../components/Code";
-import { createCache } from "../../examples/";
-import Header from "../../components/Header";
-import SubHeading from "../../components/SubHeading";
+import Block from "../components/Block";
+import Container from "../components/Container";
+import Code from "../components/Code";
+import { createCache } from "../examples/";
+import Header from "../components/Header";
+import SubHeading from "../components/SubHeading";
 
 export default function CreateCacheRoute() {
   return (

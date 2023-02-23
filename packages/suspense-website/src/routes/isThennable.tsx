@@ -1,9 +1,9 @@
-import Container from "../../components/Container";
-import Code from "../../components/Code";
-import Header from "../../components/Header";
-import { isThennable } from "../../examples";
-import Block from "../../components/Block";
-import Warning from "../../components/Warning";
+import Container from "../components/Container";
+import Code from "../components/Code";
+import Header from "../components/Header";
+import { isThennable } from "../examples";
+import Block from "../components/Block";
+import Warning from "../components/Warning";
 
 export default function IsThennableRoute() {
   return (
