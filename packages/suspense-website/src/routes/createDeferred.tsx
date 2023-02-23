@@ -28,10 +28,8 @@ export default function CreateDeferredRoute() {
         <Code code={createDeferred.control} />
       </Block>
       <Warning>
-        <p>
-          Although this package exports the <code>createDeferred</code> API, you
-          probably won't need to use it directly in most cases.
-        </p>
+        Although this package exports the <code>createDeferred</code> API, you
+        probably won't need to use it directly in most cases.
       </Warning>
     </Container>
   );

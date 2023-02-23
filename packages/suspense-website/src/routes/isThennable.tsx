@@ -26,10 +26,8 @@ export default function IsThennableRoute() {
         <Code code={isThennable.util} />
       </Block>
       <Warning>
-        <p>
-          Although this package exports the <code>isThennable</code> API, you
-          probably won't need to use it directly in most cases.
-        </p>
+        Although this package exports the <code>isThennable</code> API, you
+        probably won't need to use it directly in most cases.
       </Warning>
     </Container>
   );
