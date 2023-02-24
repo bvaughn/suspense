@@ -62,7 +62,7 @@ export default function CreateCacheRoute() {
         <p>
           When possible, it's best to pre-fetch data to avoid{" "}
           <a href="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
-            "waterfallse"
+            "waterfalls"
           </a>
           .
         </p>
