@@ -26,6 +26,15 @@ describe("createCache", () => {
     cache = createCache<[string], string>(fetch, getCacheKey, "cache");
   });
 
+  it("should supply a working default getCacheKey if none is provided", () => {
+    const cache = createCache<[string, number, boolean], string>(fetch);
+    cache.cache("foo", "string", 123, true);
+    cache.cache("bar", "other string", 456, false);
+
+    expect(cache.getValueIfCached("string", 123, true)).toEqual("foo");
+    expect(cache.getValueIfCached("other string", 456, false)).toEqual("bar");
+  });
+
   describe("cache", () => {
     it("should cache and return pre-fetched values without reloading", () => {
       cache.cache("SYNC", "sync-1");

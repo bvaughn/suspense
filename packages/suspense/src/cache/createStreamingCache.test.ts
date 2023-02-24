@@ -31,6 +31,24 @@ describe("createStreamingCache", () => {
     );
   });
 
+  it("should supply a working default getCacheKey if none is provided", () => {
+    const cache = createStreamingCache<[string, number, boolean], string>(
+      fetch
+    );
+    cache.stream("string", 123, true);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    cache.stream("other string", 456, false);
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+
+    cache.stream("string", 123, true);
+    cache.stream("other string", 456, false);
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
   describe("evict", () => {
     it("should remove cached values", async () => {
       cache.stream("string");
