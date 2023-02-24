@@ -1,19 +1,26 @@
 import { PropsWithChildren } from "react";
-import Icon from "./Icon";
+import Icon, { IconType } from "./Icon";
 
 import styles from "./Note.module.css";
 
-type Type = "note" | "warn";
+type Type = "note" | "quote" | "warn";
 
 export default function Note({
   children,
   title = "Note",
   type = "note",
 }: PropsWithChildren & { title?: string; type?: Type }) {
+  let iconType: IconType = "warn";
+  switch (type) {
+    case "quote":
+      iconType = "quote";
+      break;
+  }
+
   return (
     <div className={styles.Note} data-type={type}>
       <div className={styles.Header}>
-        <Icon className={styles.Icon} type="warn" />
+        <Icon className={styles.Icon} type={iconType} />
         {title}
       </div>
       <div className={styles.Content}>{children}</div>

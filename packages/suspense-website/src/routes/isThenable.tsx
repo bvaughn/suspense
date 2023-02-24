@@ -5,6 +5,7 @@ import { isThenable } from "../examples";
 import Block from "../components/Block";
 import Note from "../components/Note";
 import { ExternalLink } from "../components/ExternalLink";
+import SubHeading from "../components/SubHeading";
 
 export default function IsThenableRoute() {
   return (
@@ -18,20 +19,28 @@ export default function IsThenableRoute() {
       </Note>
       <Block>
         <p>
+          "Thenable" are a lower level concept that the caches in this package
+          are built on top of. To quote{" "}
           <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#thenables">
-            "Thenable"
-          </ExternalLink>{" "}
-          are a lower level concept that the caches in this package are built on
-          top of.
+            the MDM docs
+          </ExternalLink>
+          :
         </p>
-        <p>
-          A "thenable" is any object that defines a <code>then</code> method
-          that can be used to observe success or failure. (Promises are the most
-          common example of this– although you can also implement your own).
-        </p>
+        <Note title="Thenables" type="quote">
+          A thenable implements the <code>.then()</code> method, which is called
+          with two callbacks: one for when the promise is fulfilled, one for
+          when it's rejected. Promises are thenables as well.
+        </Note>
         <p>
           <code>isThenable</code> can be used to determine if a value is a
           "thenable" or not.
+        </p>
+      </Block>
+      <Block>
+        <SubHeading title="Loading optional values" />
+        <p>
+          You can use this utility method to ignore failures for a particular
+          Suspense cache without also swallowing other types of errors.
         </p>
         <Code code={isThenable.util} />
       </Block>

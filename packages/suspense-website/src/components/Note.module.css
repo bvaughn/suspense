@@ -4,12 +4,16 @@
   gap: 0.5rem;
   width: fit-content;
 
-  padding: 0.5rem 1rem;
+  padding: 1rem;
   border-radius: 0.5rem;
 }
 .Note[data-type="note"] {
   background-color: var(--color-note-background);
   color: var(--color-note);
+}
+.Note[data-type="quote"] {
+  background-color: var(--color-quote-background);
+  color: var(--color-quote);
 }
 .Note[data-type="warn"] {
   background-color: var(--color-warning-background);
@@ -21,9 +25,14 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: bold;
+  line-height: 1;
 }
 .Note[data-type="note"] .Header {
   color: var(--color-note-header);
+  font-size: 1.25rem;
+}
+.Note[data-type="quote"] .Header {
+  color: var(--color-quote-header);
   font-size: 1.25rem;
 }
 .Note[data-type="warn"] .Header {
@@ -34,7 +43,8 @@
 .Icon {
   color: inherit;
 }
-.Note[data-type="note"] .Icon {
+.Note[data-type="note"] .Icon,
+.Note[data-type="quote"] .Icon {
   height: 1.5rem !important;
   width: 1.5rem !important;
   flex: 0 0 1.5rem !important;
@@ -45,7 +55,8 @@
   flex: 0 0 1.75rem !important;
 }
 
-.Note[data-type="note"] .Content {
+.Note[data-type="note"] .Content,
+.Note[data-type="quote"] .Content {
   line-height: 1rem;
   font-size: 1rem;
 }
