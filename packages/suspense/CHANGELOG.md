@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.6
+* `createStreamingCache` catches errors and automatically rejects a pending streaming value.
+
 ## 0.0.5
 * `cache.getStatus` and `useCacheStatus` now return an explicit `"not-started"` string rather than `undefined` for keys that have not been fetched.
 * Add `status` attribute to the return value for `useStreamingValues` hook.

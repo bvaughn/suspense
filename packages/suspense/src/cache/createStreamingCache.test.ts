@@ -164,6 +164,19 @@ describe("createStreamingCache", () => {
       expect(subscription).toHaveBeenCalledTimes(2);
     });
 
+    it("automatically reject the stream if the loading function throws", async () => {
+      fetch.mockImplementation(() => {
+        throw Error("Expected");
+      });
+
+      const streaming = cache.stream("string");
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.lastCall[1]).toEqual("string");
+
+      expect(streaming.status).toBe(STATUS_REJECTED);
+    });
+
     it("warns about invalid progress values", () => {
       jest.spyOn(console, "warn").mockImplementation(() => {});
 

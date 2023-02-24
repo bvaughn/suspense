@@ -118,7 +118,7 @@ export function createStreamingCache<
 
       streamingValuesMap.set(cacheKey, streamingValues);
 
-      load(notifier, ...params);
+      loadAndCatchErrors(streamingValues, notifier, ...params);
 
       return streamingValues;
     }
@@ -132,6 +132,20 @@ export function createStreamingCache<
 
   function stream(...params: Params) {
     return getOrCreateStreamingValues(...params);
+  }
+
+  async function loadAndCatchErrors(
+    streamingValues: StreamingValues<Value, AdditionalData>,
+    notifier: StreamingProgressNotifier<Value, AdditionalData>,
+    ...params: Params
+  ) {
+    try {
+      await load(notifier, ...params);
+    } catch (error) {
+      if (streamingValues.status === STATUS_PENDING) {
+        notifier.reject(error);
+      }
+    }
   }
 
   return {
