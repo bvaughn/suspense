@@ -1,9 +1,11 @@
 .Header {
   display: flex;
   flex-direction: row;
-  align-items: space-between;
+  justify-content: space-between;
   font-size: 1.25rem;
   line-height: 1.25rem;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .Nav {
@@ -12,9 +14,9 @@
   align-items: center;
   gap: 1ch;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
   text-overflow: ellipsis;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
 }
 
 .HomeLink {
@@ -31,4 +33,7 @@
 
 .Title {
   color: var(--color-dim);
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -9,7 +9,7 @@ export default function GitHubLink() {
       rel="noopener noreferrer"
       target="_blank"
     >
-      Suspense
+      <div className={styles.Label}>Suspense</div>
       <Icon className={styles.Icon} type="github" />
     </a>
   );

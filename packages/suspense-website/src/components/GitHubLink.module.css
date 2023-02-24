@@ -6,6 +6,7 @@
   gap: 0.5ch;
   font-size: 1.5rem;
   line-height: 1.5rem;
+  flex: 0 0 auto;
 }
 .Link:hover {
   text-decoration: underline;
@@ -16,4 +17,17 @@
   flex: 0 0 1.5rem !important;
   width: 1.5rem !important;
   height: 1.5rem !important;
+}
+
+@media screen and (max-width: 500px) {
+  .Label {
+    display: none;
+  }
+
+  .Icon {
+    color: var(--color-default);
+    flex: 0 0 2rem !important;
+    width: 2rem !important;
+    height: 2rem !important;
+  }
 }
