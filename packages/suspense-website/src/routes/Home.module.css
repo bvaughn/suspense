@@ -14,13 +14,21 @@
   height: 1.5rem !important;
 }
 
-.Link {
+.HeaderLink {
   color: var(--color-default);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.5ch;
 }
-.Link:hover {
+.HeaderLink:hover {
   text-decoration: underline;
+}
+
+.Link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  text-decoration: none;
+  font-family: monospace;
 }

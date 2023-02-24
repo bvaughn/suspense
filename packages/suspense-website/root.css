@@ -5,7 +5,7 @@
   --color-button-background: #2a3343;
   --color-button-background-hover: #39414d;
   --color-button-border: #18181a;
-  --color-code-background: #050a1530;
+  --color-code-background: #ffffff20;
   --color-code: #ffffff;
   --color-default: #ffffff;
   --color-dim: #91a0ba;
@@ -14,15 +14,19 @@
   --color-input-background: #18181a;
   --color-input-border: #39414d;
   --color-input-border-focused: #dcadff;
-  --color-link: #dcadff;
+  --color-link: #7ac1ff;
   --color-loader: #91a0ba;
   --color-loader-background: #2a3343;
+  --color-note: #91a0ba;
+  --color-note-background: #2a3343;
+  --color-note-header: #fff;
   --color-panel-background: #192230;
   --color-panel-background-alternate: #202124;
   --color-solid-resize-bar: #39414d;
   --color-scroll-thumb: #39414d;
-  --color-warning-background: #f9ff87;
-  --color-warning: #494d00;
+  --color-warning-background: #3f3a27;
+  --color-warning-header: #dbba29;
+  --color-warning: #ffffff;
 
   --color-logo-chip-1: #dcadff;
   --color-logo-chip-2: #ff79ad;
@@ -56,12 +60,20 @@ body,
   color: var(--color-default);
 
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 18px;
 }
 
 * {
   box-sizing: border-box;
   line-height: 1.5em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  margin: 0;
 }
 
 p {
@@ -76,11 +88,6 @@ code {
   padding: 0.125rem 0.25rem;
 }
 
-h2 {
-  font-weight: normal;
-  margin: 0.5rem 0;
-}
-
 a {
   color: var(--color-link);
 }
@@ -93,6 +100,10 @@ ol {
   margin: 0;
   padding: 0;
   padding-left: 2ch;
+}
+
+li {
+  line-height: 1.5rem;
 }
 
 ::-webkit-scrollbar {

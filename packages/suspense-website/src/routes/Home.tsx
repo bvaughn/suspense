@@ -4,7 +4,7 @@ import Block from "../components/Block";
 import Container from "../components/Container";
 import Icon from "../components/Icon";
 import SubHeading from "../components/SubHeading";
-import Warning from "../components/Warning";
+import Note from "../components/Note";
 import {
   CREATE_CACHE,
   CREATE_DEFERRED,
@@ -15,6 +15,7 @@ import {
 } from "./config";
 
 import styles from "./Home.module.css";
+import { PropsWithChildren } from "react";
 
 export default function HomeRoute() {
   return (
@@ -23,7 +24,7 @@ export default function HomeRoute() {
         <SubHeading
           title={
             <a
-              className={styles.Link}
+              className={styles.HeaderLink}
               href="https://github.com/bvaughn/suspense/"
               target="_blank"
               rel="noopener noreferrer"
@@ -41,54 +42,45 @@ export default function HomeRoute() {
           </a>
           .
         </p>
-        <Warning>
-          Suspense is an <strong>experimental pre-release feature</strong>;
-          these APIs will change.
-        </Warning>
       </Block>
+      <Note type="warn">
+        Suspense is an <strong>experimental pre-release feature</strong>; these
+        APIs will change.
+      </Note>
       <Block>
         <SubHeading title="Installation" />
         <InstallationPanel />
       </Block>
       <Block>
-        <SubHeading title="Caches" />
+        <SubHeading title="Core API" />
         <ul>
-          <LinkListItem title="createCache" to={CREATE_CACHE} />
+          <LinkListItem children="createCache" to={CREATE_CACHE} />
           <LinkListItem
-            title="createStreamingCache"
+            children="createStreamingCache"
             to={CREATE_STREAMING_CACHE}
           />
+          <LinkListItem children="useCacheStatus" to={USE_CACHE_STATUS} />
+          <LinkListItem children="useStreamingCache" to={USE_STREAMING_CACHE} />
         </ul>
       </Block>
       <Block>
-        <SubHeading title="Hooks" />
+        <SubHeading title="Low-level API" />
         <ul>
-          <LinkListItem title="useCacheStatus" to={USE_CACHE_STATUS} />
-          <LinkListItem title="useStreamingCache" to={USE_STREAMING_CACHE} />
-        </ul>
-      </Block>
-      <Block>
-        <SubHeading title="Utilities" />
-        <p>
-          These utilities are lower level and probably not needed for most
-          scenarios.
-        </p>
-        <ul>
-          {/*<LinkListItem title="createInfallibleCache" to="/createInfallibleCache" />*/}
-          <LinkListItem title="createDeferred" to={CREATE_DEFERRED} />
-          <LinkListItem title="isThennable" to={IS_THENNABLE} />
-          {/*<LinkListItem title="parallelize" to="/parallelize" />*/}
+          {/*<LinkListItem children="createInfallibleCache" to="/createInfallibleCache" />*/}
+          <LinkListItem children="createDeferred" to={CREATE_DEFERRED} />
+          <LinkListItem children="isThennable" to={IS_THENNABLE} />
+          {/*<LinkListItem children="parallelize" to="/parallelize" />*/}
         </ul>
       </Block>
     </Container>
   );
 }
 
-function LinkListItem({ title, to }: { title: string; to: string }) {
+function LinkListItem({ children, to }: PropsWithChildren & { to: string }) {
   return (
     <li>
-      <Link to={to}>
-        <code>{title}</code>
+      <Link className={styles.Link} to={to}>
+        {children}
       </Link>
     </li>
   );

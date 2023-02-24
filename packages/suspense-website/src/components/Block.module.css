@@ -2,7 +2,6 @@
   background-color: var(--color-panel-background);
   padding: 1rem;
   border-radius: 0.5rem;
-  margin-bottom: 1rem;
 
   display: flex;
   flex-direction: column;

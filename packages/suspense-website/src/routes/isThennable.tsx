@@ -3,12 +3,16 @@ import Code from "../components/Code";
 import Header from "../components/Header";
 import { isThennable } from "../examples";
 import Block from "../components/Block";
-import Warning from "../components/Warning";
+import Note from "../components/Note";
 
 export default function IsThennableRoute() {
   return (
     <Container>
       <Header title="isThennable" />
+      <Note>
+        Although this package exports the <code>isThennable</code> API, you
+        probably won't need to use it directly in most cases.
+      </Note>
       <Block>
         <p>
           "Thennable" are a lower level concept that the caches in this package
@@ -25,10 +29,6 @@ export default function IsThennableRoute() {
         </p>
         <Code code={isThennable.util} />
       </Block>
-      <Warning>
-        Although this package exports the <code>isThennable</code> API, you
-        probably won't need to use it directly in most cases.
-      </Warning>
     </Container>
   );
 }

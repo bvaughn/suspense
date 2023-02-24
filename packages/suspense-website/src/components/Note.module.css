@@ -1,16 +1,55 @@
 .Note {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.5rem;
   width: fit-content;
 
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.5rem;
+}
+.Note[data-type="note"] {
+  background-color: var(--color-note-background);
+  color: var(--color-note);
+}
+.Note[data-type="warn"] {
+  background-color: var(--color-warning-background);
+  color: var(--color-warning);
+}
 
-  background-color: var(--color-loader-background);
-  color: var(--color-loader);
-
-  font-size: 16px;
+.Header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+}
+.Note[data-type="note"] .Header {
+  color: var(--color-note-header);
+  font-size: 1.25rem;
+}
+.Note[data-type="warn"] .Header {
+  color: var(--color-warning-header);
+  font-size: 1.5rem;
 }
 
 .Icon {
-  color: var(--color-default);
+  color: inherit;
+}
+.Note[data-type="note"] .Icon {
+  height: 1.5rem !important;
+  width: 1.5rem !important;
+  flex: 0 0 1.5rem !important;
+}
+.Note[data-type="warn"] .Icon {
+  height: 1.75rem !important;
+  width: 1.75rem !important;
+  flex: 0 0 1.75rem !important;
+}
+
+.Note[data-type="note"] .Content {
+  line-height: 1rem;
+  font-size: 1rem;
+}
+.Note[data-type="warn"] .Content {
+  line-height: 1.25rem;
+  font-size: 1.25rem;
 }

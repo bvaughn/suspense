@@ -3,12 +3,16 @@ import Code from "../components/Code";
 import Header from "../components/Header";
 import { createDeferred } from "../examples/";
 import Block from "../components/Block";
-import Warning from "../components/Warning";
+import Note from "../components/Note";
 
 export default function CreateDeferredRoute() {
   return (
     <Container>
       <Header title="createDeferred" />
+      <Note>
+        Although this package exports the <code>createDeferred</code> API, you
+        probably won't need to use it directly in most cases.
+      </Note>
       <Block>
         <p>
           Deferred objects are a lower level concept that the caches in this
@@ -27,10 +31,6 @@ export default function CreateDeferredRoute() {
         </p>
         <Code code={createDeferred.control} />
       </Block>
-      <Warning>
-        Although this package exports the <code>createDeferred</code> API, you
-        probably won't need to use it directly in most cases.
-      </Warning>
     </Container>
   );
 }

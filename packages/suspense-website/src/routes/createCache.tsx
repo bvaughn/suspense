@@ -44,6 +44,7 @@ export default function CreateCacheRoute() {
           has already been loaded, it will be returned synchronously. Otherwise
           the component will "suspend" while the data is fetched.
         </p>
+        <Code code={createCache.suspense} />
         <Note>
           Note this is currently implemented by throwing a{" "}
           <Link to="/isThennable">"thennable"</Link> and may change as the
@@ -51,7 +52,6 @@ export default function CreateCacheRoute() {
           <a href="https://github.com/reactjs/rfcs/pull/229">React API</a>{" "}
           changes.
         </Note>
-        <Code code={createCache.suspense} />
       </Block>
       <Block>
         <SubHeading title="Using a cache in an async function" />
