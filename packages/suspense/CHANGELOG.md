@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.4
+* Renamed "thennable" to "thenable" to more closely align with [pre-existing terminology](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#thenables).
+
 ## 0.0.3
 * Swapped order of `getCacheKey` and `loadData` functions for both `createCache` and `createStreamingCache` so that `getCacheKey` could be optional.
 
@@ -13,7 +16,7 @@ The initial release includes the following APIs:
 * [`useStreamingCache`](https://suspense-npm.vercel.app/useStreamingCache)
 #### Utilities
 * [`createDeferred`](https://suspense-npm.vercel.app/createDeferred)
-* [`isThennable`](https://suspense-npm.vercel.app/isThennable)
+* [`isThenable`](https://suspense-npm.vercel.app/isThenable)
 
 Special thanks to [@hbenl](https://github.com/hbenl) and [@markerikson](https://github.com/markerikson) for helping to co-develop these ideas at [@replayio](https://github.com/replayio), and to [@donavon](https://github.com/donavon) for lending the NPM package name.
 

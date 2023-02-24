@@ -16,6 +16,7 @@ import {
 
 import styles from "./Home.module.css";
 import { PropsWithChildren } from "react";
+import { ExternalLink } from "../components/ExternalLink";
 
 export default function HomeRoute() {
   return (
@@ -25,9 +26,9 @@ export default function HomeRoute() {
         <p>
           APIs to simplify data loading and caching. Primarily intended for use
           with{" "}
-          <a href="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
+          <ExternalLink to="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
             React Suspense
-          </a>
+          </ExternalLink>
           .
         </p>
       </Block>
@@ -56,7 +57,7 @@ export default function HomeRoute() {
         <ul>
           {/*<LinkListItem children="createInfallibleCache" to="/createInfallibleCache" />*/}
           <LinkListItem children="createDeferred" to={CREATE_DEFERRED} />
-          <LinkListItem children="isThennable" to={IS_THENNABLE} />
+          <LinkListItem children="isThenable" to={IS_THENNABLE} />
           {/*<LinkListItem children="parallelize" to="/parallelize" />*/}
         </ul>
       </Block>

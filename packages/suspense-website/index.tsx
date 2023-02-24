@@ -14,7 +14,7 @@ import CreateCacheRoute from "./src/routes/createCache";
 import CreateDeferredRoute from "./src/routes/createDeferred";
 import CreateStreamingCacheRoute from "./src/routes/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
-import IsThennableRoute from "./src/routes/isThennable";
+import IsThenableRoute from "./src/routes/isThenable";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheStatusRoute from "./src/routes/useCacheStatus";
 import UseStreamingCacheRoute from "./src/routes/useStreamingCache";
@@ -39,7 +39,7 @@ const router = createBrowserRouter([
   },
   {
     path: IS_THENNABLE,
-    element: <IsThennableRoute />,
+    element: <IsThenableRoute />,
   },
   {
     path: USE_CACHE_STATUS,

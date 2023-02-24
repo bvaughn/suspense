@@ -7,6 +7,7 @@ import SubHeading from "../components/SubHeading";
 import { Link } from "react-router-dom";
 import { USE_CACHE_STATUS } from "./config";
 import Note from "../components/Note";
+import { ExternalLink } from "../components/ExternalLink";
 
 export default function CreateCacheRoute() {
   return (
@@ -21,9 +22,9 @@ export default function CreateCacheRoute() {
           key-value store that can be lazily loaded by a React component while
           it is rendering. (This is done using an experimental React feature
           known as{" "}
-          <a href="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
+          <ExternalLink to="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
             suspense
-          </a>
+          </ExternalLink>
           .)
         </p>
         <p>
@@ -48,8 +49,10 @@ export default function CreateCacheRoute() {
         <Code code={createCache.suspense} />
         <Note>
           Caches currently suspend by throwing{" "}
-          <Link to="/isThennable">"thennables"</Link>. This may change as the{" "}
-          <a href="https://github.com/reactjs/rfcs/pull/229">React API</a>{" "}
+          <Link to="/isThenable">"thenables"</Link>. This may change as the{" "}
+          <ExternalLink to="https://github.com/reactjs/rfcs/pull/229">
+            React API
+          </ExternalLink>{" "}
           changes.
         </Note>
       </Block>
@@ -71,9 +74,9 @@ export default function CreateCacheRoute() {
         <SubHeading title="Pre-fetching a cache" />
         <p>
           When possible, it's best to pre-fetch data to avoid{" "}
-          <a href="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
+          <ExternalLink to="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
             "waterfalls"
-          </a>
+          </ExternalLink>
           .
         </p>
         <Code code={createCache.prefetch} />

@@ -28,17 +28,17 @@ export type UnsubscribeCallback = () => void;
 
 // This type defines the subset of the Promise API that React uses (the .then method to add success/error callbacks).
 // You can use a Promise for this, but Promises have a downside (the microtask queue).
-// You can also create your own "thennable" if you want to support synchronous resolution/rejection.
-export interface Thennable<T> {
+// You can also create your own "thenable" if you want to support synchronous resolution/rejection.
+export interface Thenable<T> {
   then(
     onFulfill: (value: T) => any,
     onReject?: (err: any) => any
-  ): void | Thennable<T>;
+  ): void | Thenable<T>;
 }
 
 // Convenience type used by Suspense caches.
-// Adds the ability to resolve or reject a pending Thennable.
-export interface Deferred<T> extends Thennable<T> {
+// Adds the ability to resolve or reject a pending Thenable.
+export interface Deferred<T> extends Thenable<T> {
   reject(error: any): void;
   resolve(value: T): void;
 }
@@ -49,7 +49,7 @@ export interface Cache<Params extends Array<any>, Value> {
   getStatus(...params: Params): Status | undefined;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
-  fetchAsync(...params: Params): Thennable<Value> | Value;
+  fetchAsync(...params: Params): Thenable<Value> | Value;
   fetchSuspense(...params: Params): Value;
   prefetch(...params: Params): void;
   subscribeToStatus(
@@ -68,7 +68,7 @@ export interface StreamingValues<Value, AdditionalData = undefined> {
   complete: boolean;
   data: AdditionalData | undefined;
   progress: number | undefined;
-  resolver: Thennable<StreamingValues<Value, AdditionalData>>;
+  resolver: Thenable<StreamingValues<Value, AdditionalData>>;
   status: Status;
   subscribe(callback: StreamingSubscribeCallback): UnsubscribeCallback;
   values: Value[] | undefined;

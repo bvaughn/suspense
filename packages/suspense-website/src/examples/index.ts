@@ -67,10 +67,10 @@ const createStreamingCache = {
   ),
 };
 
-const isThennable = {
+const isThenable = {
   util: processExample(
-    readFileSync(join(__dirname, "isThennable", "util.ts"), "utf8")
+    readFileSync(join(__dirname, "isThenable", "util.ts"), "utf8")
   ),
 };
 
-export { createCache, createDeferred, createStreamingCache, isThennable };
+export { createCache, createDeferred, createStreamingCache, isThenable };

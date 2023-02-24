@@ -2,11 +2,11 @@ import { Deferred } from "../types";
 
 let MAX_LOOP_COUNT = 1_000;
 
-// A "thennable" is a subset of the Promise API.
-// We could use a Promise as thennable, but Promises have a downside: they use the microtask queue.
-// An advantage to creating a custom thennable is synchronous resolution (or rejection).
+// A "thenable" is a subset of the Promise API.
+// We could use a Promise as thenable, but Promises have a downside: they use the microtask queue.
+// An advantage to creating a custom thenable is synchronous resolution (or rejection).
 //
-// A "deferred" is a "thennable" that has convenience resolve/reject methods.
+// A "deferred" is a "thenable" that has convenience resolve/reject methods.
 export function createDeferred<T>(debugLabel?: string): Deferred<T> {
   const resolveCallbacks: Set<(value: T) => void> = new Set();
   const rejectCallbacks: Set<(error: Error) => void> = new Set();

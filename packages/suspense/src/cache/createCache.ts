@@ -5,14 +5,14 @@ import {
   Record,
   Status,
   StatusCallback,
-  Thennable,
+  Thenable,
   UnsubscribeCallback,
 } from "../types";
 import { assertPendingRecord } from "../utils/assertPendingRecord";
-import { isThennable } from "../utils/isThennable";
+import { isThenable } from "../utils/isThenable";
 
 export function createCache<Params extends Array<any>, Value>(
-  load: (...params: Params) => Thennable<Value> | Value,
+  load: (...params: Params) => Thenable<Value> | Value,
   getKey: (...params: Params) => string = defaultGetKey,
   debugLabel?: string
 ): Cache<Params, Value> {
@@ -92,7 +92,7 @@ export function createCache<Params extends Array<any>, Value>(
     fetchAsync(...params);
   }
 
-  function fetchAsync(...params: Params): Thennable<Value> | Value {
+  function fetchAsync(...params: Params): Thenable<Value> | Value {
     const record = getOrCreateRecord(...params);
     switch (record.status) {
       case STATUS_PENDING:
@@ -134,10 +134,10 @@ export function createCache<Params extends Array<any>, Value>(
     const deferred = record.value;
 
     try {
-      const valueOrThennable = load(...params);
-      const value = isThennable(valueOrThennable)
-        ? await valueOrThennable
-        : valueOrThennable;
+      const valueOrThenable = load(...params);
+      const value = isThenable(valueOrThenable)
+        ? await valueOrThenable
+        : valueOrThenable;
 
       record.status = STATUS_RESOLVED;
       record.value = value;

@@ -6,7 +6,7 @@
 //     resolveRange: ResolveRange<Value>,
 //     rejectRange: RejectRange,
 //     ...params: Params
-//   ) => Thennable<Value>,
+//   ) => Thenable<Value>,
 //   debugLabel?: string
 // ): RangeCache<Range, Params, Value> {
 // }

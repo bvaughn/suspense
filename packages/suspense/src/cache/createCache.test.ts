@@ -1,7 +1,7 @@
 import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
 import { createCache } from "./createCache";
 import { Cache } from "../types";
-import { isThennable } from "../utils/isThennable";
+import { isThenable } from "../utils/isThenable";
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
@@ -110,11 +110,11 @@ describe("createCache", () => {
 
   describe("fetchAsync", () => {
     it("should return async values", async () => {
-      const thennable = cache.fetchAsync("async");
+      const thenable = cache.fetchAsync("async");
 
-      expect(isThennable(thennable)).toBe(true);
+      expect(isThenable(thenable)).toBe(true);
 
-      await expect(await thennable).toBe("async");
+      await expect(await thenable).toBe("async");
     });
 
     it("should return sync values", () => {
@@ -188,10 +188,10 @@ describe("createCache", () => {
         cache.fetchSuspense("async");
 
         throw new Error("should have suspended");
-      } catch (thennable) {
-        expect(isThennable(thennable)).toBe(true);
+      } catch (thenable) {
+        expect(isThenable(thenable)).toBe(true);
 
-        await thennable;
+        await thenable;
 
         expect(cache.fetchSuspense("async")).toBe("async");
       }
@@ -252,12 +252,12 @@ describe("createCache", () => {
       expect(callbackA).toHaveBeenCalledTimes(1);
       expect(callbackA).toHaveBeenCalledWith(undefined);
 
-      const thennable = cache.fetchAsync("async");
+      const thenable = cache.fetchAsync("async");
 
       expect(callbackA).toHaveBeenCalledTimes(2);
       expect(callbackA).toHaveBeenCalledWith(STATUS_PENDING);
 
-      await thennable;
+      await thenable;
 
       expect(callbackA).toHaveBeenCalledTimes(3);
       expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);

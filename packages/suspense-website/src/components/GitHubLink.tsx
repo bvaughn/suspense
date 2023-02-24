@@ -1,16 +1,15 @@
+import { ExternalLink } from "./ExternalLink";
 import styles from "./GitHubLink.module.css";
 import Icon from "./Icon";
 
 export default function GitHubLink() {
   return (
-    <a
+    <ExternalLink
       className={styles.Link}
-      href="https://github.com/bvaughn/suspense/"
-      rel="noopener noreferrer"
-      target="_blank"
+      to="https://github.com/bvaughn/suspense/"
     >
       <div className={styles.Label}>Suspense</div>
       <Icon className={styles.Icon} type="github" />
-    </a>
+    </ExternalLink>
   );
 }
