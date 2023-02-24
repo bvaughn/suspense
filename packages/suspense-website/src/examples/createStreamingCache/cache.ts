@@ -1,15 +1,18 @@
+type Comment = any;
+type Message = any;
+// REMOVE_BEFORE
 import { createStreamingCache, StreamingProgressNotifier } from "suspense";
 
 const socket = new WebSocket(`ws://example.com`);
 
-export const exampleStreamingCache = createStreamingCache<
-  [path: string],
-  string
+export const userCommentsCache = createStreamingCache<
+  [userId: string],
+  Comment
 >(
   // Stream data for params
-  async (notifier: StreamingProgressNotifier<string>, path: string) => {
-    let loadedLines = 0;
-    let totalLineCount = 0;
+  async (notifier: StreamingProgressNotifier<Comment>, userId: string) => {
+    let countLoaded = 0;
+    let countTotal = 0;
 
     socket.onerror = (error) => {
       // If loading fails, notify the cache
@@ -17,18 +20,18 @@ export const exampleStreamingCache = createStreamingCache<
     };
 
     socket.onmessage = (event) => {
-      const data = JSON.parse(event.data as any);
-      if (data.path === path) {
-        switch (data.type) {
+      const data = JSON.parse(event.data) as Message;
+      if (data.requestType === "fetchComments" && data.userId === userId) {
+        switch (data.responseType) {
           case "initialize":
-            totalLineCount = data.count as number;
+            // Some caches can calculate progress (but this is optional)
+            countTotal = data.count as number;
             break;
-          case "progress":
-            const lines = data.lines as string[];
-            loadedLines += lines.length;
+          case "update":
+            countLoaded += data.comments.length;
 
             // When new data streams in, notify the cache
-            notifier.update(lines, loadedLines / totalLineCount);
+            notifier.update(data.comments, countLoaded / countTotal);
             break;
           case "complete":
             // Once loading has finished, notify the cache
@@ -39,8 +42,8 @@ export const exampleStreamingCache = createStreamingCache<
     };
     socket.send(
       JSON.stringify({
-        socket,
-        type: "streamContent",
+        type: "fetchComments",
+        userId,
       })
     );
   }

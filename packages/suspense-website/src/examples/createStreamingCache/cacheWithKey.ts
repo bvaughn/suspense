@@ -1,7 +1,7 @@
 import { createStreamingCache, StreamingProgressNotifier } from "suspense";
 
 class ApiClient {
-  async streamData(
+  async fetchComments(
     id: string,
     onData: (data: string[]) => void,
     onComplete: () => void
@@ -10,20 +10,22 @@ class ApiClient {
   }
 }
 
+type Comment = any;
+
 // REMOVE_BEFORE
-export const exampleStreamingCache = createStreamingCache<
+export const userCommentsCache = createStreamingCache<
   [client: ApiClient, id: string],
-  string
+  Comment
 >(
-  // In this example, data is streamed by a "client" object
+  // In this example, comments are fetched using a "client" object
   async (
     notifier: StreamingProgressNotifier<string>,
     client: ApiClient,
     id: string
   ) =>
-    client.streamData(
+    client.fetchComments(
       id,
-      (values: string[]) => notifier.update(values),
+      (comments: Comment[]) => notifier.update(comments),
       () => notifier.resolve()
     ),
 

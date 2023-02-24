@@ -1,5 +1,6 @@
 import { userCommentsCache } from "./cache";
 
 // REMOVE_BEFORE
-const path = "example";
-userCommentsCache.prefetch(path);
+const userId = "123";
+
+userCommentsCache.evict(userId);

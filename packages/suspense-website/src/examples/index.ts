@@ -59,6 +59,9 @@ const createStreamingCache = {
       "utf8"
     )
   ),
+  evict: processExample(
+    readFileSync(join(__dirname, "createStreamingCache", "evict.ts"), "utf8")
+  ),
   hook: processExample(
     readFileSync(join(__dirname, "createStreamingCache", "hook.ts"), "utf8")
   ),

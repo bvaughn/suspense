@@ -6,6 +6,7 @@ import Block from "../components/Block";
 import SubHeading from "../components/SubHeading";
 import { Link } from "react-router-dom";
 import { USE_STREAMING_CACHE } from "./config";
+import Note from "../components/Note";
 
 export default function CreateStreamingCacheRoute() {
   return (
@@ -48,6 +49,15 @@ export default function CreateStreamingCacheRoute() {
         <SubHeading title="Pre-fetching values" />
         <p>Like a normal cache, streaming values can be pre-fetched.</p>
         <Code code={createStreamingCache.prefetch} />
+      </Block>
+      <Block>
+        <SubHeading title="Evicting stale values" />
+        <p>Stale values can be evicted from a cache.</p>
+        <Code code={createStreamingCache.evict} />
+        <Note>
+          Evicting cache values does not currently schedule an update with
+          React.
+        </Note>
       </Block>
     </Container>
   );
