@@ -14,3 +14,6 @@
   text-decoration: none;
   font-family: monospace;
 }
+.Link:hover {
+  text-decoration: underline;
+}

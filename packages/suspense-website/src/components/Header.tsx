@@ -11,7 +11,7 @@ export default function Header({ title }: { title?: string }) {
         </Link>
         {title && (
           <>
-            <span className={styles.Arrow}>→</span>
+            <span className={styles.Arrow}>/</span>
             <span className={styles.Title}>{title}</span>
           </>
         )}
