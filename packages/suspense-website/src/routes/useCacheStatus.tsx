@@ -10,7 +10,9 @@ import { CREATE_CACHE } from "./config";
 export default function UseCacheStatusRoute() {
   return (
     <Container>
-      <Header title="useCacheStatus" />
+      <Block>
+        <Header title="useCacheStatus" />
+      </Block>
       <Block>
         <SubHeading title="Observing status" />
         <p>

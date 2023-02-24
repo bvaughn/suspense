@@ -8,7 +8,9 @@ import Note from "../components/Note";
 export default function IsThennableRoute() {
   return (
     <Container>
-      <Header title="isThennable" />
+      <Block>
+        <Header title="isThennable" />
+      </Block>
       <Note>
         Although this package exports the <code>isThennable</code> API, you
         probably won't need to use it directly in most cases.

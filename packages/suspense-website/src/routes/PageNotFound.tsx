@@ -5,7 +5,9 @@ import Header from "../components/Header";
 export default function PageNotFoundRoute() {
   return (
     <Container>
-      <Header title="Page not found" />
+      <Block>
+        <Header title="Page not found" />
+      </Block>
       <Block>
         <p>Sorry. We couldn't find that page.</p>
       </Block>

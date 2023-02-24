@@ -7,24 +7,6 @@
   padding: 0.25rem 0.5rem;
 }
 
-.GitHub {
-  color: var(--color-dim);
-  flex: 0 0 1.5rem !important;
-  width: 1.5rem !important;
-  height: 1.5rem !important;
-}
-
-.HeaderLink {
-  color: var(--color-default);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5ch;
-}
-.HeaderLink:hover {
-  text-decoration: underline;
-}
-
 .Link {
   display: inline-flex;
   align-items: center;

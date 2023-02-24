@@ -10,7 +10,9 @@ import { CREATE_STREAMING_CACHE } from "./config";
 export default function UseStreamingCacheRoute() {
   return (
     <Container>
-      <Header title="useStreamingCache" />
+      <Block>
+        <Header title="useStreamingCache" />
+      </Block>
       <Block>
         <p>
           The easiest way to use a{" "}

@@ -8,7 +8,9 @@ import Note from "../components/Note";
 export default function CreateDeferredRoute() {
   return (
     <Container>
-      <Header title="createDeferred" />
+      <Block>
+        <Header title="createDeferred" />
+      </Block>
       <Note>
         Although this package exports the <code>createDeferred</code> API, you
         probably won't need to use it directly in most cases.

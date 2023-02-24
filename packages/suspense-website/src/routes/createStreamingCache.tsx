@@ -10,7 +10,9 @@ import { USE_STREAMING_CACHE } from "./config";
 export default function CreateStreamingCacheRoute() {
   return (
     <Container>
-      <Header title="createStreamingCache" />
+      <Block>
+        <Header title="createStreamingCache" />
+      </Block>
       <Block>
         <SubHeading title="Creating a streaming cache" />
         <p>
@@ -34,9 +36,9 @@ export default function CreateStreamingCacheRoute() {
         <SubHeading title="Using a streaming cache" />
         <p>
           The easiest way to use a streaming cache is with the{" "}
-          <Link to={USE_STREAMING_CACHE}>
-            <code>useStreamingCache</code>
-          </Link>{" "}
+          <code>
+            <Link to={USE_STREAMING_CACHE}>useStreamingCache</Link>
+          </code>{" "}
           hook.
         </p>
         <Code code={createStreamingCache.hook} />

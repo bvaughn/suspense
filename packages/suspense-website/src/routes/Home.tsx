@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 import Block from "../components/Block";
 import Container from "../components/Container";
-import Icon from "../components/Icon";
+import GitHubLink from "../components/GitHubLink";
 import SubHeading from "../components/SubHeading";
 import Note from "../components/Note";
 import {
@@ -21,19 +21,7 @@ export default function HomeRoute() {
   return (
     <Container>
       <Block>
-        <SubHeading
-          title={
-            <a
-              className={styles.HeaderLink}
-              href="https://github.com/bvaughn/suspense/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Suspense
-              <Icon className={styles.GitHub} type="github" />
-            </a>
-          }
-        />
+        <GitHubLink />
         <p>
           APIs to simplify data loading and caching. Primarily intended for use
           with{" "}
