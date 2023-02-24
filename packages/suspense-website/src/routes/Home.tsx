@@ -56,7 +56,10 @@ export default function HomeRoute() {
             to={CREATE_STREAMING_CACHE}
           />
           <LinkListItem children="useCacheStatus" to={USE_CACHE_STATUS} />
-          <LinkListItem children="useStreamingCache" to={USE_STREAMING_CACHE} />
+          <LinkListItem
+            children="useStreamingValues"
+            to={USE_STREAMING_CACHE}
+          />
         </ul>
       </Block>
       <Block>

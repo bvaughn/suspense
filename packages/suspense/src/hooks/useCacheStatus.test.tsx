@@ -5,7 +5,12 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { createCache } from "../cache/createCache";
 import { Cache, Status } from "../types";
 import { useCacheStatus } from "./useCacheStatus";
@@ -44,14 +49,14 @@ describe("useCacheStatus", () => {
     lastRenderedStatus = undefined;
   });
 
-  it("should return undefined for keys that have not been loaded", () => {
+  it("should return not-started for keys that have not been loaded", () => {
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
       root.render(<Component string="test" />);
     });
 
-    expect(lastRenderedStatus).toBe(undefined);
+    expect(lastRenderedStatus).toBe(STATUS_NOT_STARTED);
   });
 
   it("should transition from pending to resolved", async () => {

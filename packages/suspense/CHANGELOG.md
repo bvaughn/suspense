@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5
+* `cache.getStatus` and `useCacheStatus` now return an explicit `"not-started"` string rather than `undefined` for keys that have not been fetched.
+* Add `status` attribute to the return value for `useStreamingValues` hook.
+
 ## 0.0.4
 * Renamed "thennable" to "thenable" to more closely align with [pre-existing terminology](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#thenables).
 
@@ -13,7 +17,7 @@ The initial release includes the following APIs:
 * [`createStreamingCache`](https://suspense-npm.vercel.app/createStreamingCache)
 #### React hooks
 * [`useCacheStatus`](https://suspense-npm.vercel.app/useCacheStatus)
-* [`useStreamingCache`](https://suspense-npm.vercel.app/useStreamingCache)
+* [`useStreamingValues`](https://suspense-npm.vercel.app/useStreamingValues)
 #### Utilities
 * [`createDeferred`](https://suspense-npm.vercel.app/createDeferred)
 * [`isThenable`](https://suspense-npm.vercel.app/isThenable)

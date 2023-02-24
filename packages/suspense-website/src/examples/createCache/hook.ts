@@ -7,6 +7,9 @@ function StatusBadge({ userId }: { userId: string }) {
   const status = useCacheStatus(userProfileCache, userId);
 
   switch (status) {
+    case "not-started":
+      // ...
+      break;
     case "pending":
       // ...
       break;
@@ -14,10 +17,6 @@ function StatusBadge({ userId }: { userId: string }) {
       // ...
       break;
     case "rejected":
-      // ...
-      break;
-    default:
-      // Not fetched yet
       // ...
       break;
   }

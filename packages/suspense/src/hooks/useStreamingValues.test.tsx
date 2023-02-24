@@ -5,6 +5,7 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createStreamingCache } from "../cache/createStreamingCache";
+import { STATUS_PENDING, STATUS_RESOLVED } from "../constants";
 import { StreamingCache, StreamingProgressNotifier } from "../types";
 import {
   StreamingValuesPartial,
@@ -60,6 +61,7 @@ describe("useStreamingValue", () => {
       complete: false,
       data: undefined,
       progress: 0.5,
+      status: STATUS_PENDING,
       values: ["a", "b"],
     });
 
@@ -71,6 +73,7 @@ describe("useStreamingValue", () => {
       complete: true,
       data: undefined,
       progress: 1,
+      status: STATUS_RESOLVED,
       values: ["a", "b", "c", "d"],
     });
   });

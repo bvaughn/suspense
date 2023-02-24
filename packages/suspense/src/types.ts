@@ -1,9 +1,20 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "./constants";
+import {
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "./constants";
 
+export type StatusNotStarted = typeof STATUS_NOT_STARTED;
 export type StatusPending = typeof STATUS_PENDING;
 export type StatusRejected = typeof STATUS_REJECTED;
 export type StatusResolved = typeof STATUS_RESOLVED;
-export type Status = StatusPending | StatusRejected | StatusResolved;
+
+export type Status =
+  | StatusNotStarted
+  | StatusPending
+  | StatusRejected
+  | StatusResolved;
 
 export type PendingRecord<T> = {
   status: StatusPending;

@@ -1,4 +1,9 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
@@ -63,7 +68,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = recordMap.get(cacheKey);
 
-    return record?.status;
+    return record?.status ?? STATUS_NOT_STARTED;
   }
 
   function getValue(...params: Params): Value {

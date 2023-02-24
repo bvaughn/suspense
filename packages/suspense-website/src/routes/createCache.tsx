@@ -93,9 +93,9 @@ export default function CreateCacheRoute() {
       <Block>
         <SubHeading title="Observing status" />
         <p>
-          A value's <em>status</em> ("pending", "resolved", or "rejected") can
-          be queried as well using <code>cache.getStatus</code>– although the
-          recommended way to subscribe to this value is using the{" "}
+          A value's <em>status</em> ("not-started", "pending", "resolved", or
+          "rejected") can be queried as well using <code>cache.getStatus</code>–
+          although the recommended way to subscribe to this value is using the{" "}
           <code>
             <Link to={USE_CACHE_STATUS}>useCacheStatus</Link>
           </code>{" "}

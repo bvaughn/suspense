@@ -1,11 +1,12 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
+import { STATUS_PENDING } from "../constants";
 
 import { StreamingValues } from "../types";
 import { throttle } from "../utils/throttle";
 
 export type StreamingValuesPartial<Value, AdditionalData> = Pick<
   StreamingValues<Value, AdditionalData>,
-  "complete" | "data" | "progress" | "values"
+  "complete" | "data" | "progress" | "status" | "values"
 >;
 
 export function useStreamingValues<Value, AdditionalData = undefined>(
@@ -20,6 +21,7 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
     complete: false,
     data: undefined,
     progress: 0,
+    status: STATUS_PENDING,
     values: undefined,
   });
 
@@ -35,6 +37,7 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
         complete: streamingValues.complete,
         data: streamingValues.data,
         progress: streamingValues.progress,
+        status: streamingValues.status,
         values: streamingValues.values,
       };
     }

@@ -17,7 +17,7 @@ import HomeRoute from "./src/routes/Home";
 import IsThenableRoute from "./src/routes/isThenable";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheStatusRoute from "./src/routes/useCacheStatus";
-import UseStreamingCacheRoute from "./src/routes/useStreamingCache";
+import UseStreamingValuesRoute from "./src/routes/useStreamingValues";
 
 const router = createBrowserRouter([
   {
@@ -47,7 +47,7 @@ const router = createBrowserRouter([
   },
   {
     path: USE_STREAMING_CACHE,
-    element: <UseStreamingCacheRoute />,
+    element: <UseStreamingValuesRoute />,
   },
 ]);
 

@@ -1,4 +1,9 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { createCache } from "./createCache";
 import { Cache } from "../types";
 import { isThenable } from "../utils/isThenable";
@@ -76,8 +81,8 @@ describe("createCache", () => {
   });
 
   describe("getStatus", () => {
-    it("should return undefined for keys that have not been loaded", () => {
-      expect(cache.getStatus("nope")).toBeUndefined();
+    it("should return not-started for keys that have not been loaded", () => {
+      expect(cache.getStatus("nope")).toBe(STATUS_NOT_STARTED);
     });
 
     it("should transition from pending to resolved", async () => {
@@ -235,7 +240,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(undefined);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       await Promise.resolve();
 
@@ -246,7 +251,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(undefined);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       cache.fetchAsync("sync");
 
@@ -259,7 +264,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "async");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(undefined);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       const thenable = cache.fetchAsync("async");
 
@@ -277,10 +282,10 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackB, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(undefined);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       expect(callbackB).toHaveBeenCalledTimes(1);
-      expect(callbackB).toHaveBeenCalledWith(undefined);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       cache.fetchAsync("sync");
 
@@ -297,7 +302,7 @@ describe("createCache", () => {
       const unsubscribe = cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(undefined);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
 
       unsubscribe();
 
