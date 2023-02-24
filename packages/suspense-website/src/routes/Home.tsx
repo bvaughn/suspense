@@ -24,17 +24,24 @@ export default function HomeRoute() {
       <Block>
         <GitHubLink />
         <p>
-          APIs to simplify data loading and caching. Primarily intended for use
-          with{" "}
+          APIs to simplify data loading and caching, for use with{" "}
           <ExternalLink to="https://beta.reactjs.org/blog/2022/03/29/react-v18#suspense-in-data-frameworks">
             React Suspense
           </ExternalLink>
           .
         </p>
+        <p>
+          This library exposes techniques used in apps like the{" "}
+          <ExternalLink to="https://github.com/facebook/react/tree/main/packages/react-devtools-shared">
+            React DevTools extension
+          </ExternalLink>{" "}
+          and <ExternalLink to="https://www.replay.io/">Replay.io</ExternalLink>
+          .
+        </p>
       </Block>
       <Note type="warn">
         Suspense is an <strong>experimental pre-release feature</strong>; these
-        APIs will change.
+        APIs may change.
       </Note>
       <Block>
         <SubHeading title="Installation" />
