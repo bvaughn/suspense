@@ -38,12 +38,9 @@ describe("useStreamingValue", () => {
 
     notifiers = new Map();
 
-    cache = createStreamingCache(
-      (key) => key,
-      (notifier, key) => {
-        notifiers.set(key, notifier);
-      }
-    );
+    cache = createStreamingCache((notifier, key) => {
+      notifiers.set(key, notifier);
+    });
   });
 
   it("should re-render as values stream in", () => {

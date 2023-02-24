@@ -1,7 +1,8 @@
-import { exampleCache } from "./cache";
+import { userProfileCache } from "./cache";
 
 // REMOVE_BEFORE
 function UserProfile({ userId }: { userId: string }) {
-  const userData = exampleCache.fetchSuspense(userId);
+  const userProfile = userProfileCache.fetchSuspense(userId);
+
   // ...
 }

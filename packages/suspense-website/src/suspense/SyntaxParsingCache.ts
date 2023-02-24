@@ -35,7 +35,6 @@ export const {
   fetchAsync: highlightSyntaxAsync,
   fetchSuspense: highlightSyntaxSuspense,
 } = createCache<[code: string, language: Language], ParsedTokens[]>(
-  (code: string, language: Language) => `${code.length}-${language}`,
   async (code: string, language: Language) => {
     const languageExtension = await getLanguageExtension(language);
     const parsedTokens: ParsedTokens[] = [];
@@ -159,6 +158,7 @@ export const {
 
     return parsedTokens;
   },
+  (code: string, language: Language) => `${code.length}-${language}`,
   "SyntaxParsingCache"
 );
 

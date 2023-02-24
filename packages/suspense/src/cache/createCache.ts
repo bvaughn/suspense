@@ -12,8 +12,8 @@ import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThennable } from "../utils/isThennable";
 
 export function createCache<Params extends Array<any>, Value>(
-  getKey: (...params: Params) => string,
   load: (...params: Params) => Thennable<Value> | Value,
+  getKey: (...params: Params) => string = defaultGetKey,
   debugLabel?: string
 ): Cache<Params, Value> {
   const recordMap = new Map<string, Record<Value>>();
@@ -191,4 +191,8 @@ export function createCache<Params extends Array<any>, Value>(
     prefetch,
     subscribeToStatus,
   };
+}
+
+function defaultGetKey(...params: any[]): string {
+  return params.join(",");
 }

@@ -39,7 +39,7 @@ describe("useCacheStatus", () => {
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation((key) => key.toString());
 
-    cache = createCache<[string], string>(getCacheKey, fetch, "cache");
+    cache = createCache<[string], string>(fetch, getCacheKey, "cache");
 
     lastRenderedStatus = undefined;
   });

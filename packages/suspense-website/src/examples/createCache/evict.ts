@@ -1,6 +1,6 @@
-import { exampleCache } from "./cache";
+import { userProfileCache } from "./cache";
 
 // REMOVE_BEFORE
 const userId = "123";
 
-exampleCache.evict(userId);
+userProfileCache.evict(userId);

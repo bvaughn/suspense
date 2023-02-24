@@ -25,8 +25,8 @@ describe("createStreamingCache", () => {
     );
 
     cache = createStreamingCache<[string], string, any>(
-      getCacheKey,
       fetch,
+      getCacheKey,
       "cache"
     );
   });

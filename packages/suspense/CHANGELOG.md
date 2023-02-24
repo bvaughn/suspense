@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.3
+* Swapped order of `getCacheKey` and `loadData` functions for both `createCache` and `createStreamingCache` so that `getCacheKey` could be optional.
+
 ## 0.0.2
 The initial release includes the following APIs:
 #### Cache types

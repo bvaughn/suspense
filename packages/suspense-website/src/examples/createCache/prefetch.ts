@@ -1,4 +1,4 @@
-import { exampleCache } from "./cache";
+import { userProfileCache } from "./cache";
 
 function getQueryParam(key: string): string {
   return "dummy";
@@ -8,7 +8,7 @@ function getQueryParam(key: string): string {
 const userId = getQueryParam("userId");
 
 // Start loading user data eagerly, while route renders.
-exampleCache.prefetch(userId);
+userProfileCache.prefetch(userId);
 
 function UserProfileRoute() {
   // ...

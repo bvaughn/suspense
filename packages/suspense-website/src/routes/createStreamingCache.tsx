@@ -21,16 +21,17 @@ export default function CreateStreamingCacheRoute() {
           it provides a subscription interface that can be used to re-render as
           data incrementally loads.
         </p>
-        <p>Implementing a streaming cache requires two methods:</p>
-        <ul>
-          <li>
-            One to compute a <em>unique key</em> from cache parameters, and
-          </li>
-          <li>
-            One to stream the data using an API like a <code>WebSocket</code>
-          </li>
-        </ul>
+        <p>
+          Like a regular cache, implementing a streaming cache typically only
+          requires a single method– to stream the data using an API like a{" "}
+          <code>WebSocket</code>.
+        </p>
         <Code code={createStreamingCache.cache} />
+        <p>
+          A second method can be provided to compute the cache key if one of the
+          parameters can't be stringified.
+        </p>
+        <Code code={createStreamingCache.cacheWithKey} />
       </Block>
       <Block>
         <SubHeading title="Using a streaming cache" />

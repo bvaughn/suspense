@@ -13,8 +13,8 @@ export function createStreamingCache<
   Value,
   AdditionalData = undefined
 >(
-  getKey: (...params: Params) => string,
   load: (notifier: StreamingProgressNotifier<Value>, ...params: Params) => void,
+  getKey: (...params: Params) => string = defaultGetKey,
   debugLabel?: string
 ): StreamingCache<Params, Value, AdditionalData> {
   const streamingValuesMap = new Map<
@@ -139,4 +139,8 @@ export function createStreamingCache<
     prefetch,
     stream,
   };
+}
+
+function defaultGetKey(...params: any[]): string {
+  return params.join(",");
 }

@@ -26,18 +26,17 @@ export default function CreateCacheRoute() {
           </a>
           .)
         </p>
-        <p>Implementing one of these caches requires two methods:</p>
-        <ul>
-          <li>
-            One to compute a <em>unique key</em> from cache parameters, and
-          </li>
-          <li>One to load the data</li>
-        </ul>
         <p>
-          For example, a cache that loads user data from a (JSON) API might look
-          like this:
+          Implementing one of these caches typically only requires a single
+          method (to load the data). For example, a cache that loads user data
+          from a (JSON) API might look like this:
         </p>
         <Code code={createCache.cache} />
+        <p>
+          If one of the cache key parameters can't be stringified, a second
+          method should also be provided to compute a unique key.
+        </p>
+        <Code code={createCache.cacheWithKey} />
       </Block>
       <Block>
         <SubHeading title="Using a cache with suspense" />

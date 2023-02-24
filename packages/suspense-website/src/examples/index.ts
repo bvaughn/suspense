@@ -17,6 +17,9 @@ const createCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createCache", "cache.ts"), "utf8")
   ),
+  cacheWithKey: processExample(
+    readFileSync(join(__dirname, "createCache", "cacheWithKey.ts"), "utf8")
+  ),
   evict: processExample(
     readFileSync(join(__dirname, "createCache", "evict.ts"), "utf8")
   ),
@@ -49,6 +52,12 @@ const createDeferred = {
 const createStreamingCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createStreamingCache", "cache.ts"), "utf8")
+  ),
+  cacheWithKey: processExample(
+    readFileSync(
+      join(__dirname, "createStreamingCache", "cacheWithKey.ts"),
+      "utf8"
+    )
   ),
   hook: processExample(
     readFileSync(join(__dirname, "createStreamingCache", "hook.ts"), "utf8")
