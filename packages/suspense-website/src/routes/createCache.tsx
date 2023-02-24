@@ -46,9 +46,8 @@ export default function CreateCacheRoute() {
         </p>
         <Code code={createCache.suspense} />
         <Note>
-          Note this is currently implemented by throwing a{" "}
-          <Link to="/isThennable">"thennable"</Link> and may change as the
-          underlying{" "}
+          Caches currently suspend by throwing{" "}
+          <Link to="/isThennable">"thennables"</Link>. This may change as the{" "}
           <a href="https://github.com/reactjs/rfcs/pull/229">React API</a>{" "}
           changes.
         </Note>
