@@ -29,6 +29,9 @@ const createCache = {
   suspense: processExample(
     readFileSync(join(__dirname, "createCache", "suspense.ts"), "utf8")
   ),
+  sync: processExample(
+    readFileSync(join(__dirname, "createCache", "sync.ts"), "utf8")
+  ),
 };
 
 const createDeferred = {

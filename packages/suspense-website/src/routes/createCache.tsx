@@ -53,9 +53,18 @@ export default function CreateCacheRoute() {
         </Note>
       </Block>
       <Block>
-        <SubHeading title="Using a cache in an async function" />
+        <SubHeading title="Other ways to use a cache" />
         <p>For convenience, caches can also be used within async methods.</p>
         <Code code={createCache.async} />
+        <p>
+          Data loaded this way will be stored in such a way as to be shared with
+          data loaded via suspense.
+        </p>
+        <p>
+          Although not commonly needed, data can even be loaded synchronously
+          from the cache.
+        </p>
+        <Code code={createCache.sync} />
       </Block>
       <Block>
         <SubHeading title="Pre-fetching a cache" />
@@ -70,11 +79,12 @@ export default function CreateCacheRoute() {
       </Block>
       <Block>
         <SubHeading title="Evicting stale values" />
-        <p>
-          Stale values can be evicted from a cache (although note that this does
-          not currently schedule an update with React).
-        </p>
+        <p>Stale values can be evicted from a cache.</p>
         <Code code={createCache.evict} />
+        <Note>
+          Evicting cache values does not currently schedule an update with
+          React.
+        </Note>
       </Block>
       <Block>
         <SubHeading title="Observing status" />
