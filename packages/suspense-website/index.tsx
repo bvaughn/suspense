@@ -32,11 +32,8 @@ root.render(
       <ScrollToTop />
 
       <Routes>
-        <Route
-          path="/"
-          element={<HomeRoute />}
-          errorElement={<PageNotFoundRoute />}
-        />
+        <Route path="*" element={<PageNotFoundRoute />} />
+        <Route path="/" element={<HomeRoute />} />
         <Route path={CREATE_CACHE} element={<CreateCacheRoute />} />
         <Route path={CREATE_DEFERRED} element={<CreateDeferredRoute />} />
         <Route

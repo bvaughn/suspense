@@ -1,8 +1,9 @@
+import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import GitHubLink from "./GitHubLink";
 import styles from "./Header.module.css";
 
-export default function Header({ title }: { title?: string }) {
+export default function Header({ title }: { title?: ReactNode }) {
   return (
     <div className={styles.Header}>
       <div className={styles.Nav}>
