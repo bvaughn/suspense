@@ -10,24 +10,24 @@ export default function UseStreamingValuesRoute() {
   return (
     <Container>
       <Block>
-        <Header title="fetch with status" />
+        <Header title="render cache status updates" />
       </Block>
       <Block>
         <p>
-          The demo below shows how the <code>useCacheStatus</code> hook can be
-          used to render UI based on the status of a cached item. Click the
-          "start demo" button to fetch user data in the cache.
+          The demo below shows how <code>useCacheStatus</code> can be used to
+          render UI based on the status of a cached item.
         </p>
+        <p>Click the "start demo" button to fetch user data in the cache.</p>
       </Block>
       <Block>
         <Demo />
       </Block>
       <Block>
         <p>
-          Although the <code>UserStatusBadge</code> component is neither
-          scheduling the update with React nor suspending to load user data, it
-          uses <code>useCacheStatus</code> to update as the user records are
-          fetched.
+          Although the <code>UserStatusBadge</code> component neither schedules
+          the update with React nor suspends to load user data,{" "}
+          <code>useCacheStatus</code> allows it to render status updates in
+          response to cache changes.
         </p>
         <Code code={demos.fetchWithStatus.UserStatusBadge} />
       </Block>
