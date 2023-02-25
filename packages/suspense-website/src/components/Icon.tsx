@@ -1,6 +1,14 @@
 import styles from "./Icon.module.css";
 
-export type IconType = "github" | "loading" | "note" | "quote" | "warn";
+export type IconType =
+  | "github"
+  | "loading"
+  | "note"
+  | "quote"
+  | "status-not-started"
+  | "status-pending"
+  | "status-resolved"
+  | "warn";
 
 export default function Icon({
   className = "",
@@ -25,6 +33,18 @@ export default function Icon({
       break;
     case "quote":
       path = "M10,7L8,11H11V17H5V11L7,7H10M18,7L16,11H19V17H13V11L15,7H18Z";
+      break;
+    case "status-not-started":
+      path =
+        "M17,13H7V11H17M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z";
+      break;
+    case "status-pending":
+      path =
+        "M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.24,7.76C15.07,6.58 13.53,6 12,6V12L7.76,16.24C10.1,18.58 13.9,18.58 16.24,16.24C18.59,13.9 18.59,10.1 16.24,7.76Z";
+      break;
+    case "status-resolved":
+      path =
+        "M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z";
       break;
     case "warn":
       path =

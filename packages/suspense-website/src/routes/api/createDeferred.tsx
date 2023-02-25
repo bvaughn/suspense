@@ -1,9 +1,9 @@
-import Container from "../components/Container";
-import Code from "../components/Code";
-import Header from "../components/Header";
-import { createDeferred } from "../examples/";
-import Block from "../components/Block";
-import Note from "../components/Note";
+import Container from "../../components/Container";
+import Code from "../../components/Code";
+import Header from "../../components/Header";
+import { createDeferred } from "../../examples";
+import Block from "../../components/Block";
+import Note from "../../components/Note";
 
 export default function CreateDeferredRoute() {
   return (

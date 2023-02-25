@@ -9,6 +9,7 @@ import {
   CREATE_CACHE,
   CREATE_DEFERRED,
   CREATE_STREAMING_CACHE,
+  EXAMPLE_FETCH_WITH_STATUS,
   IS_THENNABLE,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -50,34 +51,58 @@ export default function HomeRoute() {
       <Block>
         <SubHeading title="Core API" />
         <ul>
-          <LinkListItem children="createCache" to={CREATE_CACHE} />
+          <LinkListItem children="createCache" to={CREATE_CACHE} type="code" />
           <LinkListItem
             children="createStreamingCache"
             to={CREATE_STREAMING_CACHE}
+            type="code"
           />
-          <LinkListItem children="useCacheStatus" to={USE_CACHE_STATUS} />
+          <LinkListItem
+            children="useCacheStatus"
+            to={USE_CACHE_STATUS}
+            type="code"
+          />
           <LinkListItem
             children="useStreamingValues"
             to={USE_STREAMING_CACHE}
+            type="code"
           />
         </ul>
       </Block>
       <Block>
         <SubHeading title="Low-level API" />
         <ul>
-          {/*<LinkListItem children="createInfallibleCache" to="/createInfallibleCache" />*/}
-          <LinkListItem children="createDeferred" to={CREATE_DEFERRED} />
-          <LinkListItem children="isThenable" to={IS_THENNABLE} />
-          {/*<LinkListItem children="parallelize" to="/parallelize" />*/}
+          {/*<LinkListItem children="createInfallibleCache" to="{CREATE_INFALLIBLE_CACHE} type="code" />*/}
+          <LinkListItem
+            children="createDeferred"
+            to={CREATE_DEFERRED}
+            type="code"
+          />
+          <LinkListItem children="isThenable" to={IS_THENNABLE} type="code" />
+          {/*<LinkListItem children="parallelize" to={PARALLELIZE} type="code" />*/}
+        </ul>
+      </Block>
+      <Block>
+        <SubHeading title="Examples" />
+        <ul>
+          <LinkListItem
+            children="Rendering status while fetching"
+            to={EXAMPLE_FETCH_WITH_STATUS}
+            type="plaintext"
+          />
         </ul>
       </Block>
     </Container>
   );
 }
 
-function LinkListItem({ children, to }: PropsWithChildren & { to: string }) {
+function LinkListItem({
+  children,
+  to,
+  type,
+}: PropsWithChildren & { to: string; type: "code" | "plaintext" }) {
   return (
-    <li>
+    <li className={styles.ListItem} data-type={type}>
       <Link className={styles.Link} to={to}>
         {children}
       </Link>

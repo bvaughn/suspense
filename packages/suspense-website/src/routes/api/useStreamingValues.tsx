@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 
-import Block from "../components/Block";
-import Code from "../components/Code";
-import Container from "../components/Container";
-import Header from "../components/Header";
-import { createStreamingCache } from "../examples";
-import { CREATE_STREAMING_CACHE } from "./config";
+import Block from "../../components/Block";
+import Code from "../../components/Code";
+import Container from "../../components/Container";
+import Header from "../../components/Header";
+import { createStreamingCache } from "../../examples";
+import { CREATE_STREAMING_CACHE } from "../config";
 
 export default function UseStreamingValuesRoute() {
   return (

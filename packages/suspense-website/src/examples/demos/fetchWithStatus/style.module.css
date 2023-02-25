@@ -1,0 +1,81 @@
+.App {
+  display: flex;
+  flex-direction: row;
+  font-size: 1rem;
+}
+
+.SideNav {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.ButtonRow {
+  display: flex;
+  flex-direction: row;
+  gap: 1ch;
+}
+
+.MainButton,
+.UserButton {
+  font-size: 1rem;
+  outline: none;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  transition: opacity 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+.MainButton {
+  background-color: var(--color-button-alternate-background);
+  color: var(--color-button-alternate);
+  text-align: left;
+}
+.MainButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.MainButton:not(.MainButton:disabled):hover {
+  background-color: var(--color-button-alternate-background-hover);
+}
+
+.UserButton {
+  background-color: transparent;
+  color: var(--color-button);
+  margin-right: 0.25rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1ch;
+}
+.UserButton:not(.UserButton[data-current]):hover {
+  background-color: var(--color-button-background-hover);
+}
+.UserButton[data-status="not-started"] svg {
+  color: var(--color-status-not-started);
+}
+.UserButton[data-status="pending"] svg {
+  color: var(--color-status-pending);
+}
+.UserButton[data-status="resolved"] svg {
+  color: var(--color-status-resolved);
+}
+.UserButton[data-current] {
+  margin-right: 0;
+  border-right: 0.25rem solid var(--color-button-background);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  background-color: var(--color-button-background);
+  cursor: default;
+}
+
+.Main {
+  flex: 1 1 auto;
+  background-color: var(--color-note-background);
+  color: var(--color-note);
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+}

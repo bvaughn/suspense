@@ -1,13 +1,13 @@
-import Block from "../components/Block";
-import Container from "../components/Container";
-import Code from "../components/Code";
-import { createCache } from "../examples/";
-import Header from "../components/Header";
-import SubHeading from "../components/SubHeading";
+import Block from "../../components/Block";
+import Container from "../../components/Container";
+import Code from "../../components/Code";
+import { createCache } from "../../examples";
+import Header from "../../components/Header";
+import SubHeading from "../../components/SubHeading";
 import { Link } from "react-router-dom";
-import { USE_CACHE_STATUS } from "./config";
-import Note from "../components/Note";
-import { ExternalLink } from "../components/ExternalLink";
+import { IS_THENNABLE, USE_CACHE_STATUS } from "../config";
+import Note from "../../components/Note";
+import { ExternalLink } from "../../components/ExternalLink";
 
 export default function CreateCacheRoute() {
   return (
@@ -49,7 +49,7 @@ export default function CreateCacheRoute() {
         <Code code={createCache.suspense} />
         <Note>
           Caches currently suspend by throwing{" "}
-          <Link to="/isThenable">"thenables"</Link>. This may change as the{" "}
+          <Link to={IS_THENNABLE}>"thenables"</Link>. This may change as the{" "}
           <ExternalLink to="https://github.com/reactjs/rfcs/pull/229">
             React API
           </ExternalLink>{" "}

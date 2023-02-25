@@ -1,11 +1,11 @@
-import Container from "../components/Container";
-import Code from "../components/Code";
-import Header from "../components/Header";
-import { isThenable } from "../examples";
-import Block from "../components/Block";
-import Note from "../components/Note";
-import { ExternalLink } from "../components/ExternalLink";
-import SubHeading from "../components/SubHeading";
+import Container from "../../components/Container";
+import Code from "../../components/Code";
+import Header from "../../components/Header";
+import { isThenable } from "../../examples";
+import Block from "../../components/Block";
+import Note from "../../components/Note";
+import { ExternalLink } from "../../components/ExternalLink";
+import SubHeading from "../../components/SubHeading";
 
 export default function IsThenableRoute() {
   return (

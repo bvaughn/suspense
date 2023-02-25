@@ -1,12 +1,12 @@
-import Container from "../components/Container";
-import Code from "../components/Code";
-import { createStreamingCache } from "../examples/";
-import Header from "../components/Header";
-import Block from "../components/Block";
-import SubHeading from "../components/SubHeading";
+import Container from "../../components/Container";
+import Code from "../../components/Code";
+import { createStreamingCache } from "../../examples";
+import Header from "../../components/Header";
+import Block from "../../components/Block";
+import SubHeading from "../../components/SubHeading";
 import { Link } from "react-router-dom";
-import { USE_STREAMING_CACHE } from "./config";
-import Note from "../components/Note";
+import { USE_STREAMING_CACHE } from "../config";
+import Note from "../../components/Note";
 
 export default function CreateStreamingCacheRoute() {
   return (

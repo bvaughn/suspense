@@ -1,60 +1,57 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   CREATE_CACHE,
   CREATE_DEFERRED,
   CREATE_STREAMING_CACHE,
+  EXAMPLE_FETCH_WITH_STATUS,
   IS_THENNABLE,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
 } from "./src/routes/config";
 
-import CreateCacheRoute from "./src/routes/createCache";
-import CreateDeferredRoute from "./src/routes/createDeferred";
-import CreateStreamingCacheRoute from "./src/routes/createStreamingCache";
+import CreateCacheRoute from "./src/routes/api/createCache";
+import CreateDeferredRoute from "./src/routes/api/createDeferred";
+import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
-import IsThenableRoute from "./src/routes/isThenable";
+import IsThenableRoute from "./src/routes/api/isThenable";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
-import UseCacheStatusRoute from "./src/routes/useCacheStatus";
-import UseStreamingValuesRoute from "./src/routes/useStreamingValues";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomeRoute />,
-    errorElement: <PageNotFoundRoute />,
-  },
-  {
-    path: CREATE_CACHE,
-    element: <CreateCacheRoute />,
-  },
-  {
-    path: CREATE_DEFERRED,
-    element: <CreateDeferredRoute />,
-  },
-  {
-    path: CREATE_STREAMING_CACHE,
-    element: <CreateStreamingCacheRoute />,
-  },
-  {
-    path: IS_THENNABLE,
-    element: <IsThenableRoute />,
-  },
-  {
-    path: USE_CACHE_STATUS,
-    element: <UseCacheStatusRoute />,
-  },
-  {
-    path: USE_STREAMING_CACHE,
-    element: <UseStreamingValuesRoute />,
-  },
-]);
+import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
+import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
+import FetchWithStatusRoute from "./src/routes/examples/fetchWithStatus";
+import ScrollToTop from "./src/components/ScrollToTop";
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <BrowserRouter>
+      <ScrollToTop />
+
+      <Routes>
+        <Route
+          path="/"
+          element={<HomeRoute />}
+          errorElement={<PageNotFoundRoute />}
+        />
+        <Route path={CREATE_CACHE} element={<CreateCacheRoute />} />
+        <Route path={CREATE_DEFERRED} element={<CreateDeferredRoute />} />
+        <Route
+          path={CREATE_STREAMING_CACHE}
+          element={<CreateStreamingCacheRoute />}
+        />
+        <Route
+          path={EXAMPLE_FETCH_WITH_STATUS}
+          element={<FetchWithStatusRoute />}
+        />
+        <Route path={IS_THENNABLE} element={<IsThenableRoute />} />
+        <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
+        <Route
+          path={USE_STREAMING_CACHE}
+          element={<UseStreamingValuesRoute />}
+        />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>
 );

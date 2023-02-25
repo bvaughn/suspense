@@ -70,10 +70,21 @@ const createStreamingCache = {
   ),
 };
 
+const demos = {
+  fetchWithStatus: {
+    UserStatusBadge: processExample(
+      readFileSync(
+        join(__dirname, "demos", "fetchWithStatus", "UserStatusBadge.tsx"),
+        "utf8"
+      )
+    ),
+  },
+};
+
 const isThenable = {
   util: processExample(
     readFileSync(join(__dirname, "isThenable", "util.ts"), "utf8")
   ),
 };
 
-export { createCache, createDeferred, createStreamingCache, isThenable };
+export { createCache, createDeferred, createStreamingCache, demos, isThenable };
