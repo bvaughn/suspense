@@ -1,4 +1,4 @@
-import { createStreamingCache, StreamingProgressNotifier } from "suspense";
+import { createStreamingCache, StreamingCacheLoadOptions } from "suspense";
 
 class ApiClient {
   async fetchComments(
@@ -19,14 +19,14 @@ export const userCommentsCache = createStreamingCache<
 >(
   // In this example, comments are fetched using a "client" object
   async (
-    notifier: StreamingProgressNotifier<string>,
+    { resolve, update }: StreamingCacheLoadOptions<string>,
     client: ApiClient,
     id: string
   ) =>
     client.fetchComments(
       id,
-      (comments: Comment[]) => notifier.update(comments),
-      () => notifier.resolve()
+      (comments: Comment[]) => update(comments),
+      () => resolve()
     ),
 
   // The id parameter is sufficiently unique to be the key

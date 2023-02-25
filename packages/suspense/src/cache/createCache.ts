@@ -7,6 +7,7 @@ import {
 import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
+  CacheLoadOptions,
   Record,
   Status,
   StatusCallback,
@@ -15,14 +16,31 @@ import {
 } from "../types";
 import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
+import { isPendingRecord } from "../utils/isPendingRecord";
 
 export function createCache<Params extends Array<any>, Value>(
-  load: (...params: Params) => Thenable<Value> | Value,
+  load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value,
   getKey: (...params: Params) => string = defaultGetKey,
   debugLabel?: string
 ): Cache<Params, Value> {
   const recordMap = new Map<string, Record<Value>>();
   const subscriberMap = new Map<string, Set<StatusCallback>>();
+
+  function abort(...params: Params): boolean {
+    const cacheKey = getKey(...params);
+    const record = recordMap.get(cacheKey);
+    if (record && isPendingRecord(record)) {
+      recordMap.delete(cacheKey);
+
+      record.value.abortController.abort();
+
+      notifySubscribers(...params);
+
+      return true;
+    }
+
+    return false;
+  }
 
   function cache(value: Value, ...params: Params): void {
     const cacheKey = getKey(...params);
@@ -45,26 +63,30 @@ export function createCache<Params extends Array<any>, Value>(
 
     let record = recordMap.get(cacheKey);
     if (record == null) {
+      const abortController = new AbortController();
       const deferred = createDeferred<Value>(
         debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
       );
 
       record = {
         status: STATUS_PENDING,
-        value: deferred,
+        value: {
+          abortController,
+          deferred,
+        },
       } as Record<Value>;
 
       recordMap.set(cacheKey, record);
 
       notifySubscribers(...params);
 
-      processPendingRecord(record, ...params);
+      processPendingRecord(abortController.signal, record, ...params);
     }
 
     return record;
   }
 
-  function getStatus(...params: Params): Status | undefined {
+  function getStatus(...params: Params): Status {
     const cacheKey = getKey(...params);
     const record = recordMap.get(cacheKey);
 
@@ -101,12 +123,11 @@ export function createCache<Params extends Array<any>, Value>(
     const record = getOrCreateRecord(...params);
     switch (record.status) {
       case STATUS_PENDING:
-      case STATUS_RESOLVED: {
+        return record.value.deferred;
+      case STATUS_RESOLVED:
         return record.value;
-      }
-      case STATUS_REJECTED: {
+      case STATUS_REJECTED:
         throw record.value;
-      }
     }
   }
 
@@ -114,6 +135,8 @@ export function createCache<Params extends Array<any>, Value>(
     const record = getOrCreateRecord(...params);
     if (record.status === STATUS_RESOLVED) {
       return record.value;
+    } else if (isPendingRecord(record)) {
+      throw record.value.deferred;
     } else {
       throw record.value;
     }
@@ -131,30 +154,37 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   async function processPendingRecord(
+    abortSignal: AbortSignal,
     record: Record<Value>,
     ...params: Params
   ) {
     assertPendingRecord(record);
 
-    const deferred = record.value;
+    const { abortController, deferred } = record.value;
 
     try {
-      const valueOrThenable = load(...params);
+      const valueOrThenable = load(...params, abortController);
       const value = isThenable(valueOrThenable)
         ? await valueOrThenable
         : valueOrThenable;
 
-      record.status = STATUS_RESOLVED;
-      record.value = value;
+      if (!abortSignal.aborted) {
+        record.status = STATUS_RESOLVED;
+        record.value = value;
 
-      deferred.resolve(value);
+        deferred.resolve(value);
+      }
     } catch (error) {
-      record.status = STATUS_REJECTED;
-      record.value = error;
+      if (!abortSignal.aborted) {
+        record.status = STATUS_REJECTED;
+        record.value = error;
 
-      deferred.reject(error);
+        deferred.reject(error);
+      }
     } finally {
-      notifySubscribers(...(params as unknown as Params));
+      if (!abortSignal.aborted) {
+        notifySubscribers(...(params as unknown as Params));
+      }
     }
   }
 
@@ -186,6 +216,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   return {
+    abort,
     cache,
     evict,
     getStatus,

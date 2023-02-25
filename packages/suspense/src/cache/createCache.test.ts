@@ -5,12 +5,13 @@ import {
   STATUS_RESOLVED,
 } from "../constants";
 import { createCache } from "./createCache";
-import { Cache } from "../types";
+import { Cache, Deferred, CacheLoadOptions } from "../types";
 import { isThenable } from "../utils/isThenable";
+import { createDeferred } from "../utils/createDeferred";
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [string]>;
+  let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [string]>;
 
   beforeEach(() => {
@@ -32,12 +33,73 @@ describe("createCache", () => {
   });
 
   it("should supply a working default getCacheKey if none is provided", () => {
-    const cache = createCache<[string, number, boolean], string>(fetch);
+    const cache = createCache<[string, number, boolean], string>(
+      (string: string, number: number, boolean: boolean) => string
+    );
     cache.cache("foo", "string", 123, true);
     cache.cache("bar", "other string", 456, false);
 
     expect(cache.getValueIfCached("string", 123, true)).toEqual("foo");
     expect(cache.getValueIfCached("other string", 456, false)).toEqual("bar");
+  });
+
+  describe("abort", () => {
+    it("should abort an active request", () => {
+      let abortSignal: AbortSignal | null = null;
+      let deferred: Deferred<string> | null = null;
+      fetch.mockImplementation(async (...args) => {
+        abortSignal = args[1].signal;
+        deferred = createDeferred();
+        return deferred;
+      });
+
+      cache.fetchAsync("async");
+      expect(cache.getStatus("async")).toBe(STATUS_PENDING);
+
+      expect(cache.abort("async")).toBe(true);
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+
+      expect(abortSignal.aborted).toBe(true);
+
+      deferred!.resolve("async");
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+    });
+
+    it("should restart an aborted request on next fetch", async () => {
+      let deferred: Deferred<string> | null = null;
+      fetch.mockImplementation(async () => {
+        deferred = createDeferred();
+        return deferred;
+      });
+
+      cache.fetchAsync("async");
+      expect(cache.getStatus("async")).toBe(STATUS_PENDING);
+
+      const initialDeferred = deferred;
+
+      expect(cache.abort("async")).toBe(true);
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+
+      const fetchTwo = cache.fetchAsync("async");
+      expect(cache.getStatus("async")).toBe(STATUS_PENDING);
+      expect(fetch).toHaveBeenCalled();
+
+      // At this point, even if the first request completes– it should be ignored.
+      initialDeferred!.resolve("async");
+      expect(cache.getStatus("async")).toBe(STATUS_PENDING);
+
+      // But the second request should be processed.
+      deferred!.resolve("async");
+      await fetchTwo;
+      expect(cache.getStatus("async")).toBe(STATUS_RESOLVED);
+    });
+
+    it("should gracefully handle an abort request for a completed fetch", () => {
+      cache.fetchAsync("sync");
+      expect(cache.getStatus("sync")).toBe(STATUS_RESOLVED);
+
+      expect(cache.abort("sync")).toBe(false);
+    });
   });
 
   describe("cache", () => {
@@ -224,7 +286,21 @@ describe("createCache", () => {
   });
 
   describe("prefetch", () => {
-    // TODO
+    it("should start fetching a resource", async () => {
+      cache.prefetch("sync-1");
+
+      fetch.mockReset();
+
+      // Verify value already loaded
+      cache.fetchAsync("sync-1");
+      expect(fetch).not.toHaveBeenCalled();
+      expect(cache.getValue("sync-1")).toEqual("sync-1");
+
+      // Verify other values fetch independently
+      cache.fetchAsync("sync-2");
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.lastCall[0]).toEqual("sync-2");
+    });
   });
 
   describe("subscribeToStatus", () => {

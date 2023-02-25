@@ -1,8 +1,13 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_ABORTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { createDeferred } from "../utils/createDeferred";
 import {
   StreamingCache,
-  StreamingProgressNotifier,
+  StreamingCacheLoadOptions,
   StreamingSubscribeCallback,
   StreamingValues,
 } from "../types";
@@ -13,14 +18,26 @@ export function createStreamingCache<
   Value,
   AdditionalData = undefined
 >(
-  load: (notifier: StreamingProgressNotifier<Value>, ...params: Params) => void,
+  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void,
   getKey: (...params: Params) => string = defaultGetKey,
   debugLabel?: string
 ): StreamingCache<Params, Value, AdditionalData> {
+  const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
     string,
     StreamingValues<Value, AdditionalData>
   >();
+
+  function abort(...params: Params): boolean {
+    const cacheKey = getKey(...params);
+    let abortController = abortControllerMap.get(cacheKey);
+    if (abortController != null) {
+      abortController.abort();
+      return true;
+    }
+
+    return false;
+  }
 
   function evict(...params: Params) {
     const cacheKey = getKey(...params);
@@ -64,15 +81,34 @@ export function createStreamingCache<
         });
       };
 
-      const assertIncomplete = () => {
-        if (streamingValues.complete) {
-          throw Error(`Stream has already been ${streamingValues.status}`);
+      const assertPending = () => {
+        if (streamingValues.status !== STATUS_PENDING) {
+          throw Error(
+            `Stream with status "${streamingValues.status}" cannot be updated`
+          );
         }
       };
 
-      const notifier: StreamingProgressNotifier<Value, AdditionalData> = {
+      const abortController = new AbortController();
+      abortController.signal.addEventListener("abort", () => {
+        if (streamingValues.complete) {
+          return false;
+        }
+
+        streamingValues.status = STATUS_ABORTED;
+
+        streamingValuesMap.delete(cacheKey);
+
+        notifySubscribers();
+
+        resolver.resolve();
+      });
+
+      abortControllerMap.set(cacheKey, abortController);
+
+      const options: StreamingCacheLoadOptions<Value, AdditionalData> = {
         update: (values: Value[], progress?: number, data?: AdditionalData) => {
-          assertIncomplete();
+          assertPending();
 
           streamingValues.data = data;
 
@@ -94,7 +130,7 @@ export function createStreamingCache<
           notifySubscribers();
         },
         resolve: () => {
-          assertIncomplete();
+          assertPending();
 
           streamingValues.complete = true;
           streamingValues.progress = 1;
@@ -105,7 +141,7 @@ export function createStreamingCache<
           resolver.resolve(streamingValues);
         },
         reject: (error: Error) => {
-          assertIncomplete();
+          assertPending();
 
           streamingValues.complete = true;
           streamingValues.status = STATUS_REJECTED;
@@ -114,11 +150,12 @@ export function createStreamingCache<
 
           resolver.reject(error);
         },
+        signal: abortController.signal,
       };
 
       streamingValuesMap.set(cacheKey, streamingValues);
 
-      loadAndCatchErrors(streamingValues, notifier, ...params);
+      loadAndCatchErrors(cacheKey, streamingValues, options, ...params);
 
       return streamingValues;
     }
@@ -135,20 +172,24 @@ export function createStreamingCache<
   }
 
   async function loadAndCatchErrors(
+    cacheKey: string,
     streamingValues: StreamingValues<Value, AdditionalData>,
-    notifier: StreamingProgressNotifier<Value, AdditionalData>,
+    options: StreamingCacheLoadOptions<Value, AdditionalData>,
     ...params: Params
   ) {
     try {
-      await load(notifier, ...params);
+      await load(options, ...params);
     } catch (error) {
       if (streamingValues.status === STATUS_PENDING) {
-        notifier.reject(error);
+        options.reject(error);
       }
+    } finally {
+      abortControllerMap.delete(cacheKey);
     }
   }
 
   return {
+    abort,
     evict,
     prefetch,
     stream,
