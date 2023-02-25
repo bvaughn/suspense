@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.7
+* `createCache` and `createStreamingCache` add support for cancellation via [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+
 ## 0.0.6
 * `createStreamingCache` catches errors and automatically rejects a pending streaming value.
 

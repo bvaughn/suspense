@@ -11,6 +11,9 @@ function processExample(text: string): string {
 }
 
 const createCache = {
+  abort: processExample(
+    readFileSync(join(__dirname, "createCache", "abort.ts"), "utf8")
+  ),
   async: processExample(
     readFileSync(join(__dirname, "createCache", "async.ts"), "utf8")
   ),
@@ -19,6 +22,9 @@ const createCache = {
   ),
   cacheWithKey: processExample(
     readFileSync(join(__dirname, "createCache", "cacheWithKey.ts"), "utf8")
+  ),
+  cacheWithSignal: processExample(
+    readFileSync(join(__dirname, "createCache", "cacheWithSignal.ts"), "utf8")
   ),
   evict: processExample(
     readFileSync(join(__dirname, "createCache", "evict.ts"), "utf8")
@@ -50,12 +56,21 @@ const createDeferred = {
 };
 
 const createStreamingCache = {
+  abort: processExample(
+    readFileSync(join(__dirname, "createStreamingCache", "abort.ts"), "utf8")
+  ),
   cache: processExample(
     readFileSync(join(__dirname, "createStreamingCache", "cache.ts"), "utf8")
   ),
   cacheWithKey: processExample(
     readFileSync(
       join(__dirname, "createStreamingCache", "cacheWithKey.ts"),
+      "utf8"
+    )
+  ),
+  cacheWithSignal: processExample(
+    readFileSync(
+      join(__dirname, "createStreamingCache", "cacheWithSignal.ts"),
       "utf8"
     )
   ),

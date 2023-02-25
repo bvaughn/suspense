@@ -31,6 +31,7 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
       value.complete !== streamingValues.complete ||
       value.data !== streamingValues.data ||
       value.progress !== streamingValues.progress ||
+      value.status !== streamingValues.status ||
       value.values !== streamingValues.values
     ) {
       ref.current = {
@@ -47,7 +48,9 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
 
   const throttledSubscribe = useCallback(
     (callback: () => void) => {
-      const callbackWrapper = throttle(callback, throttleUpdatesBy);
+      const callbackWrapper = throttle(() => {
+        callback();
+      }, throttleUpdatesBy);
 
       return streamingValues.subscribe(callbackWrapper);
     },

@@ -7,6 +7,7 @@ import SubHeading from "../../components/SubHeading";
 import { Link } from "react-router-dom";
 import { USE_STREAMING_CACHE } from "../config";
 import Note from "../../components/Note";
+import { ExternalLink } from "../../components/ExternalLink";
 
 export default function CreateStreamingCacheRoute() {
   return (
@@ -58,6 +59,24 @@ export default function CreateStreamingCacheRoute() {
           Evicting cache values does not currently schedule an update with
           React.
         </Note>
+      </Block>
+      <Block>
+        <SubHeading title="Aborting a request" />
+        <p>
+          In-progress requests can be cancelled using an{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
+              AbortSignal
+            </ExternalLink>
+          </code>{" "}
+          so long as the load function supports it.
+        </p>
+        <Code code={createStreamingCache.cacheWithSignal} />
+        <p>
+          Requests can be aborted anywhere that side effects are permitted (e.g.
+          event handlers, effect cleanup functions).
+        </p>
+        <Code code={createStreamingCache.abort} />
       </Block>
     </Container>
   );

@@ -12,12 +12,13 @@ import {
   STATUS_RESOLVED,
 } from "../constants";
 import { createCache } from "../cache/createCache";
-import { Cache, Status } from "../types";
+import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { useCacheStatus } from "./useCacheStatus";
+import { createDeferred } from "../utils/createDeferred";
 
 describe("useCacheStatus", () => {
   let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [string]>;
+  let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [string]>;
   let lastRenderedStatus: Status | undefined = undefined;
 
@@ -116,5 +117,35 @@ describe("useCacheStatus", () => {
       root.render(<Component string="error" />);
     });
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
+  });
+
+  it("should update in response to an aborted request", async () => {
+    let abortSignal: AbortSignal | null = null;
+    let deferred: Deferred<string> | null = null;
+    fetch.mockImplementation(async (...args) => {
+      abortSignal = args[1].signal;
+      deferred = createDeferred();
+      return deferred;
+    });
+
+    cache.fetchAsync("async");
+    expect(cache.getStatus("async")).toBe(STATUS_PENDING);
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component string="async" />);
+    });
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    act(() => {
+      expect(cache.abort("async")).toBe(true);
+    });
+    expect(abortSignal.aborted).toBe(true);
+
+    await Promise.resolve();
+
+    expect(lastRenderedStatus).toBe(STATUS_NOT_STARTED);
   });
 });

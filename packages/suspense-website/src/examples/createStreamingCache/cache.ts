@@ -1,7 +1,7 @@
 type Comment = any;
 type Message = any;
 // REMOVE_BEFORE
-import { createStreamingCache, StreamingProgressNotifier } from "suspense";
+import { createStreamingCache, StreamingCacheLoadOptions } from "suspense";
 
 const socket = new WebSocket(`ws://example.com`);
 
@@ -10,13 +10,16 @@ export const userCommentsCache = createStreamingCache<
   Comment
 >(
   // Stream data for params
-  async (notifier: StreamingProgressNotifier<Comment>, userId: string) => {
+  async (
+    { reject, update, resolve }: StreamingCacheLoadOptions<Comment>,
+    userId: string
+  ) => {
     let countLoaded = 0;
     let countTotal = 0;
 
     socket.onerror = (error) => {
       // If loading fails, notify the cache
-      notifier.reject(error);
+      reject(error);
     };
 
     socket.onmessage = (event) => {
@@ -31,11 +34,11 @@ export const userCommentsCache = createStreamingCache<
             countLoaded += data.comments.length;
 
             // When new data streams in, notify the cache
-            notifier.update(data.comments, countLoaded / countTotal);
+            update(data.comments, countLoaded / countTotal);
             break;
           case "complete":
             // Once loading has finished, notify the cache
-            notifier.resolve();
+            resolve();
             break;
         }
       }

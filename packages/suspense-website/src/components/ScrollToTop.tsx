@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 export default function ScrollToTop(): null {
-  const location = useLocation();
+  const { hash } = useLocation();
   const navigationType = useNavigationType();
 
   useEffect(() => {
@@ -16,16 +16,16 @@ export default function ScrollToTop(): null {
     }
 
     // In all other cases, check fragment/scroll to top
-    let hash = location.hash;
     if (hash) {
       let element = document.querySelector(hash);
+      console.log("found element:", element);
       if (element) {
         element.scrollIntoView({ block: "start", behavior: "smooth" });
       }
     } else {
       window.scrollTo(0, 0);
     }
-  }, [location, navigationType]);
+  }, [hash, navigationType]);
 
   return null;
 }

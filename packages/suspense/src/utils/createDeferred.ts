@@ -8,7 +8,7 @@ let MAX_LOOP_COUNT = 1_000;
 //
 // A "deferred" is a "thenable" that has convenience resolve/reject methods.
 export function createDeferred<T>(debugLabel?: string): Deferred<T> {
-  const resolveCallbacks: Set<(value: T) => void> = new Set();
+  const resolveCallbacks: Set<(value?: T) => void> = new Set();
   const rejectCallbacks: Set<(error: Error) => void> = new Set();
 
   let status: "unresolved" | "resolved" | "rejected" = "unresolved";
@@ -30,7 +30,7 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
 
   const deferred: Deferred<T> = {
     then(
-      resolveCallback: (value: T) => void,
+      resolveCallback: (value?: T) => void,
       rejectCallback: (error: Error) => void
     ) {
       switch (status) {
@@ -73,7 +73,7 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
       rejectCallbacks.clear();
       resolveCallbacks.clear();
     },
-    resolve(value: T) {
+    resolve(value?: T) {
       if (status !== "unresolved") {
         throw Error(`Deferred has already been ${status}`);
       }

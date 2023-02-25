@@ -5,8 +5,12 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createStreamingCache } from "../cache/createStreamingCache";
-import { STATUS_PENDING, STATUS_RESOLVED } from "../constants";
-import { StreamingCache, StreamingProgressNotifier } from "../types";
+import { STATUS_ABORTED, STATUS_PENDING, STATUS_RESOLVED } from "../constants";
+import {
+  StreamingCache,
+  StreamingCacheLoadOptions,
+  StreamingValues,
+} from "../types";
 import {
   StreamingValuesPartial,
   useStreamingValues,
@@ -14,18 +18,18 @@ import {
 
 describe("useStreamingValue", () => {
   let cache: StreamingCache<[string], string>;
-  let notifiers: Map<string, StreamingProgressNotifier<string, any>>;
+  let optionsMap: Map<string, StreamingCacheLoadOptions<string, any>>;
   let lastRendered: StreamingValuesPartial<string, undefined> | undefined =
     undefined;
 
   function Component({
-    string,
+    streaming,
     throttleUpdatesBy,
   }: {
-    string: string;
+    streaming: StreamingValues<string>;
     throttleUpdatesBy?: number;
   }): any {
-    lastRendered = useStreamingValues(cache.stream(string), {
+    lastRendered = useStreamingValues(streaming, {
       throttleUpdatesBy,
     });
     return null;
@@ -37,25 +41,27 @@ describe("useStreamingValue", () => {
 
     jest.useFakeTimers();
 
-    notifiers = new Map();
+    optionsMap = new Map();
 
-    cache = createStreamingCache((notifier, key) => {
-      notifiers.set(key, notifier);
+    cache = createStreamingCache((options, key) => {
+      optionsMap.set(key, options);
     });
   });
 
   it("should re-render as values stream in", () => {
+    const streaming = cache.stream("test");
+
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
-      root.render(<Component string="test" throttleUpdatesBy={0} />);
+      root.render(<Component streaming={streaming} throttleUpdatesBy={0} />);
     });
 
     expect(lastRendered?.values).toEqual(undefined);
 
-    const notifier = notifiers.get("test")!;
+    const options = optionsMap.get("test")!;
     act(() => {
-      notifier.update(["a", "b"], 0.5);
+      options.update(["a", "b"], 0.5);
     });
     expect(lastRendered).toEqual({
       complete: false,
@@ -66,8 +72,8 @@ describe("useStreamingValue", () => {
     });
 
     act(() => {
-      notifier.update(["c", "d"], 1);
-      notifier.resolve();
+      options.update(["c", "d"], 1);
+      options.resolve();
     });
     expect(lastRendered).toEqual({
       complete: true,
@@ -79,29 +85,33 @@ describe("useStreamingValue", () => {
   });
 
   it("should throttle updates to avoid overwhelming React's scheduler", () => {
+    const streaming = cache.stream("test");
+
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
-      root.render(<Component string="test" throttleUpdatesBy={1_000} />);
+      root.render(
+        <Component streaming={streaming} throttleUpdatesBy={1_000} />
+      );
     });
 
     expect(lastRendered?.values).toEqual(undefined);
 
-    const notifier = notifiers.get("test")!;
+    const options = optionsMap.get("test")!;
     act(() => {
-      notifier.update(["a"], 0.25);
+      options.update(["a"], 0.25);
     });
     expect(lastRendered.values).toEqual(["a"]);
 
     act(() => {
-      notifier.update(["b"], 0.5);
+      options.update(["b"], 0.5);
     });
     expect(lastRendered.values).toEqual(["a"]);
 
     jest.advanceTimersByTime(500);
 
     act(() => {
-      notifier.update(["c"], 0.75);
+      options.update(["c"], 0.75);
     });
     expect(lastRendered.values).toEqual(["a"]);
 
@@ -110,5 +120,24 @@ describe("useStreamingValue", () => {
     });
 
     expect(lastRendered.values).toEqual(["a", "b", "c"]);
+  });
+
+  it("should update in response to an aborted request", async () => {
+    const streaming = cache.stream("test");
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component streaming={streaming} />);
+    });
+    expect(lastRendered?.status).toEqual(STATUS_PENDING);
+
+    act(() => {
+      cache.abort("test");
+    });
+
+    jest.runAllTimers();
+
+    expect(lastRendered?.status).toEqual(STATUS_ABORTED);
   });
 });

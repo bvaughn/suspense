@@ -1,26 +1,32 @@
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_ABORTED,
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { createStreamingCache } from "./createStreamingCache";
-import { StreamingCache, StreamingProgressNotifier } from "../types";
+import { StreamingCache, StreamingCacheLoadOptions } from "../types";
 
 describe("createStreamingCache", () => {
   let cache: StreamingCache<[string], string>;
   let getCacheKey: jest.Mock<string, [string]>;
   let fetch: jest.Mock<
     void,
-    [notifier: StreamingProgressNotifier<string>, key: string]
+    [options: StreamingCacheLoadOptions<string>, key: string]
   >;
-  let notifiers: Map<string, StreamingProgressNotifier<string, any>>;
+  let optionsMap: Map<string, StreamingCacheLoadOptions<string, any>>;
 
   beforeEach(() => {
-    notifiers = new Map();
+    optionsMap = new Map();
 
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation((key: string) => key);
 
     fetch = jest.fn();
     fetch.mockImplementation(
-      (notifier: StreamingProgressNotifier<string>, key: string) => {
-        notifiers.set(key, notifier);
+      (options: StreamingCacheLoadOptions<string>, key: string) => {
+        optionsMap.set(key, options);
       }
     );
 
@@ -49,13 +55,63 @@ describe("createStreamingCache", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  describe("abort", () => {
+    it("should abort an active request", async () => {
+      const streaming = cache.stream("string");
+      expect(streaming.status).toBe(STATUS_PENDING);
+
+      const options = optionsMap.get("string")!;
+      options.update(["a"], 1);
+
+      expect(cache.abort("string")).toBe(true);
+      expect(streaming.status).toBe(STATUS_ABORTED);
+      expect(options.signal.aborted).toBe(true);
+
+      expect(options.resolve).toThrow();
+      await Promise.resolve();
+      expect(streaming.status).toBe(STATUS_ABORTED);
+    });
+
+    it("should restart an aborted request on next stream request", async () => {
+      const streamingA = cache.stream("string");
+      expect(streamingA.status).toBe(STATUS_PENDING);
+
+      const optionsA = optionsMap.get("string")!;
+      expect(cache.abort("string")).toBe(true);
+      expect(streamingA.status).toBe(STATUS_ABORTED);
+      expect(optionsA.signal.aborted).toBe(true);
+
+      expect(optionsA.resolve).toThrow();
+      await Promise.resolve();
+      expect(streamingA.status).toBe(STATUS_ABORTED);
+
+      const streamingB = cache.stream("string");
+      expect(streamingB.status).toBe(STATUS_PENDING);
+      expect(fetch).toHaveBeenCalled();
+    });
+
+    it("should gracefully handle an abort request for a completed fetch", async () => {
+      const streaming = cache.stream("string");
+
+      const options = optionsMap.get("string")!;
+      options.update(["a"], 1);
+      options.resolve();
+
+      await Promise.resolve();
+
+      expect(streaming.status).toBe(STATUS_RESOLVED);
+
+      expect(cache.abort("string")).toBe(false);
+    });
+  });
+
   describe("evict", () => {
     it("should remove cached values", async () => {
       cache.stream("string");
 
-      const notifier = notifiers.get("string")!;
-      notifier.update(["a"], 1);
-      notifier.resolve();
+      const options = optionsMap.get("string")!;
+      options.update(["a"], 1);
+      options.resolve();
 
       // Verify value has been cached
       let streaming = cache.stream("string");
@@ -74,12 +130,12 @@ describe("createStreamingCache", () => {
   });
 
   describe("prefetch", () => {
-    it("test", async () => {
+    it("should start fetching a resource", async () => {
       cache.prefetch("string-1");
 
-      const notifier = notifiers.get("string-1")!;
-      notifier.update(["a"], 1);
-      notifier.resolve();
+      const options = optionsMap.get("string-1")!;
+      options.update(["a"], 1);
+      options.resolve();
 
       fetch.mockReset();
 
@@ -106,22 +162,22 @@ describe("createStreamingCache", () => {
       const subscription = jest.fn();
       streaming.subscribe(subscription);
 
-      const notifier = notifiers.get("string")!;
-      notifier.update(["a", "b"], 0.66);
+      const options = optionsMap.get("string")!;
+      options.update(["a", "b"], 0.66);
       expect(subscription).toHaveBeenCalledTimes(1);
       expect(streaming.complete).toEqual(false);
       expect(streaming.progress).toEqual(0.66);
       expect(streaming.status).toEqual(STATUS_PENDING);
       expect(streaming.values).toEqual(["a", "b"]);
 
-      notifier.update(["c"], 1);
+      options.update(["c"], 1);
       expect(subscription).toHaveBeenCalledTimes(2);
       expect(streaming.complete).toEqual(false);
       expect(streaming.progress).toEqual(1);
       expect(streaming.status).toEqual(STATUS_PENDING);
       expect(streaming.values).toEqual(["a", "b", "c"]);
 
-      notifier.resolve();
+      options.resolve();
       expect(subscription).toHaveBeenCalledTimes(3);
       expect(streaming.complete).toEqual(true);
       expect(streaming.progress).toEqual(1);
@@ -138,29 +194,25 @@ describe("createStreamingCache", () => {
       const subscription = jest.fn();
       streaming.subscribe(subscription);
 
-      const notifier = notifiers.get("string")!;
-      notifier.update(["a"]);
+      const options = optionsMap.get("string")!;
+      options.update(["a"]);
       expect(subscription).toHaveBeenCalledTimes(1);
       expect(streaming.complete).toEqual(false);
       expect(streaming.progress).toBeUndefined();
       expect(streaming.status).toEqual(STATUS_PENDING);
       expect(streaming.values).toEqual(["a"]);
 
-      notifier.reject("Expected");
+      options.reject("Expected");
       expect(subscription).toHaveBeenCalledTimes(2);
       expect(streaming.complete).toEqual(true);
       expect(streaming.progress).toBeUndefined();
       expect(streaming.status).toEqual(STATUS_REJECTED);
       expect(streaming.values).toEqual(["a"]);
 
-      expect(() => {
-        notifier.update(["a"]);
-      }).toThrow("already been rejected");
+      expect(() => options.update(["a"])).toThrow();
       expect(subscription).toHaveBeenCalledTimes(2);
 
-      expect(() => {
-        notifier.resolve();
-      }).toThrow("already been rejected");
+      expect(options.resolve).toThrow();
       expect(subscription).toHaveBeenCalledTimes(2);
     });
 
@@ -182,14 +234,14 @@ describe("createStreamingCache", () => {
 
       cache.stream("string");
 
-      const notifier = notifiers.get("string")!;
-      notifier.update([], -1);
+      const options = optionsMap.get("string")!;
+      options.update([], -1);
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
         "Invalid progress: -1; value must be between 0-1."
       );
 
-      notifier.update([], 2);
+      options.update([], 2);
       expect(console.warn).toHaveBeenCalledTimes(2);
       expect(console.warn).toHaveBeenCalledWith(
         "Invalid progress: 2; value must be between 0-1."
@@ -199,9 +251,9 @@ describe("createStreamingCache", () => {
     it("caches values so they are only streamed once", () => {
       cache.stream("string");
 
-      const notifier = notifiers.get("string")!;
-      notifier.update(["a", "b"], -1);
-      notifier.resolve();
+      const options = optionsMap.get("string")!;
+      options.update(["a", "b"], -1);
+      options.resolve();
 
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(fetch.mock.lastCall[1]).toEqual("string");
@@ -217,8 +269,8 @@ describe("createStreamingCache", () => {
       const streamingA = cache.stream("a");
       const streamingB = cache.stream("b");
 
-      const notifierA = notifiers.get("a")!;
-      const notifierB = notifiers.get("b")!;
+      const optionsA = optionsMap.get("a")!;
+      const optionsB = optionsMap.get("b")!;
 
       const subscriptionA = jest.fn();
       const subscriptionB = jest.fn();
@@ -229,13 +281,13 @@ describe("createStreamingCache", () => {
       expect(subscriptionA).not.toHaveBeenCalled();
       expect(subscriptionB).not.toHaveBeenCalled();
 
-      notifierA.update(["a", "b"], 0.5);
+      optionsA.update(["a", "b"], 0.5);
 
       expect(subscriptionA).toHaveBeenCalledTimes(1);
       expect(subscriptionB).not.toHaveBeenCalled();
 
-      notifierB.update(["a", "b"], 0.5);
-      notifierB.update(["c", "d"], 1);
+      optionsB.update(["a", "b"], 0.5);
+      optionsB.update(["c", "d"], 1);
 
       expect(subscriptionA).toHaveBeenCalledTimes(1);
       expect(subscriptionB).toHaveBeenCalledTimes(2);
@@ -260,26 +312,26 @@ describe("createStreamingCache", () => {
       const subscription = jest.fn();
       const unsubscribe = streaming.subscribe(subscription);
 
-      const notifier = notifiers.get("string")!;
-      notifier.update(["a"]);
+      const options = optionsMap.get("string")!;
+      options.update(["a"]);
       expect(subscription).toHaveBeenCalledTimes(1);
 
       unsubscribe();
 
-      notifier.update(["b"]);
-      notifier.resolve();
+      options.update(["b"]);
+      options.resolve();
 
       expect(subscription).toHaveBeenCalledTimes(1);
     });
 
     it("should support additional data passed by the fetcher", () => {
       const streaming = cache.stream("string");
-      const notifier = notifiers.get("string")!;
+      const options = optionsMap.get("string")!;
 
-      notifier.update(["a"], 0.5, { data: 1 });
+      options.update(["a"], 0.5, { data: 1 });
       expect(streaming.data).toEqual({ data: 1 });
 
-      notifier.update(["b"], 1, { data: 2 });
+      options.update(["b"], 1, { data: 2 });
       expect(streaming.data).toEqual({ data: 2 });
     });
   });

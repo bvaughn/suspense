@@ -1,4 +1,5 @@
 import {
+  STATUS_ABORTED,
   STATUS_NOT_STARTED,
   STATUS_PENDING,
   STATUS_REJECTED,
@@ -7,18 +8,23 @@ import {
 
 export type StatusNotStarted = typeof STATUS_NOT_STARTED;
 export type StatusPending = typeof STATUS_PENDING;
+export type StatusAborted = typeof STATUS_ABORTED;
 export type StatusRejected = typeof STATUS_REJECTED;
 export type StatusResolved = typeof STATUS_RESOLVED;
 
 export type Status =
   | StatusNotStarted
   | StatusPending
+  | StatusAborted
   | StatusRejected
   | StatusResolved;
 
 export type PendingRecord<T> = {
   status: StatusPending;
-  value: Deferred<T>;
+  value: {
+    abortController: AbortController;
+    deferred: Deferred<T>;
+  };
 };
 
 export type ResolvedRecord<T> = {
@@ -34,15 +40,16 @@ export type RejectedRecord = {
 export type Record<T> = PendingRecord<T> | ResolvedRecord<T> | RejectedRecord;
 
 export type StreamingSubscribeCallback = () => void;
-export type StatusCallback = (status: Status | undefined) => void;
+export type StatusCallback = (status: Status) => void;
 export type UnsubscribeCallback = () => void;
 
 // This type defines the subset of the Promise API that React uses (the .then method to add success/error callbacks).
 // You can use a Promise for this, but Promises have a downside (the microtask queue).
 // You can also create your own "thenable" if you want to support synchronous resolution/rejection.
+// Note that if a thenable is rejected, its onFulfill callback will be called with undefined.
 export interface Thenable<T> {
   then(
-    onFulfill: (value: T) => any,
+    onFulfill: (value?: T) => any,
     onReject?: (err: any) => any
   ): void | Thenable<T>;
 }
@@ -51,13 +58,14 @@ export interface Thenable<T> {
 // Adds the ability to resolve or reject a pending Thenable.
 export interface Deferred<T> extends Thenable<T> {
   reject(error: any): void;
-  resolve(value: T): void;
+  resolve(value?: T): void;
 }
 
 export interface Cache<Params extends Array<any>, Value> {
+  abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
   evict(...params: Params): boolean;
-  getStatus(...params: Params): Status | undefined;
+  getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
   fetchAsync(...params: Params): Thenable<Value> | Value;
@@ -72,6 +80,10 @@ export interface Cache<Params extends Array<any>, Value> {
 export type RejectRange = (error: Error) => void;
 export type ResolveRange<Value> = (values: Value[]) => void;
 
+export type CacheLoadOptions = {
+  signal: AbortSignal;
+};
+
 // export interface RangeCache<Range, Params extends Array<any>, Value> {
 // }
 
@@ -85,10 +97,11 @@ export interface StreamingValues<Value, AdditionalData = undefined> {
   values: Value[] | undefined;
 }
 
-export interface StreamingProgressNotifier<Value, AdditionalData = undefined> {
+export interface StreamingCacheLoadOptions<Value, AdditionalData = undefined> {
   update: (values: Value[], progress?: number, data?: AdditionalData) => void;
   resolve: () => void;
   reject: (error: any) => void;
+  signal: AbortSignal;
 }
 
 export interface StreamingCache<
@@ -96,6 +109,7 @@ export interface StreamingCache<
   Value,
   AdditionalData = undefined
 > {
+  abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   prefetch(...params: Params): void;
   stream(...params: Params): StreamingValues<Value, AdditionalData>;
