@@ -2,7 +2,7 @@
   background-color: var(--color-background-code);
   color: var(--color-default);
   display: inline-block;
-  white-space: pre;
+  white-space: pre-wrap;
   border-radius: 0.5rem;
   padding: 0.25rem 0.5rem;
   overflow-x: auto;
