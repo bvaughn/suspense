@@ -1,8 +1,8 @@
-name: "Tests: E2E"
+name: "Jest unit tests"
 on: [pull_request]
 jobs:
   tests_e2e:
-    name: Run end-to-end tests
+    name: Run unit tests with Jest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -11,5 +11,5 @@ jobs:
         run: yarn
       - name: Build NPM package
         run: yarn prerelease
-      - name: Run Playwright tests
-        run: cd packages/suspense-website && yarn test:e2e
+      - name: Run tests
+        run: cd packages/suspense && yarn test
