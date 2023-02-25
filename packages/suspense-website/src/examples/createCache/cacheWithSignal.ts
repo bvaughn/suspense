@@ -1,7 +1,9 @@
 import { CacheLoadOptions, createCache } from "suspense";
 
-export const userProfileCache = createCache<[userId: string], JSON>(
+// REMOVE_BEFORE
+createCache<[userId: string], JSON>(
   async (userId: string, options: CacheLoadOptions) => {
+    // An AbortSignal is passed in as the final parameter with each request
     const { signal } = options;
 
     // The native fetch API supports AbortSignals

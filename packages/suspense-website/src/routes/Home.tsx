@@ -9,6 +9,7 @@ import {
   CREATE_CACHE,
   CREATE_DEFERRED,
   CREATE_STREAMING_CACHE,
+  EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
   IS_THENNABLE,
   USE_CACHE_STATUS,
@@ -86,7 +87,12 @@ export default function HomeRoute() {
         <SubHeading title="Examples" />
         <ul>
           <LinkListItem
-            children="Rendering status while fetching"
+            children="Aborting a request"
+            to={EXAMPLE_ABORT_A_REQUEST}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Rendering cache status"
             to={EXAMPLE_FETCH_WITH_STATUS}
             type="plaintext"
           />

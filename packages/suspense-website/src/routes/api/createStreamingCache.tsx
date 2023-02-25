@@ -34,6 +34,16 @@ export default function CreateStreamingCacheRoute() {
           parameters can't be stringified.
         </p>
         <Code code={createStreamingCache.cacheWithKey} />
+        <p>
+          Use the{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
+              AbortSignal
+            </ExternalLink>
+          </code>{" "}
+          that's provided to support cancellation.
+        </p>
+        <Code code={createStreamingCache.cacheWithSignal} />
       </Block>
       <Block>
         <SubHeading title="Using a streaming cache" />
@@ -62,21 +72,16 @@ export default function CreateStreamingCacheRoute() {
       </Block>
       <Block>
         <SubHeading title="Aborting a request" />
-        <p>
-          In-progress requests can be cancelled using an{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
-              AbortSignal
-            </ExternalLink>
-          </code>{" "}
-          so long as the load function supports it.
-        </p>
-        <Code code={createStreamingCache.cacheWithSignal} />
-        <p>
-          Requests can be aborted anywhere that side effects are permitted (e.g.
-          event handlers, effect cleanup functions).
-        </p>
+        <p>In-progress requests can be cancelled.</p>
         <Code code={createStreamingCache.abort} />
+        <Note>
+          Requests can be aborted where side effects are permitted (e.g. event
+          handlers, effect cleanup functions).
+        </Note>
+        <Note>
+          A cache must use the <code>AbortSignal</code> parameter to support
+          cancellation.
+        </Note>
       </Block>
     </Container>
   );

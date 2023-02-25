@@ -38,6 +38,16 @@ export default function CreateCacheRoute() {
           method should also be provided to compute a unique key.
         </p>
         <Code code={createCache.cacheWithKey} />
+        <p>
+          Use the{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
+              AbortSignal
+            </ExternalLink>
+          </code>{" "}
+          that's provided to support cancellation.
+        </p>
+        <Code code={createCache.cacheWithSignal} />
       </Block>
       <Block>
         <SubHeading title="Using a cache with suspense" />
@@ -91,6 +101,19 @@ export default function CreateCacheRoute() {
         </Note>
       </Block>
       <Block>
+        <SubHeading title="Aborting a request" />
+        <p>In-progress requests can be cancelled.</p>
+        <Code code={createCache.abort} />{" "}
+        <Note>
+          Requests can be aborted where side effects are permitted (e.g. event
+          handlers, effect cleanup functions).
+        </Note>
+        <Note>
+          A cache must use the <code>AbortSignal</code> parameter to support
+          cancellation.
+        </Note>
+      </Block>
+      <Block>
         <SubHeading title="Observing status" />
         <p>
           A value's <em>status</em> ("not-started", "pending", "resolved", or
@@ -102,24 +125,6 @@ export default function CreateCacheRoute() {
           hook:
         </p>
         <Code code={createCache.hook} />
-      </Block>
-      <Block>
-        <SubHeading title="Aborting a request" />
-        <p>
-          In-progress requests can be cancelled using an{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
-              AbortSignal
-            </ExternalLink>
-          </code>{" "}
-          so long as the load function supports it.
-        </p>
-        <Code code={createCache.cacheWithSignal} />
-        <p>
-          Requests can be aborted anywhere that side effects are permitted (e.g.
-          event handlers, effect cleanup functions).
-        </p>
-        <Code code={createCache.abort} />
       </Block>
     </Container>
   );

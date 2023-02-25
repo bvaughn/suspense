@@ -13,21 +13,21 @@ class ApiClient {
 type Comment = any;
 
 // REMOVE_BEFORE
-export const userCommentsCache = createStreamingCache<
-  [client: ApiClient, id: string],
-  Comment
->(
+createStreamingCache<[client: ApiClient, id: string], Comment>(
   // In this example, comments are fetched using a "client" object
   async (
-    { resolve, update }: StreamingCacheLoadOptions<string>,
+    options: StreamingCacheLoadOptions<Comment>,
     client: ApiClient,
     id: string
-  ) =>
-    client.fetchComments(
+  ) => {
+    const { resolve, update } = options;
+
+    return client.fetchComments(
       id,
       (comments: Comment[]) => update(comments),
       () => resolve()
-    ),
+    );
+  },
 
   // The id parameter is sufficiently unique to be the key
   (client: ApiClient, id: string) => id

@@ -10,10 +10,9 @@ export const userCommentsCache = createStreamingCache<
   Comment
 >(
   // Stream data for params
-  async (
-    { reject, update, resolve }: StreamingCacheLoadOptions<Comment>,
-    userId: string
-  ) => {
+  async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
+    const { reject, update, resolve } = options;
+
     let countLoaded = 0;
     let countTotal = 0;
 

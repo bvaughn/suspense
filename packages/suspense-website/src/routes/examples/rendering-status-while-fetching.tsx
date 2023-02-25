@@ -4,13 +4,13 @@ import Container from "../../components/Container";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import { demos } from "../../examples";
-import Demo from "../../examples/demos/fetchWithStatus";
+import Demo from "../../examples/demos/renderingCacheStatus";
 
-export default function UseStreamingValuesRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>
-        <Header title="render cache status updates" />
+        <Header title="render cache status" />
       </Block>
       <Block>
         <p>
@@ -29,7 +29,7 @@ export default function UseStreamingValuesRoute() {
           <code>useCacheStatus</code> allows it to render status updates in
           response to cache changes.
         </p>
-        <Code code={demos.fetchWithStatus.UserStatusBadge} />
+        <Code code={demos.renderingCacheStatus.UserStatusBadge} />
       </Block>
 
       <Note>

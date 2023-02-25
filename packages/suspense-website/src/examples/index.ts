@@ -86,10 +86,15 @@ const createStreamingCache = {
 };
 
 const demos = {
-  fetchWithStatus: {
+  abortRequest: {
+    abort: processExample(
+      readFileSync(join(__dirname, "demos", "abortRequest", "abort.ts"), "utf8")
+    ),
+  },
+  renderingCacheStatus: {
     UserStatusBadge: processExample(
       readFileSync(
-        join(__dirname, "demos", "fetchWithStatus", "UserStatusBadge.tsx"),
+        join(__dirname, "demos", "renderingCacheStatus", "UserStatusBadge.tsx"),
         "utf8"
       )
     ),

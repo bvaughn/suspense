@@ -6,4 +6,5 @@ export const USE_CACHE_STATUS = "/useCacheStatus";
 export const USE_STREAMING_CACHE = "/useStreamingValues";
 
 // Examples
-export const EXAMPLE_FETCH_WITH_STATUS = "/example/fetchWithStatus";
+export const EXAMPLE_FETCH_WITH_STATUS = "/example/rendering-cache-status";
+export const EXAMPLE_ABORT_A_REQUEST = "/example/abort-a-request";
