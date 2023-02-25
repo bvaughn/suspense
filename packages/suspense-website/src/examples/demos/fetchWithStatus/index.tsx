@@ -1,8 +1,8 @@
 import {
   createContext,
-  startTransition,
   Suspense,
   useContext,
+  useDeferredValue,
   useEffect,
   useMemo,
   useState,
@@ -143,7 +143,8 @@ function DemoSuspends() {
 }
 
 function UserProfile({ id }: { id: number }) {
-  const userProfile = id ? userProfileCache.fetchSuspense(id) : null;
+  const deferredId = useDeferredValue(id);
+  const userProfile = userProfileCache.fetchSuspense(deferredId);
 
   return (
     <>
@@ -172,7 +173,7 @@ function UserLink({ id, name }: { id: number; name: string }) {
   const status = useCacheStatus(userProfileCache, id);
 
   const handleClick = () => {
-    startTransition(() => setSelectedUserId(id));
+    setSelectedUserId(id);
   };
 
   return (
