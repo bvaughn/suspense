@@ -3,10 +3,11 @@ import {
   startTransition,
   Suspense,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
-import { createCache, Status, useCacheStatus } from "suspense";
+import { createCache, useCacheStatus } from "suspense";
 import Loader from "../../../components/Loader";
 
 import styles from "./style.module.css";
@@ -71,6 +72,12 @@ export default function Demo() {
 
 function DemoSuspends() {
   const users = jsonCache.fetchSuspense();
+
+  useEffect(() => {
+    return () => {
+      users.map(({ id }) => userProfileCache.evict(id));
+    };
+  }, []);
 
   const [selectedUserId, setSelectedUserId] = useState<number>(users[0].id);
   const context = useMemo(
