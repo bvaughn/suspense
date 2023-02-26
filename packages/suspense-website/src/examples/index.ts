@@ -2,9 +2,14 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 function processExample(text: string): string {
-  const index = text.indexOf("REMOVE_BEFORE");
+  let index = text.indexOf("// REMOVE_BEFORE");
   if (index >= 0) {
-    text = text.substring(index + "REMOVE_BEFORE".length);
+    text = text.substring(index + "// REMOVE_BEFORE".length);
+  }
+
+  index = text.indexOf("// REMOVE_AFTER");
+  if (index >= 0) {
+    text = text.substring(0, index);
   }
 
   return text.trim();
@@ -95,6 +100,14 @@ const demos = {
     UserStatusBadge: processExample(
       readFileSync(
         join(__dirname, "demos", "renderingCacheStatus", "UserStatusBadge.tsx"),
+        "utf8"
+      )
+    ),
+  },
+  streamingCache: {
+    Posts: processExample(
+      readFileSync(
+        join(__dirname, "demos", "streamingCache", "Posts.tsx"),
         "utf8"
       )
     ),

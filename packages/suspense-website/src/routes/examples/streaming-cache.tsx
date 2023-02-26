@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Block from "../../components/Block";
 import Code from "../../components/Code";
 import Container from "../../components/Container";
@@ -5,32 +6,37 @@ import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import { demos } from "../../examples";
-import Demo from "../../examples/demos/renderingCacheStatus";
+import Demo from "../../examples/demos/streamingCache";
+import { CREATE_STREAMING_CACHE, USE_STREAMING_CACHE } from "../config";
 
 export default function Route() {
   return (
     <Container>
       <Block>
-        <Header title="render cache status" />
+        <Header title="writing a streaming cache" />
       </Block>
       <Block>
         <p>
-          The demo below shows how <code>useCacheStatus</code> can be used to
-          render UI based on the status of a cached item.
+          The demo below shows how a{" "}
+          <Link to={CREATE_STREAMING_CACHE}>streaming cache</Link> can be used
+          to render a larger data set as it incrementally loads.
         </p>
         <p>Click the "start demo" button to fetch user data in the cache.</p>
+        {/*<Code code={demos.} />*/}
       </Block>
       <Block type="demo">
         <Demo />
       </Block>
       <Block>
         <p>
-          Although the <code>UserStatusBadge</code> component neither schedules
-          the update with React nor suspends to load user data,{" "}
-          <code>useCacheStatus</code> allows it to render status updates in
-          response to cache changes.
+          The demo above uses the{" "}
+          <code>
+            <Link to={USE_STREAMING_CACHE}>useStreamingValues</Link>
+          </code>{" "}
+          hook to incrementally render posts as they stream in. At a high level
+          that usage looks like this:
         </p>
-        <Code code={demos.renderingCacheStatus.UserStatusBadge} />
+        <Code code={demos.streamingCache.Posts} />
         <p>
           The full code for the demo can be found{" "}
           <ExternalLink to="https://github.com/bvaughn/suspense/tree/main/packages/suspense-website/src/examples/demos">
@@ -39,7 +45,6 @@ export default function Route() {
           .
         </p>
       </Block>
-
       <Note>
         The cache in this demo uses a timeout to simulate a slow network
         request.

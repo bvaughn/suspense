@@ -11,6 +11,15 @@
   --color-code-background: #ffffff20;
   --color-code: #ffffff;
   --color-default: #ffffff;
+  --color-demo-background: #273f35;
+  --color-demo-button: #fff;
+  --color-demo-button-background: #152c23;
+  --color-demo-button-background-hover: #183127;
+  --color-demo-contrast: #ffffff20;
+  --color-demo-panel: #1e332a;
+  --color-demo-progress-background: #111b17;
+  --color-demo-progress-bar: #7afac5;
+  --color-demo: #ffffff;
   --color-dim: #91a0ba;
   --color-horizontal-rule: #39414d;
   --color-input: #ffffff;
@@ -18,8 +27,8 @@
   --color-input-border: #39414d;
   --color-input-border-focused: #dcadff;
   --color-link: #7ac1ff;
-  --color-loader: #91a0ba;
-  --color-loader-background: #2a3343;
+  --color-loader: #ffffffcc;
+  --color-loader-background: #00000030;
   --color-note: #91a0ba;
   --color-note-background: #2a3343;
   --color-note-header: #fff;

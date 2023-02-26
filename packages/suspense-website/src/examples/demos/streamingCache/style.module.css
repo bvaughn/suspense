@@ -1,0 +1,66 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.ButtonRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1ch;
+}
+
+.Button {
+  font-size: 1rem;
+  outline: none;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  transition: opacity 0.25s ease-in-out;
+  cursor: pointer;
+  background-color: var(--color-demo-button-background);
+  color: var(--color-demo-button);
+  text-align: left;
+}
+.Button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.Button:not(.Button:disabled):hover {
+  background-color: var(--color-demo-button-background-hover);
+}
+
+.ProgressBarOuter {
+  width: 100%;
+  flex: 0 0 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--color-demo-progress-background);
+  overflow: hidden;
+}
+
+.ProgressBarInner {
+  height: 100%;
+  background-color: var(--color-demo-progress-bar);
+}
+
+.Posts {
+  width: 100%;
+  height: 10rem;
+  overflow: auto;
+  background-color: var(--color-demo-panel);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.PostRow,
+.PlaceholderRow {
+  flex: 1 0 0.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--color-demo-contrast);
+}

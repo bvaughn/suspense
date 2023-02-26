@@ -9,11 +9,13 @@
   flex-direction: column;
   align-items: stretch;
   gap: 0.25rem;
+  padding: 0;
 }
 
 .ButtonRow {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   gap: 1ch;
 }
 
@@ -29,8 +31,8 @@
 }
 
 .MainButton {
-  background-color: var(--color-button-alternate-background);
-  color: var(--color-button-alternate);
+  background-color: var(--color-demo-button-background);
+  color: var(--color-demo-button);
   text-align: left;
 }
 .MainButton:disabled {
@@ -38,12 +40,12 @@
   cursor: default;
 }
 .MainButton:not(.MainButton:disabled):hover {
-  background-color: var(--color-button-alternate-background-hover);
+  background-color: var(--color-demo-button-background-hover);
 }
 
 .UserButton {
   background-color: transparent;
-  color: var(--color-button);
+  color: var(--color-demo-button);
   margin-right: 0.25rem;
   display: flex;
   flex-direction: row;
@@ -51,7 +53,7 @@
   gap: 1ch;
 }
 .UserButton:not(.UserButton[data-current]):hover {
-  background-color: var(--color-button-background-hover);
+  background-color: var(--color-demo-button-background-hover);
 }
 .UserButton[data-status="not-started"] svg {
   color: var(--color-status-not-started);
@@ -64,17 +66,17 @@
 }
 .UserButton[data-current] {
   margin-right: 0;
-  border-right: 0.25rem solid var(--color-button-background);
+  border-right: 0.25rem solid var(--color-demo-panel);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  background-color: var(--color-button-background);
+  background-color: var(--color-demo-panel);
   cursor: default;
 }
 
 .Main {
   flex: 1 1 auto;
-  background-color: var(--color-note-background);
-  color: var(--color-note);
+  background-color: var(--color-demo-panel);
+  color: var(--color-demo);
   border-top-right-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
   padding: 0.25rem 0.5rem;

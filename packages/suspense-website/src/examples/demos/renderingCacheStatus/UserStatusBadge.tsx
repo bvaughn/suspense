@@ -5,7 +5,7 @@ import Icon, { IconType } from "../../../components/Icon";
 
 import { useCacheStatus } from "suspense";
 
-export function UserStatusBadge({ id }: { id: number }) {
+function UserStatusBadge({ id }: { id: number }) {
   const status = useCacheStatus(userProfileCache, id);
 
   let type: IconType;
@@ -23,3 +23,7 @@ export function UserStatusBadge({ id }: { id: number }) {
 
   return <Icon type={type} />;
 }
+
+// REMOVE_AFTER
+
+export { UserStatusBadge };

@@ -11,6 +11,7 @@ import {
   CREATE_STREAMING_CACHE,
   EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
+  EXAMPLE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -89,6 +90,11 @@ export default function HomeRoute() {
           <LinkListItem
             children="Aborting a request"
             to={EXAMPLE_ABORT_A_REQUEST}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Creating a streaming cache"
+            to={EXAMPLE_STREAMING_CACHE}
             type="plaintext"
           />
           <LinkListItem

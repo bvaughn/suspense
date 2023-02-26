@@ -103,28 +103,24 @@ function DemoSuspends() {
     }
   };
 
-  let label;
-  switch (state) {
-    case "ready":
-      label = "Start demo";
-      break;
-    case "running":
-      label = "Loading data";
-      break;
-    case "complete":
-      label = "Reset demo";
-      break;
-  }
-
   return (
     <SelectedUserContext.Provider value={context}>
-      <button
-        className={styles.MainButton}
-        disabled={state === "running"}
-        onClick={handleClick}
-      >
-        {label}
-      </button>
+      <div className={styles.ButtonRow}>
+        <button
+          className={styles.MainButton}
+          disabled={state !== "ready"}
+          onClick={handleClick}
+        >
+          Start demo
+        </button>
+        <button
+          className={styles.MainButton}
+          disabled={state !== "complete"}
+          onClick={handleClick}
+        >
+          Reset demo
+        </button>
+      </div>
 
       <section className={styles.App}>
         <nav className={styles.SideNav}>
