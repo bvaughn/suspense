@@ -14,7 +14,7 @@ export default function Code({
   className = "",
   code,
   language = "jsx",
-  showLineNumbers = true,
+  showLineNumbers = false,
 }: {
   className?: string;
   code: string;
