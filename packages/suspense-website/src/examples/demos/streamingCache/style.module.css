@@ -38,9 +38,11 @@
   border-radius: 0.25rem;
   background-color: var(--color-demo-progress-background);
   overflow: hidden;
+  position: relative;
 }
 
 .ProgressBarInner {
+  position: absolute;
   height: 100%;
   background-color: var(--color-demo-progress-bar);
   transition: width 250ms;

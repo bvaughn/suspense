@@ -51,6 +51,7 @@
   flex-direction: row;
   align-items: center;
   gap: 1ch;
+  white-space: nowrap;
 }
 .UserButton:not(.UserButton[data-current]):hover {
   background-color: var(--color-demo-button-background-hover);
