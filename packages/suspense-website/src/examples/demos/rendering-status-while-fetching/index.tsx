@@ -1,3 +1,4 @@
+import shuffle from "lodash.shuffle";
 import {
   createContext,
   Suspense,
@@ -10,16 +11,22 @@ import {
 import { createCache, useCacheStatus } from "suspense";
 import Loader from "../../../components/Loader";
 import { UserStatusBadge } from "./UserStatusBadge";
-import users from "./data.json";
 
 import styles from "./style.module.css";
 
+// Fake API data
+import { users } from "../users.json";
+
 type User = typeof users[0];
+
+function getRandomUsers(): User[] {
+  return shuffle(users).slice(0, 5);
+}
 
 export const userProfileCache = createCache<[number], User>(
   async (id: number) => {
     return new Promise((resolve, reject) => {
-      const delay = 1_000 + Math.random() * 4_000;
+      const delay = 500 + Math.random() * 4_500;
       setTimeout(() => {
         const user = users.find((user) => user.id === id);
         if (user) {
@@ -46,31 +53,34 @@ export default function Demo() {
 }
 
 function DemoSuspends() {
-  useEffect(() => {
-    return () => {
-      users.map(({ id }) => userProfileCache.evict(id));
-    };
-  }, []);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(getRandomUsers);
+  const [state, setState] = useState<"ready" | "running" | "complete">("ready");
 
-  const [selectedUserId, setSelectedUserId] = useState<number>(users[0].id);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const context = useMemo(
     () => ({ selectedUserId, setSelectedUserId }),
     [selectedUserId]
   );
 
-  const [state, setState] = useState<"ready" | "running" | "complete">("ready");
+  useEffect(() => {
+    return () => {
+      filteredUsers.map(({ id }) => userProfileCache.evict(id));
+    };
+  }, []);
 
   const handleClick = async () => {
     switch (state) {
       case "ready":
         setState("running");
         await Promise.all(
-          users.map(({ id }) => userProfileCache.fetchAsync(id))
+          filteredUsers.map(({ id }) => userProfileCache.fetchAsync(id))
         );
         setState("complete");
         break;
       case "complete":
-        users.map(({ id }) => userProfileCache.evict(id));
+        filteredUsers.map(({ id }) => userProfileCache.evict(id));
+        setFilteredUsers(getRandomUsers());
+        setSelectedUserId(null);
         setState("ready");
         break;
     }
@@ -97,18 +107,29 @@ function DemoSuspends() {
 
       <section className={styles.App}>
         <nav className={styles.SideNav}>
-          {users.map((user) => (
-            <UserLink key={user.id} id={user.id} name={user.name} />
+          {filteredUsers.map(({ id, firstName, lastName }) => (
+            <UserLink key={id} id={id} name={`${firstName} ${lastName}`} />
           ))}
         </nav>
         <main className={styles.Main}>
-          <Suspense>
-            <UserProfile id={selectedUserId} />
-          </Suspense>
+          {selectedUserId ? (
+            <Suspense
+              fallback={<Placeholder title="Loading..." />}
+              key={selectedUserId}
+            >
+              <UserProfile id={selectedUserId} />
+            </Suspense>
+          ) : (
+            <Placeholder title="No user selected" />
+          )}
         </main>
       </section>
     </SelectedUserContext.Provider>
   );
+}
+
+function Placeholder({ title }: { title: string }) {
+  return <div className={styles.Placeholder}>{title}</div>;
 }
 
 function UserProfile({ id }: { id: number }) {
@@ -117,11 +138,14 @@ function UserProfile({ id }: { id: number }) {
 
   return (
     <>
-      <h3 className={styles.Header}>{userProfile.name}</h3>
+      <h3 className={styles.Header}>
+        {userProfile.firstName} {userProfile.lastName}
+      </h3>
       <ul>
         <li>
-          <label>Address</label>: {userProfile.address.street},{" "}
-          {userProfile.address.city}, {userProfile.address.zipcode}
+          <label>Address</label>:{userProfile.address.address},{" "}
+          {userProfile.address.city}, {userProfile.address.state}{" "}
+          {userProfile.address.postalCode}
         </li>
         <li>
           <label>Phone</label>: {userProfile.phone}
@@ -130,7 +154,7 @@ function UserProfile({ id }: { id: number }) {
           <label>Email</label>: {userProfile.email}
         </li>
         <li>
-          <label>Website</label>: {userProfile.website}
+          <label>Website</label>: {userProfile.domain}
         </li>
       </ul>
     </>

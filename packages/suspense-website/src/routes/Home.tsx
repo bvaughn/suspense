@@ -93,11 +93,11 @@ export default function Route() {
             to={EXAMPLE_ABORT_A_REQUEST}
             type="plaintext"
           />
-          {/*<LinkListItem
+          <LinkListItem
             children="Mutating a cache value"
             to={EXAMPLE_MUTATING_A_CACHE_VALUE}
             type="plaintext"
-          />*/}
+          />
           <LinkListItem
             children="Creating a streaming cache"
             to={EXAMPLE_STREAMING_CACHE}

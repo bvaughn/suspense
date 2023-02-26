@@ -1,17 +1,21 @@
 import { Suspense, useMemo, useState } from "react";
 import {
-  createCache,
   createStreamingCache,
   StreamingCacheLoadOptions,
   StreamingValues,
   useStreamingValues,
 } from "suspense";
 import Loader from "../../../components/Loader";
-import posts from "./data.json";
 
 import styles from "./style.module.css";
 
+// Fake API data
+import { posts } from "../posts.json";
+import { users } from "../users.json";
+import { Posts } from "./Posts";
+
 export type Post = typeof posts[0];
+export type User = typeof users[0];
 
 export type Metadata = {
   postCount: number;
@@ -120,7 +124,7 @@ function DemoSuspends() {
       </div>
 
       <main className={styles.App}>
-        {stream ? <Posts stream={stream} /> : <Placeholder />}
+        {stream ? <Posts stream={stream} users={users} /> : <Placeholder />}
       </main>
     </div>
   );
@@ -135,31 +139,30 @@ function Placeholder() {
   );
 }
 
-function Posts({ stream }: { stream: StreamingValues<Post, Metadata> }) {
-  const { data, progress, values } = useStreamingValues(stream);
-
-  return (
-    <>
-      <ProgressBar progress={progress ?? 0} />
-      <Rows postCount={data?.postCount ?? 0} posts={values ?? []} />
-    </>
-  );
-}
-
 export function Rows({
   postCount,
   posts,
+  users,
 }: {
   postCount: number;
   posts: Post[];
+  users: User[];
 }) {
   return (
     <div className={styles.Posts}>
       {Array(postCount)
         .fill(null)
-        .map((_, index) => (
-          <PostRow key={index} post={posts[index] ?? null} />
-        ))}
+        .map((_, index) => {
+          const post = posts[index] ?? null;
+          const user = post
+            ? users.find(({ id }) => id === post.userId) ?? null
+            : null;
+          if (post && !user) {
+            debugger;
+          }
+
+          return <PostRow key={index} post={post} user={user} />;
+        })}
     </div>
   );
 }
@@ -175,14 +178,26 @@ export function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-function PostRow({ post }: { post: Post | null }) {
+function PostRow({ post, user }: { post: Post | null; user: User | null }) {
   if (post === null) {
     return <PlaceholderRow />;
   }
 
   return (
     <div className={styles.PostRow}>
-      <div className={styles.PostTitle}>{post.title}</div>
+      <div className={styles.PostHeaderRow}>
+        <div className={styles.PostName}>
+          {user.firstName} {user.lastName} (@{user.username})
+        </div>
+        <div className={styles.PostTags}>
+          {post.tags.map((tag) => (
+            <span key={tag} className={styles.PostTag}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className={styles.PostTitle}>"{post.title}"</div>
       <div className={styles.PostBody}>{post.body}</div>
     </div>
   );

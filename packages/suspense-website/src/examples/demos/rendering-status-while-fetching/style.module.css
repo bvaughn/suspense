@@ -10,8 +10,6 @@
   align-items: stretch;
   gap: 0.25rem;
   padding: 0;
-  max-height: 10rem;
-  overflow-y: auto;
 }
 
 .ButtonRow {
@@ -83,4 +81,12 @@
   border-top-right-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
+}
+
+.Placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-dim);
 }
