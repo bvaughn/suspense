@@ -43,6 +43,7 @@
 .ProgressBarInner {
   height: 100%;
   background-color: var(--color-demo-progress-bar);
+  transition: width 250ms;
 }
 
 .Posts {
