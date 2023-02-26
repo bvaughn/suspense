@@ -81,6 +81,7 @@
   border-top-right-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
+  overflow: auto;
 }
 
 .Placeholder {
