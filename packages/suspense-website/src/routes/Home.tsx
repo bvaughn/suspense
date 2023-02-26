@@ -85,7 +85,7 @@ export default function HomeRoute() {
         </ul>
       </Block>
       <Block>
-        <SubHeading title="Examples" />
+        <SubHeading title="Guides" />
         <ul>
           <LinkListItem
             children="Aborting a request"
