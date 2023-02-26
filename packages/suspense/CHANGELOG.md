@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.8
+* `useStreamingValues` waits until commit boundaries before throttling, to avoid overwhelming the scheduler if there are slow renders.
+
 ## 0.0.7
 * `createCache` and `createStreamingCache` add support for cancellation via [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
 

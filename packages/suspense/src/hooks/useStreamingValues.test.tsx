@@ -23,15 +23,22 @@ describe("useStreamingValue", () => {
     undefined;
 
   function Component({
+    simulateRenderDuration,
     streaming,
     throttleUpdatesBy,
   }: {
+    simulateRenderDuration?: number;
     streaming: StreamingValues<string>;
     throttleUpdatesBy?: number;
   }): any {
     lastRendered = useStreamingValues(streaming, {
       throttleUpdatesBy,
     });
+
+    if (simulateRenderDuration > 0) {
+      jest.advanceTimersByTime(simulateRenderDuration);
+    }
+
     return null;
   }
 
@@ -54,7 +61,7 @@ describe("useStreamingValue", () => {
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
-      root.render(<Component streaming={streaming} throttleUpdatesBy={0} />);
+      root.render(<Component streaming={streaming} throttleUpdatesBy={10} />);
     });
 
     expect(lastRendered?.values).toEqual(undefined);
@@ -74,7 +81,10 @@ describe("useStreamingValue", () => {
     act(() => {
       options.update(["c", "d"], 1);
       options.resolve();
+
+      jest.advanceTimersByTime(10);
     });
+
     expect(lastRendered).toEqual({
       complete: true,
       data: undefined,
@@ -89,9 +99,17 @@ describe("useStreamingValue", () => {
 
     const container = document.createElement("div");
     const root = createRoot(container);
+
+    // Simulate a render that takes longer than the throttle-by duration.
+    // This ensures that the throttling respects commit boundaries
+    // to avoid overwhelming the scheduler.
     act(() => {
       root.render(
-        <Component streaming={streaming} throttleUpdatesBy={1_000} />
+        <Component
+          simulateRenderDuration={500}
+          streaming={streaming}
+          throttleUpdatesBy={100}
+        />
       );
     });
 
@@ -108,7 +126,7 @@ describe("useStreamingValue", () => {
     });
     expect(lastRendered.values).toEqual(["a"]);
 
-    jest.advanceTimersByTime(500);
+    jest.advanceTimersByTime(50);
 
     act(() => {
       options.update(["c"], 0.75);
@@ -116,7 +134,7 @@ describe("useStreamingValue", () => {
     expect(lastRendered.values).toEqual(["a"]);
 
     act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersByTime(50);
     });
 
     expect(lastRendered.values).toEqual(["a", "b", "c"]);

@@ -32,7 +32,9 @@ const streamingCache = createStreamingCache<[Post[]], Post, Metadata>(
     const { signal } = options;
 
     for (let i = 0; i < posts.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) =>
+        setTimeout(resolve, i % 10 === 0 ? 500 : 1)
+      );
 
       if (signal.aborted) {
         return;
