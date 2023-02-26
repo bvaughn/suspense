@@ -5,7 +5,7 @@ import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import { demos } from "../../examples";
-import Demo from "../../examples/demos/renderingCacheStatus";
+import Demo from "../../examples/demos/rendering-status-while-fetching";
 
 export default function Route() {
   return (

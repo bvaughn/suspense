@@ -7,7 +7,7 @@ import Header from "../../components/Header";
 import { createStreamingCache } from "../../examples";
 import { CREATE_STREAMING_CACHE } from "../config";
 
-export default function UseStreamingValuesRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>

@@ -6,6 +6,7 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "jsx": "react-jsx",
+    "resolveJsonModule": true,
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules"],

@@ -7,6 +7,7 @@ import {
   CREATE_STREAMING_CACHE,
   EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
+  EXAMPLE_MUTATING_A_CACHE_VALUE,
   EXAMPLE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
@@ -22,6 +23,7 @@ import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
+import MutatingCacheValueRoute from "./src/routes/examples/mutating-a-cache-value";
 import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-status-while-fetching";
 import CreatingStreamingCacheRoute from "./src/routes/examples/streaming-cache";
 import ScrollToTop from "./src/components/ScrollToTop";
@@ -49,6 +51,10 @@ root.render(
         <Route
           path={EXAMPLE_FETCH_WITH_STATUS}
           element={<RenderingStatusWhileFetchingRoute />}
+        />
+        <Route
+          path={EXAMPLE_MUTATING_A_CACHE_VALUE}
+          element={<MutatingCacheValueRoute />}
         />
         <Route
           path={EXAMPLE_STREAMING_CACHE}

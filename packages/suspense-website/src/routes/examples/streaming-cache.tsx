@@ -6,7 +6,7 @@ import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import { demos } from "../../examples";
-import Demo from "../../examples/demos/streamingCache";
+import Demo from "../../examples/demos/streaming-cache";
 import { CREATE_STREAMING_CACHE, USE_STREAMING_CACHE } from "../config";
 
 export default function Route() {

@@ -11,6 +11,7 @@ import {
   CREATE_STREAMING_CACHE,
   EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
+  EXAMPLE_MUTATING_A_CACHE_VALUE,
   EXAMPLE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
@@ -21,7 +22,7 @@ import styles from "./Home.module.css";
 import { PropsWithChildren } from "react";
 import { ExternalLink } from "../components/ExternalLink";
 
-export default function HomeRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>
@@ -92,6 +93,11 @@ export default function HomeRoute() {
             to={EXAMPLE_ABORT_A_REQUEST}
             type="plaintext"
           />
+          {/*<LinkListItem
+            children="Mutating a cache value"
+            to={EXAMPLE_MUTATING_A_CACHE_VALUE}
+            type="plaintext"
+          />*/}
           <LinkListItem
             children="Creating a streaming cache"
             to={EXAMPLE_STREAMING_CACHE}

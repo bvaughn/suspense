@@ -8,4 +8,5 @@ export const USE_STREAMING_CACHE = "/useStreamingValues";
 // Examples
 export const EXAMPLE_ABORT_A_REQUEST = "/example/abort-a-request";
 export const EXAMPLE_FETCH_WITH_STATUS = "/example/rendering-cache-status";
+export const EXAMPLE_MUTATING_A_CACHE_VALUE = "/example/mutating-a-cache-value";
 export const EXAMPLE_STREAMING_CACHE = "/example/writing-a-streaming-cache";

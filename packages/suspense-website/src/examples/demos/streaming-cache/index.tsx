@@ -7,25 +7,15 @@ import {
   useStreamingValues,
 } from "suspense";
 import Loader from "../../../components/Loader";
+import posts from "./data.json";
 
 import styles from "./style.module.css";
 
-export type Post = {
-  body: string;
-  id: number;
-  title: string;
-  userId: number;
-};
+export type Post = typeof posts[0];
 
 export type Metadata = {
   postCount: number;
 };
-
-const jsonCache = createCache<[], Post[]>(async () => {
-  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-  const json = await response.json();
-  return json as Post[];
-});
 
 const streamingCache = createStreamingCache<[Post[]], Post, Metadata>(
   async (options: StreamingCacheLoadOptions<Post, Metadata>, posts: Post[]) => {
@@ -58,8 +48,6 @@ export default function Demo() {
 }
 
 function DemoSuspends() {
-  const posts = jsonCache.fetchSuspense();
-
   const [state, setState] = useState<"ready" | "running" | "complete">("ready");
   const [stream, setStream] = useState<StreamingValues<Post, Metadata> | null>(
     null

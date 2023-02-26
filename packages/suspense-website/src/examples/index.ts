@@ -96,10 +96,18 @@ const demos = {
       readFileSync(join(__dirname, "demos", "abortRequest", "abort.ts"), "utf8")
     ),
   },
+  mutatingCacheValue: {
+    // TODO
+  },
   renderingCacheStatus: {
     UserStatusBadge: processExample(
       readFileSync(
-        join(__dirname, "demos", "renderingCacheStatus", "UserStatusBadge.tsx"),
+        join(
+          __dirname,
+          "demos",
+          "rendering-status-while-fetching",
+          "UserStatusBadge.tsx"
+        ),
         "utf8"
       )
     ),
@@ -107,7 +115,7 @@ const demos = {
   streamingCache: {
     Posts: processExample(
       readFileSync(
-        join(__dirname, "demos", "streamingCache", "Posts.tsx"),
+        join(__dirname, "demos", "streaming-cache", "Posts.tsx"),
         "utf8"
       )
     ),

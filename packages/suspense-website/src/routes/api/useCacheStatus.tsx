@@ -7,7 +7,7 @@ import SubHeading from "../../components/SubHeading";
 import { createCache } from "../../examples";
 import { CREATE_CACHE } from "../config";
 
-export default function UseCacheStatusRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>

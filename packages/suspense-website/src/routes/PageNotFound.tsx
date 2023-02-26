@@ -3,7 +3,7 @@ import Container from "../components/Container";
 import Header from "../components/Header";
 import SubHeading from "../components/SubHeading";
 
-export default function PageNotFoundRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>

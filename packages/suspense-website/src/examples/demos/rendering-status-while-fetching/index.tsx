@@ -9,43 +9,18 @@ import {
 } from "react";
 import { createCache, useCacheStatus } from "suspense";
 import Loader from "../../../components/Loader";
+import { UserStatusBadge } from "./UserStatusBadge";
+import users from "./data.json";
 
 import styles from "./style.module.css";
-import { UserStatusBadge } from "./UserStatusBadge";
 
-type User = {
-  id: number;
-  name: string;
-  username: string;
-  email: string;
-  address: {
-    street: string;
-    suite: string;
-    city: string;
-    zipcode: string;
-  };
-  phone: string;
-  website: string;
-  company: {
-    name: string;
-    catchPhrase: string;
-    bs: string;
-  };
-};
-
-const jsonCache = createCache<[], User[]>(async () => {
-  const response = await fetch("https://jsonplaceholder.typicode.com/users");
-  const json = await response.json();
-  const users = json as User[];
-  return users.slice(0, 5);
-});
+type User = typeof users[0];
 
 export const userProfileCache = createCache<[number], User>(
   async (id: number) => {
     return new Promise((resolve, reject) => {
       const delay = 1_000 + Math.random() * 4_000;
       setTimeout(() => {
-        const users = jsonCache.getValue();
         const user = users.find((user) => user.id === id);
         if (user) {
           resolve(user);
@@ -71,8 +46,6 @@ export default function Demo() {
 }
 
 function DemoSuspends() {
-  const users = jsonCache.fetchSuspense();
-
   useEffect(() => {
     return () => {
       users.map(({ id }) => userProfileCache.evict(id));
@@ -152,6 +125,9 @@ function UserProfile({ id }: { id: number }) {
         </li>
         <li>
           <label>Phone</label>: {userProfile.phone}
+        </li>
+        <li>
+          <label>Email</label>: {userProfile.email}
         </li>
         <li>
           <label>Website</label>: {userProfile.website}

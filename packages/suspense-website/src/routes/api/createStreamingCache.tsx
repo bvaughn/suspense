@@ -9,7 +9,7 @@ import { USE_STREAMING_CACHE } from "../config";
 import Note from "../../components/Note";
 import { ExternalLink } from "../../components/ExternalLink";
 
-export default function CreateStreamingCacheRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>

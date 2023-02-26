@@ -5,7 +5,7 @@ import { createDeferred } from "../../examples";
 import Block from "../../components/Block";
 import Note from "../../components/Note";
 
-export default function CreateDeferredRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>

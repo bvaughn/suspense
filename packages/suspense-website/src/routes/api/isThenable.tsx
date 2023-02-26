@@ -7,7 +7,7 @@ import Note from "../../components/Note";
 import { ExternalLink } from "../../components/ExternalLink";
 import SubHeading from "../../components/SubHeading";
 
-export default function IsThenableRoute() {
+export default function Route() {
   return (
     <Container>
       <Block>
