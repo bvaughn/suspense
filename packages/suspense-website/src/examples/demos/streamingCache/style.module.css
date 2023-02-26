@@ -65,3 +65,16 @@
   border-radius: 0.25rem;
   background-color: var(--color-demo-contrast);
 }
+
+.PostTitle {
+}
+
+.PostBody {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+  margin-bottom: 0.25rem;
+}

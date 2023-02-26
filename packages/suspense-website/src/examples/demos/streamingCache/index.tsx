@@ -192,8 +192,8 @@ function PostRow({ post }: { post: Post | null }) {
 
   return (
     <div className={styles.PostRow}>
-      <div>{post.title}</div>
-      <small>{post.body}</small>
+      <div className={styles.PostTitle}>{post.title}</div>
+      <div className={styles.PostBody}>{post.body}</div>
     </div>
   );
 }
