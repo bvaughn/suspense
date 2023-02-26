@@ -65,6 +65,7 @@ export interface Cache<Params extends Array<any>, Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
   evict(...params: Params): boolean;
+  evictAll(): boolean;
   getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
@@ -111,6 +112,7 @@ export interface StreamingCache<
 > {
   abort(...params: Params): boolean;
   evict(...params: Params): boolean;
+  evictAll(): boolean;
   prefetch(...params: Params): void;
   stream(...params: Params): StreamingValues<Value, AdditionalData>;
 }

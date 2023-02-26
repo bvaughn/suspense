@@ -45,6 +45,14 @@ export function createStreamingCache<
     return streamingValuesMap.delete(cacheKey);
   }
 
+  function evictAll(): boolean {
+    const hadValues = streamingValuesMap.size > 0;
+
+    streamingValuesMap.clear();
+
+    return hadValues;
+  }
+
   function getOrCreateStreamingValues(
     ...params: Params
   ): StreamingValues<Value, AdditionalData> {
@@ -191,6 +199,7 @@ export function createStreamingCache<
   return {
     abort,
     evict,
+    evictAll,
     prefetch,
     stream,
   };

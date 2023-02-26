@@ -58,6 +58,14 @@ export function createCache<Params extends Array<any>, Value>(
     return recordMap.delete(cacheKey);
   }
 
+  function evictAll(): boolean {
+    const hadRecords = recordMap.size > 0;
+
+    recordMap.clear();
+
+    return hadRecords;
+  }
+
   function getOrCreateRecord(...params: Params): Record<Value> {
     const cacheKey = getKey(...params);
 
@@ -219,6 +227,7 @@ export function createCache<Params extends Array<any>, Value>(
     abort,
     cache,
     evict,
+    evictAll,
     getStatus,
     getValue,
     getValueIfCached,

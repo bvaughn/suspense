@@ -129,6 +129,38 @@ describe("createStreamingCache", () => {
     });
   });
 
+  describe("evictAll", () => {
+    it("should remove cached values", async () => {
+      cache.stream("string-a");
+      cache.stream("string-b");
+
+      const optionsA = optionsMap.get("string-a")!;
+      optionsA.update(["a"], 1);
+      optionsA.resolve();
+
+      const optionsB = optionsMap.get("string-b")!;
+      optionsB.update(["b"], 1);
+      optionsB.resolve();
+
+      // Verify value has been cached
+      let streaming = cache.stream("string-a");
+      expect(streaming.values).toEqual(["a"]);
+      streaming = cache.stream("string-b");
+      expect(streaming.values).toEqual(["b"]);
+
+      fetch.mockReset();
+
+      cache.evictAll();
+
+      // Verify value is no longer cached
+      const streamingA = cache.stream("string-a");
+      const streamingB = cache.stream("string-b");
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(streamingA.values).toBeUndefined();
+      expect(streamingB.values).toBeUndefined();
+    });
+  });
+
   describe("prefetch", () => {
     it("should start fetching a resource", async () => {
       cache.prefetch("string-1");

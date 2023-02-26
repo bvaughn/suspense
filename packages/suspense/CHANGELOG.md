@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.9
+* Add `evictAll` method to `createCache` and `createStreamingCache` types.
+
 ## 0.0.8
 * `useStreamingValues` waits until commit boundaries before throttling, to avoid overwhelming the scheduler if there are slow renders.
 
