@@ -10,7 +10,12 @@
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules"],
-  "include": ["declaration.d.ts", "packages/**/*.ts", "packages/**/*.tsx"],
+  "include": [
+    "css.d.ts",
+    "react.d.ts",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ],
   "strict": true,
   "target": "es2018"
 }
