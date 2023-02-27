@@ -9,7 +9,7 @@ createCache<[userId: string], JSON>({
 
     // The native fetch API supports AbortSignals
     // All that's required to support cancellation is to forward the signal
-    const response = await fetch(`https://example.com/user?id=${userId}`, {
+    const response = await fetch(`/api/user?id=${userId}`, {
       signal,
     });
     const json = await response.json();
