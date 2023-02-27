@@ -2,126 +2,14 @@
   "comments": [
     {
       "id": 1,
-      "body": "This is some awesome thinking!"
+      "body": "This is an example comment."
     },
     {
       "id": 2,
-      "body": "What terrific math skills you’re showing!"
-    },
-    {
-      "id": 3,
-      "body": "You are an amazing writer!"
-    },
-    {
-      "id": 4,
-      "body": "Wow! You have improved so much!"
-    },
-    {
-      "id": 5,
-      "body": "Nice idea!"
-    },
-    {
-      "id": 6,
-      "body": "You are showing excellent understanding!"
-    },
-    {
-      "id": 7,
-      "body": "This is clear, concise, and complete!"
-    },
-    {
-      "id": 8,
-      "body": "What a powerful argument!"
-    },
-    {
-      "id": 9,
-      "body": "I knew you could do it!"
-    },
-    {
-      "id": 10,
-      "body": "Wonderful ideas!"
-    },
-    {
-      "id": 11,
-      "body": "It was a pleasure to grade this!"
-    },
-    {
-      "id": 12,
-      "body": "Keep up the incredible work!"
-    },
-    {
-      "id": 13,
-      "body": "My goodness, how impressive!"
-    },
-    {
-      "id": 14,
-      "body": "You’re showing inventive ideas!"
-    },
-    {
-      "id": 15,
-      "body": "You’ve shown so much growth!"
-    },
-    {
-      "id": 16,
-      "body": "Interesting thoughts!"
-    },
-    {
-      "id": 17,
-      "body": "I love your neat work!"
-    },
-    {
-      "id": 18,
-      "body": "Doesn’t it feel good to do such great work?"
-    },
-    {
-      "id": 19,
-      "body": "First-rate work!"
-    },
-    {
-      "id": 20,
-      "body": "This is fascinating information!"
-    },
-    {
-      "id": 21,
-      "body": "You inspire me!"
-    },
-    {
-      "id": 22,
-      "body": "This is right on target!"
-    },
-    {
-      "id": 23,
-      "body": "What an astounding observation!"
-    },
-    {
-      "id": 24,
-      "body": "This is very well thought out!"
-    },
-    {
-      "id": 25,
-      "body": "I can tell you’ve been practicing!"
-    },
-    {
-      "id": 26,
-      "body": "You’ve come a long way!"
-    },
-    {
-      "id": 27,
-      "body": "I can tell you’ve been paying attention!"
-    },
-    {
-      "id": 28,
-      "body": "Reading this made my day!"
-    },
-    {
-      "id": 29,
-      "body": "This is very perceptive!"
-    },
-    {
-      "id": 30,
-      "body": "What an accomplishment!"
+      "body": "This is another example comment."
     }
   ],
-  "total": 340,
+  "total": 2,
   "skip": 0,
   "limit": 30
 }

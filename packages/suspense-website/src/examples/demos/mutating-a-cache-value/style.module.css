@@ -55,6 +55,9 @@
 .InputRow:focus-within {
   background-color: var(--color-input-background-focused);
 }
+.InputRow[data-disabled] {
+  opacity: 0.5;
+}
 
 .Input {
   width: 100%;

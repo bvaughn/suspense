@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react";
+import { memo, Suspense, useMemo } from "react";
 
 import {
   Language,
@@ -10,7 +10,7 @@ import { ParsedTokens } from "../suspense/SyntaxParsingCache";
 import styles from "./Code.module.css";
 import Loader from "./Loader";
 
-export default function Code({
+function Code({
   className = "",
   code,
   language = "jsx",
@@ -32,6 +32,8 @@ export default function Code({
     </Suspense>
   );
 }
+
+export default memo(Code);
 
 function Parser({
   className,
