@@ -13,8 +13,8 @@
   --color-default: #ffffff;
   --color-demo-background: #273f35;
   --color-demo-button: #fff;
-  --color-demo-button-background: #152c23;
-  --color-demo-button-background-hover: #183127;
+  --color-demo-button-background: #0004;
+  --color-demo-button-background-hover: #0006;
   --color-demo-contrast: #ffffff20;
   --color-demo-panel: #1e332a;
   --color-demo-progress-background: #111b17;
@@ -23,9 +23,8 @@
   --color-dim: #d2e1f9a6;
   --color-horizontal-rule: #39414d;
   --color-input: #ffffff;
-  --color-input-background: #18181a;
-  --color-input-border: #39414d;
-  --color-input-border-focused: #dcadff;
+  --color-input-background: #0004;
+  --color-input-background-focused: #0006;
   --color-link: #7ac1ff;
   --color-loader: #ffffffcc;
   --color-loader-background: #00000030;
