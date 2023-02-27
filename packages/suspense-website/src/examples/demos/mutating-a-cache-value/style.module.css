@@ -15,7 +15,7 @@
   cursor: pointer;
   background-color: var(--color-demo-button-background);
   color: var(--color-demo-button);
-  text-align: left;
+  text-align: center;
 }
 .Button:disabled {
   opacity: 0.5;

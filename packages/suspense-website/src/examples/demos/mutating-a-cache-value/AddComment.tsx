@@ -1,20 +1,15 @@
 import {
-  ButtonHTMLAttributes,
   forwardRef,
   InputHTMLAttributes,
   KeyboardEvent,
   MutableRefObject,
   useRef,
-  useState,
 } from "react";
 
 import Icon from "../../../components/Icon";
 import { ApiClient, commentsCache } from "./index";
 import styles from "./style.module.css";
-
-function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button {...props} className={styles.Button} />;
-}
+import { SaveButton } from "./SaveButton";
 
 function InputInner({
   disabled,
@@ -80,7 +75,7 @@ function AddComment({ apiClient }: { apiClient: ApiClient }) {
       // Any components using the cache will re-render after the mutation
       await mutate({
         mutate: async (cache) => {
-          input.disabled = true;
+          // input.disabled = true;
 
           // The "mutate" callback performs external mutations (e.g. API calls)
           const newComments = await apiClient.addComment(input.value);
@@ -92,7 +87,7 @@ function AddComment({ apiClient }: { apiClient: ApiClient }) {
         effect: async () => {
           // The optional "effect" callback can do clean-up work
           // e.g. reset the text input after the comment is created
-          input.disabled = false;
+          // input.disabled = false;
           input.value = "";
         },
       });
@@ -107,9 +102,7 @@ function AddComment({ apiClient }: { apiClient: ApiClient }) {
         placeholder="New comment"
         ref={inputRef}
       />
-      <Button disabled={isPending} onClick={addComment}>
-        Save
-      </Button>
+      <SaveButton isPending={isPending} onClick={addComment} />
     </>
   );
 }

@@ -8,6 +8,7 @@ import { comments as staticComments } from "../comments.json";
 import { createSingleEntryCache, useCacheMutation } from "suspense";
 import Loader from "../../../components/Loader";
 import { AddComment } from "./AddComment";
+import { SaveButton } from "./SaveButton";
 
 type Comment = typeof staticComments[0];
 
@@ -128,6 +129,9 @@ function Comment({
       mutate: async () => {
         await apiClient.editComment(comment.id, body);
       },
+      effect: async () => {
+        setHasPendingChanges(false);
+      },
       params: [apiClient],
     });
   };
@@ -181,13 +185,11 @@ function Comment({
           ref={inputRef}
         />
       </div>
-      <button
-        className={styles.Button}
-        disabled={!hasPendingChanges || isPending}
+      <SaveButton
+        hasPendingChanges={hasPendingChanges}
+        isPending={isPending}
         onClick={saveComment}
-      >
-        Save
-      </button>
+      />
     </>
   );
 }

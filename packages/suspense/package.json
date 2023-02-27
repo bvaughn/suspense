@@ -16,7 +16,7 @@
     "build": "parcel build",
     "test": "jest",
     "test:watch": "jest --watch",
-    "watch": "parcel watch"
+    "watch": "parcel watch --port=2345"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
