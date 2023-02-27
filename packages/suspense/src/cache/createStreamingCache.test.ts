@@ -30,17 +30,17 @@ describe("createStreamingCache", () => {
       }
     );
 
-    cache = createStreamingCache<[string], string, any>(
-      fetch,
-      getCacheKey,
-      "cache"
-    );
+    cache = createStreamingCache<[string], string, any>({
+      debugLabel: "cache",
+      getKey: getCacheKey,
+      load: fetch,
+    });
   });
 
   it("should supply a working default getCacheKey if none is provided", () => {
-    const cache = createStreamingCache<[string, number, boolean], string>(
-      fetch
-    );
+    const cache = createStreamingCache<[string, number, boolean], string>({
+      load: fetch,
+    });
     cache.stream("string", 123, true);
 
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -126,6 +126,38 @@ describe("createStreamingCache", () => {
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(fetch.mock.lastCall[1]).toEqual("string");
       expect(streaming.values).toBeUndefined();
+    });
+  });
+
+  describe("evictAll", () => {
+    it("should remove cached values", async () => {
+      cache.stream("string-a");
+      cache.stream("string-b");
+
+      const optionsA = optionsMap.get("string-a")!;
+      optionsA.update(["a"], 1);
+      optionsA.resolve();
+
+      const optionsB = optionsMap.get("string-b")!;
+      optionsB.update(["b"], 1);
+      optionsB.resolve();
+
+      // Verify value has been cached
+      let streaming = cache.stream("string-a");
+      expect(streaming.values).toEqual(["a"]);
+      streaming = cache.stream("string-b");
+      expect(streaming.values).toEqual(["b"]);
+
+      fetch.mockReset();
+
+      cache.evictAll();
+
+      // Verify value is no longer cached
+      const streamingA = cache.stream("string-a");
+      const streamingB = cache.stream("string-b");
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(streamingA.values).toBeUndefined();
+      expect(streamingB.values).toBeUndefined();
     });
   });
 

@@ -23,8 +23,9 @@ function getRandomUsers(): User[] {
   return shuffle(users).slice(0, 5);
 }
 
-export const userProfileCache = createCache<[number], User>(
-  async (id: number) => {
+export const userProfileCache = createCache<[number], User>({
+  debugLabel: "userProfileCache",
+  load: async (id: number) => {
     return new Promise((resolve, reject) => {
       const delay = 500 + Math.random() * 4_500;
       setTimeout(() => {
@@ -36,8 +37,8 @@ export const userProfileCache = createCache<[number], User>(
         }
       }, delay);
     });
-  }
-);
+  },
+});
 
 export const SelectedUserContext = createContext<{
   selectedUserId: number;

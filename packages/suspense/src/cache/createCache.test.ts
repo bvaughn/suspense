@@ -29,13 +29,17 @@ describe("createCache", () => {
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation((key) => key.toString());
 
-    cache = createCache<[string], string>(fetch, getCacheKey, "cache");
+    cache = createCache<[string], string>({
+      debugLabel: "cache",
+      getKey: getCacheKey,
+      load: fetch,
+    });
   });
 
   it("should supply a working default getCacheKey if none is provided", () => {
-    const cache = createCache<[string, number, boolean], string>(
-      (string: string, number: number, boolean: boolean) => string
-    );
+    const cache = createCache<[string, number, boolean], string>({
+      load: (string: string, number: number, boolean: boolean) => string,
+    });
     cache.cache("foo", "string", 123, true);
     cache.cache("bar", "other string", 456, false);
 
@@ -130,7 +134,7 @@ describe("createCache", () => {
       expect(cache.getValueIfCached("sync-2")).toEqual("VALUE 2");
     });
 
-    it("should refectch requested items after eviction", () => {
+    it("should refetch requested items after eviction", () => {
       cache.cache("VALUE", "sync");
       cache.evict("sync");
 
@@ -139,6 +143,37 @@ describe("createCache", () => {
       cache.fetchAsync("sync");
 
       expect(fetch).toHaveBeenCalled();
+    });
+  });
+
+  describe("evictAll", () => {
+    it("should event cached items", () => {
+      cache.cache("VALUE 1", "sync-1");
+      cache.cache("VALUE 2", "sync-2");
+
+      expect(cache.getValueIfCached("sync-1")).toEqual("VALUE 1");
+      expect(cache.getValueIfCached("sync-2")).toEqual("VALUE 2");
+
+      expect(fetch).not.toHaveBeenCalled();
+
+      cache.evictAll();
+
+      expect(cache.getValueIfCached("sync-1")).toEqual(undefined);
+      expect(cache.getValueIfCached("sync-2")).toEqual(undefined);
+    });
+
+    it("should refetch requested items after eviction", () => {
+      cache.cache("VALUE 1", "sync-1");
+      cache.cache("VALUE 2", "sync-2");
+
+      expect(fetch).not.toHaveBeenCalled();
+
+      cache.evictAll();
+
+      cache.fetchAsync("sync-1");
+      cache.fetchAsync("sync-2");
+
+      expect(fetch).toHaveBeenCalledTimes(2);
     });
   });
 

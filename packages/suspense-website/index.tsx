@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   CREATE_CACHE,
   CREATE_DEFERRED,
+  CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
   EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
@@ -16,6 +17,7 @@ import {
 
 import CreateCacheRoute from "./src/routes/api/createCache";
 import CreateDeferredRoute from "./src/routes/api/createDeferred";
+import CreateSingleEntryCacheRoute from "./src/routes/api/createSingleEntryCache";
 import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
 import IsThenableRoute from "./src/routes/api/isThenable";
@@ -40,6 +42,10 @@ root.render(
         <Route path="/" element={<HomeRoute />} />
         <Route path={CREATE_CACHE} element={<CreateCacheRoute />} />
         <Route path={CREATE_DEFERRED} element={<CreateDeferredRoute />} />
+        <Route
+          path={CREATE_SINGLE_ENTRY_CACHE}
+          element={<CreateSingleEntryCacheRoute />}
+        />
         <Route
           path={CREATE_STREAMING_CACHE}
           element={<CreateStreamingCacheRoute />}

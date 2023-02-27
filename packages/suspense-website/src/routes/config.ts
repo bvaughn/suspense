@@ -1,5 +1,6 @@
 export const CREATE_CACHE = "/createCache";
 export const CREATE_DEFERRED = "/createDeferred";
+export const CREATE_SINGLE_ENTRY_CACHE = "/createSingleEntryCache";
 export const CREATE_STREAMING_CACHE = "/createStreamingCache";
 export const IS_THENNABLE = "/isThenable";
 export const USE_CACHE_STATUS = "/useCacheStatus";

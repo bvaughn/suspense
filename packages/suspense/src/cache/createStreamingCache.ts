@@ -13,15 +13,37 @@ import {
 } from "../types";
 import { warnInDev } from "../utils/warnInDev";
 
+// Enable to help with debugging in dev
+const DEBUG_LOG_IN_DEV = false;
+
 export function createStreamingCache<
   Params extends Array<any>,
   Value,
   AdditionalData = undefined
->(
-  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void,
-  getKey: (...params: Params) => string = defaultGetKey,
-  debugLabel?: string
-): StreamingCache<Params, Value, AdditionalData> {
+>(options: {
+  debugLabel?: string;
+  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void;
+  getKey?: (...params: Params) => string;
+}): StreamingCache<Params, Value, AdditionalData> {
+  const { debugLabel, getKey = defaultGetKey, load } = options;
+
+  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+      const cacheKey = params ? `"${getKey(...params)}"` : "";
+      const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+
+      console.log(
+        `%c${prefix}`,
+        "font-weight: bold; color: yellow;",
+        debug,
+        cacheKey,
+        ...args
+      );
+    }
+  };
+
+  debugLogInDev("Creating cache ...");
+
   const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
     string,
@@ -29,6 +51,8 @@ export function createStreamingCache<
   >();
 
   function abort(...params: Params): boolean {
+    debugLogInDev("abort()", params);
+
     const cacheKey = getKey(...params);
     let abortController = abortControllerMap.get(cacheKey);
     if (abortController != null) {
@@ -40,9 +64,25 @@ export function createStreamingCache<
   }
 
   function evict(...params: Params) {
+    debugLogInDev("evict()", params);
+
     const cacheKey = getKey(...params);
 
     return streamingValuesMap.delete(cacheKey);
+  }
+
+  function evictAll(): boolean {
+    debugLogInDev(
+      `evictAll()`,
+      undefined,
+      `${streamingValuesMap.size} records`
+    );
+
+    const hadValues = streamingValuesMap.size > 0;
+
+    streamingValuesMap.clear();
+
+    return hadValues;
   }
 
   function getOrCreateStreamingValues(
@@ -164,6 +204,8 @@ export function createStreamingCache<
   }
 
   function prefetch(...params: Params): void {
+    debugLogInDev(`prefetch()`, params);
+
     getOrCreateStreamingValues(...params);
   }
 
@@ -191,6 +233,7 @@ export function createStreamingCache<
   return {
     abort,
     evict,
+    evictAll,
     prefetch,
     stream,
   };

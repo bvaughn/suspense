@@ -18,11 +18,33 @@ import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
 import { isPendingRecord } from "../utils/isPendingRecord";
 
-export function createCache<Params extends Array<any>, Value>(
-  load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value,
-  getKey: (...params: Params) => string = defaultGetKey,
-  debugLabel?: string
-): Cache<Params, Value> {
+// Enable to help with debugging in dev
+const DEBUG_LOG_IN_DEV = false;
+
+export function createCache<Params extends Array<any>, Value>(options: {
+  load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value;
+  getKey?: (...params: Params) => string;
+  debugLabel?: string;
+}): Cache<Params, Value> {
+  const { debugLabel, getKey = defaultGetKey, load } = options;
+
+  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+      const cacheKey = params ? `"${getKey(...params)}"` : "";
+      const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+
+      console.log(
+        `%c${prefix}`,
+        "font-weight: bold; color: yellow;",
+        debug,
+        cacheKey,
+        ...args
+      );
+    }
+  };
+
+  debugLogInDev("Creating cache ...");
+
   const recordMap = new Map<string, Record<Value>>();
   const subscriberMap = new Map<string, Set<StatusCallback>>();
 
@@ -30,6 +52,8 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = recordMap.get(cacheKey);
     if (record && isPendingRecord(record)) {
+      debugLogInDev("abort()", params);
+
       recordMap.delete(cacheKey);
 
       record.value.abortController.abort();
@@ -49,13 +73,27 @@ export function createCache<Params extends Array<any>, Value>(
       value,
     };
 
+    debugLogInDev("cache()", params, value);
+
     recordMap.set(cacheKey, record);
   }
 
   function evict(...params: Params): boolean {
     const cacheKey = getKey(...params);
 
+    debugLogInDev(`evict()`, params);
+
     return recordMap.delete(cacheKey);
+  }
+
+  function evictAll(): boolean {
+    debugLogInDev(`evictAll()`, undefined, `${recordMap.size} records`);
+
+    const hadRecords = recordMap.size > 0;
+
+    recordMap.clear();
+
+    return hadRecords;
   }
 
   function getOrCreateRecord(...params: Params): Record<Value> {
@@ -116,6 +154,8 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function prefetch(...params: Params): void {
+    debugLogInDev(`prefetch()`, params);
+
     fetchAsync(...params);
   }
 
@@ -219,6 +259,7 @@ export function createCache<Params extends Array<any>, Value>(
     abort,
     cache,
     evict,
+    evictAll,
     getStatus,
     getValue,
     getValueIfCached,

@@ -34,8 +34,10 @@ export const DEFAULT_MAX_TIME = 5_000;
 export const {
   fetchAsync: highlightSyntaxAsync,
   fetchSuspense: highlightSyntaxSuspense,
-} = createCache<[code: string, language: Language], ParsedTokens[]>(
-  async (code: string, language: Language) => {
+} = createCache<[code: string, language: Language], ParsedTokens[]>({
+  debugLabel: "SyntaxParsingCache",
+  getKey: (code: string, language: Language) => `${code.length}-${language}`,
+  load: async (code: string, language: Language) => {
     const languageExtension = await getLanguageExtension(language);
     const parsedTokens: ParsedTokens[] = [];
 
@@ -158,9 +160,7 @@ export const {
 
     return parsedTokens;
   },
-  (code: string, language: Language) => `${code.length}-${language}`,
-  "SyntaxParsingCache"
-);
+});
 
 function processSection(
   currentLineState: {

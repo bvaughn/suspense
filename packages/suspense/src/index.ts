@@ -1,5 +1,6 @@
 export * from "./constants";
 export * from "./cache/createCache";
+export * from "./cache/createSingleEntryCache";
 export * from "./cache/createStreamingCache";
 export * from "./hooks/useCacheStatus";
 export * from "./hooks/useStreamingValues";

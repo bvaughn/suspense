@@ -60,6 +60,18 @@ const createDeferred = {
   ),
 };
 
+const createSingleEntryCache = {
+  cache: processExample(
+    readFileSync(join(__dirname, "createSingleEntryCache", "cache.ts"), "utf8")
+  ),
+  cacheWithParameters: processExample(
+    readFileSync(
+      join(__dirname, "createSingleEntryCache", "cacheWithParameters.ts"),
+      "utf8"
+    )
+  ),
+};
+
 const createStreamingCache = {
   abort: processExample(
     readFileSync(join(__dirname, "createStreamingCache", "abort.ts"), "utf8")
@@ -128,4 +140,11 @@ const isThenable = {
   ),
 };
 
-export { createCache, createDeferred, createStreamingCache, demos, isThenable };
+export {
+  createCache,
+  createDeferred,
+  createSingleEntryCache,
+  createStreamingCache,
+  demos,
+  isThenable,
+};

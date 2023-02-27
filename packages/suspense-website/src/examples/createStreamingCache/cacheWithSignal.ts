@@ -3,8 +3,9 @@ import { createStreamingCache, StreamingCacheLoadOptions } from "suspense";
 type Comment = any;
 
 // REMOVE_BEFORE
-createStreamingCache<[userId: string], Comment>(
-  async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
+
+createStreamingCache<[userId: string], Comment>({
+  load: async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
     // An AbortSignal is included in the options parameter with each request
     const { signal } = options;
 
@@ -14,5 +15,5 @@ createStreamingCache<[userId: string], Comment>(
     };
 
     // ...
-  }
-);
+  },
+});

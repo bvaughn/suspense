@@ -18,7 +18,6 @@ export default function ScrollToTop(): null {
     // In all other cases, check fragment/scroll to top
     if (hash) {
       let element = document.querySelector(hash);
-      console.log("found element:", element);
       if (element) {
         element.scrollIntoView({ block: "start", behavior: "smooth" });
       }
