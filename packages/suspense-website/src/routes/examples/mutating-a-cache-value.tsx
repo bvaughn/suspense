@@ -20,6 +20,9 @@ export default function Route() {
       <Block type="demo">
         <Demo />
       </Block>
+      <Block>
+        <Code code={demos.mutatingCacheValue.addComment} />
+      </Block>
     </Container>
   );
 }

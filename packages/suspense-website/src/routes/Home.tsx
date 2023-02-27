@@ -12,6 +12,7 @@ import {
   CREATE_STREAMING_CACHE,
   EXAMPLE_ABORT_A_REQUEST,
   EXAMPLE_FETCH_WITH_STATUS,
+  EXAMPLE_MUTATING_A_CACHE_VALUE,
   EXAMPLE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
@@ -96,6 +97,11 @@ export default function Route() {
           <LinkListItem
             children="Aborting a request"
             to={EXAMPLE_ABORT_A_REQUEST}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Mutating a cache value"
+            to={EXAMPLE_MUTATING_A_CACHE_VALUE}
             type="plaintext"
           />
           <LinkListItem

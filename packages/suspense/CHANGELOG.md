@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.10
+* Add `useCacheMutation` hook for easier cache mutations.
+
 ## 0.0.9
 * Change `createCache` and `createStreamingCache` signatures to use named parameters.
 * Add `evictAll` method to `createCache` and `createStreamingCache` types.

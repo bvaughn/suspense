@@ -1,3 +1,4 @@
+import { unstable_getCacheForType as getCacheForType } from "react";
 import {
   STATUS_NOT_STARTED,
   STATUS_PENDING,
@@ -20,6 +21,14 @@ import { isPendingRecord } from "../utils/isPendingRecord";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
+
+function identity(): Object {
+  return {};
+}
+
+function subscribeToCacheRefreshes(): void {
+  getCacheForType<Object>(identity);
+}
 
 export function createCache<Params extends Array<any>, Value>(options: {
   load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value;
@@ -172,6 +181,13 @@ export function createCache<Params extends Array<any>, Value>(options: {
   }
 
   function fetchSuspense(...params: Params): Value {
+    // HACK
+    // This method notifies React that the component reading this data is subscribed to the cache.
+    // This will schedule an update if useCacheRefresh() is later called because of a mutation.
+    // We can't use the Map returned by this method though, without breaking the imperative APIs
+    // since those methods are called outside of React's lifecycle.
+    subscribeToCacheRefreshes();
+
     const record = getOrCreateRecord(...params);
     if (record.status === STATUS_RESOLVED) {
       return record.value;

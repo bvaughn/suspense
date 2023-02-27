@@ -109,7 +109,12 @@ const demos = {
     ),
   },
   mutatingCacheValue: {
-    // TODO
+    addComment: processExample(
+      readFileSync(
+        join(__dirname, "demos", "mutating-a-cache-value", "add-comment.ts"),
+        "utf8"
+      )
+    ),
   },
   renderingCacheStatus: {
     UserStatusBadge: processExample(

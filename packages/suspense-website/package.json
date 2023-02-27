@@ -26,8 +26,8 @@
     "lodash.shuffle": "^4.2.0",
     "match-sorter": "latest",
     "playwright": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "react": "experimental",
+    "react-dom": "experimental",
     "react-router-dom": "latest",
     "react-virtualized-auto-sizer": "latest",
     "sort-by": "latest"
