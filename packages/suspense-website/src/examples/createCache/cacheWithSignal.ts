@@ -1,8 +1,9 @@
 import { CacheLoadOptions, createCache } from "suspense";
 
 // REMOVE_BEFORE
-createCache<[userId: string], JSON>(
-  async (userId: string, options: CacheLoadOptions) => {
+
+createCache<[userId: string], JSON>({
+  load: async (userId: string, options: CacheLoadOptions) => {
     // An AbortSignal is passed in as the final parameter with each request
     const { signal } = options;
 
@@ -13,5 +14,5 @@ createCache<[userId: string], JSON>(
     });
     const json = await response.json();
     return json;
-  }
-);
+  },
+});

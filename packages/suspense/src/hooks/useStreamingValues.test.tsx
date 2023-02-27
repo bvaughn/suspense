@@ -50,8 +50,10 @@ describe("useStreamingValue", () => {
 
     optionsMap = new Map();
 
-    cache = createStreamingCache((options, key) => {
-      optionsMap.set(key, options);
+    cache = createStreamingCache({
+      load: (options, key) => {
+        optionsMap.set(key, options);
+      },
     });
   });
 

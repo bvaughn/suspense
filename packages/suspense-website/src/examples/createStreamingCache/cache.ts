@@ -8,9 +8,9 @@ const socket = new WebSocket(`ws://example.com`);
 export const userCommentsCache = createStreamingCache<
   [userId: string],
   Comment
->(
+>({
   // Stream data for params
-  async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
+  load: async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
     const { reject, update, resolve } = options;
 
     let countLoaded = 0;
@@ -48,5 +48,5 @@ export const userCommentsCache = createStreamingCache<
         userId,
       })
     );
-  }
-);
+  },
+});

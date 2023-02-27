@@ -30,17 +30,17 @@ describe("createStreamingCache", () => {
       }
     );
 
-    cache = createStreamingCache<[string], string, any>(
-      fetch,
-      getCacheKey,
-      "cache"
-    );
+    cache = createStreamingCache<[string], string, any>({
+      debugLabel: "cache",
+      getKey: getCacheKey,
+      load: fetch,
+    });
   });
 
   it("should supply a working default getCacheKey if none is provided", () => {
-    const cache = createStreamingCache<[string, number, boolean], string>(
-      fetch
-    );
+    const cache = createStreamingCache<[string, number, boolean], string>({
+      load: fetch,
+    });
     cache.stream("string", 123, true);
 
     expect(fetch).toHaveBeenCalledTimes(1);

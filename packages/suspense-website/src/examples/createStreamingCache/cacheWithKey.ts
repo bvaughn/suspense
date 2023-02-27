@@ -13,9 +13,14 @@ class ApiClient {
 type Comment = any;
 
 // REMOVE_BEFORE
-createStreamingCache<[client: ApiClient, id: string], Comment>(
+
+createStreamingCache<[client: ApiClient, id: string], Comment>({
+  // The "client" parameter can't be serialized to a string
+  // The "id" parameter is unique, so it can be the key
+  getKey: (client: ApiClient, id: string) => id,
+
   // In this example, comments are fetched using a "client" object
-  async (
+  load: async (
     options: StreamingCacheLoadOptions<Comment>,
     client: ApiClient,
     id: string
@@ -28,7 +33,4 @@ createStreamingCache<[client: ApiClient, id: string], Comment>(
       () => resolve()
     );
   },
-
-  // The id parameter is sufficiently unique to be the key
-  (client: ApiClient, id: string) => id
-);
+});

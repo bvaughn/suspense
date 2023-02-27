@@ -21,8 +21,11 @@ export type Metadata = {
   postCount: number;
 };
 
-const streamingCache = createStreamingCache<[Post[]], Post, Metadata>(
-  async (options: StreamingCacheLoadOptions<Post, Metadata>, posts: Post[]) => {
+const streamingCache = createStreamingCache<[Post[]], Post, Metadata>({
+  load: async (
+    options: StreamingCacheLoadOptions<Post, Metadata>,
+    posts: Post[]
+  ) => {
     const { signal } = options;
 
     for (let i = 0; i < posts.length; i++) {
@@ -40,8 +43,8 @@ const streamingCache = createStreamingCache<[Post[]], Post, Metadata>(
       options.update([post], progress, { postCount: posts.length });
     }
     options.resolve();
-  }
-);
+  },
+});
 
 export default function Demo() {
   return (

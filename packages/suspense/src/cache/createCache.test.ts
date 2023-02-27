@@ -29,13 +29,17 @@ describe("createCache", () => {
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation((key) => key.toString());
 
-    cache = createCache<[string], string>(fetch, getCacheKey, "cache");
+    cache = createCache<[string], string>({
+      debugLabel: "cache",
+      getKey: getCacheKey,
+      load: fetch,
+    });
   });
 
   it("should supply a working default getCacheKey if none is provided", () => {
-    const cache = createCache<[string, number, boolean], string>(
-      (string: string, number: number, boolean: boolean) => string
-    );
+    const cache = createCache<[string, number, boolean], string>({
+      load: (string: string, number: number, boolean: boolean) => string,
+    });
     cache.cache("foo", "string", 123, true);
     cache.cache("bar", "other string", 456, false);
 
