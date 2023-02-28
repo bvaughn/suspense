@@ -10,9 +10,10 @@ import {
   CREATE_DEFERRED,
   CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
-  EXAMPLE_ABORT_A_REQUEST,
-  EXAMPLE_FETCH_WITH_STATUS,
-  EXAMPLE_STREAMING_CACHE,
+  GUIDE_ABORT_A_REQUEST,
+  GUIDE_FETCH_WITH_STATUS,
+  GUIDE_MEMORY_MANAGEMENT,
+  GUIDE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -94,18 +95,23 @@ export default function Route() {
         <SubHeading title="Guides" />
         <ul>
           <LinkListItem
+            children="Memory management"
+            to={GUIDE_MEMORY_MANAGEMENT}
+            type="plaintext"
+          />
+          <LinkListItem
             children="Aborting a request"
-            to={EXAMPLE_ABORT_A_REQUEST}
+            to={GUIDE_ABORT_A_REQUEST}
             type="plaintext"
           />
           <LinkListItem
             children="Creating a streaming cache"
-            to={EXAMPLE_STREAMING_CACHE}
+            to={GUIDE_STREAMING_CACHE}
             type="plaintext"
           />
           <LinkListItem
             children="Rendering cache status"
-            to={EXAMPLE_FETCH_WITH_STATUS}
+            to={GUIDE_FETCH_WITH_STATUS}
             type="plaintext"
           />
         </ul>
