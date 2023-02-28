@@ -55,6 +55,17 @@
   flex: 0 0 1.75rem !important;
 }
 
+.Content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.Content * {
+  line-height: 1;
+  margin: 0;
+}
+
 .Note[data-type="note"] .Content,
 .Note[data-type="quote"] .Content {
   line-height: 1rem;

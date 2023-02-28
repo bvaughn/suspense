@@ -6,10 +6,11 @@ import {
   CREATE_DEFERRED,
   CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
-  EXAMPLE_ABORT_A_REQUEST,
-  EXAMPLE_FETCH_WITH_STATUS,
-  EXAMPLE_MUTATING_A_CACHE_VALUE,
-  EXAMPLE_STREAMING_CACHE,
+  GUIDE_ABORT_A_REQUEST,
+  GUIDE_FETCH_WITH_STATUS,
+  GUIDE_MEMORY_MANAGEMENT,
+  GUIDE_MUTATING_A_CACHE_VALUE,
+  GUIDE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -25,6 +26,7 @@ import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
+import MemoryManagementRoute from "./src/routes/examples/memory-management";
 import MutatingCacheValueRoute from "./src/routes/examples/mutating-a-cache-value";
 import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-status-while-fetching";
 import CreatingStreamingCacheRoute from "./src/routes/examples/streaming-cache";
@@ -51,19 +53,23 @@ root.render(
           element={<CreateStreamingCacheRoute />}
         />
         <Route
-          path={EXAMPLE_ABORT_A_REQUEST}
+          path={GUIDE_ABORT_A_REQUEST}
           element={<AbortingRequestRoute />}
         />
         <Route
-          path={EXAMPLE_FETCH_WITH_STATUS}
+          path={GUIDE_FETCH_WITH_STATUS}
           element={<RenderingStatusWhileFetchingRoute />}
         />
         <Route
-          path={EXAMPLE_MUTATING_A_CACHE_VALUE}
+          path={GUIDE_MEMORY_MANAGEMENT}
+          element={<MemoryManagementRoute />}
+        />
+        <Route
+          path={GUIDE_MUTATING_A_CACHE_VALUE}
           element={<MutatingCacheValueRoute />}
         />
         <Route
-          path={EXAMPLE_STREAMING_CACHE}
+          path={GUIDE_STREAMING_CACHE}
           element={<CreatingStreamingCacheRoute />}
         />
         <Route path={IS_THENNABLE} element={<IsThenableRoute />} />

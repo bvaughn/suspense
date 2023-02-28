@@ -31,6 +31,12 @@ const createCache = {
   cacheWithSignal: processExample(
     readFileSync(join(__dirname, "createCache", "cacheWithSignal.ts"), "utf8")
   ),
+  cacheWithoutWeakRef: processExample(
+    readFileSync(
+      join(__dirname, "createCache", "cacheWithoutWeakRef.ts"),
+      "utf8"
+    )
+  ),
   evict: processExample(
     readFileSync(join(__dirname, "createCache", "evict.ts"), "utf8")
   ),

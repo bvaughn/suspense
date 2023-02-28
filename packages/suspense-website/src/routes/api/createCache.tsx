@@ -5,7 +5,11 @@ import { createCache } from "../../examples";
 import Header from "../../components/Header";
 import SubHeading from "../../components/SubHeading";
 import { Link } from "react-router-dom";
-import { IS_THENNABLE, USE_CACHE_STATUS } from "../config";
+import {
+  GUIDE_MEMORY_MANAGEMENT,
+  IS_THENNABLE,
+  USE_CACHE_STATUS,
+} from "../config";
 import Note from "../../components/Note";
 import { ExternalLink } from "../../components/ExternalLink";
 
@@ -48,6 +52,11 @@ export default function Route() {
           that's provided to support cancellation.
         </p>
         <Code code={createCache.cacheWithSignal} />
+        <Note>
+          Caches use <code>WeakRef</code> and <code>FinalizationRegistry</code>{" "}
+          by default,{" "}
+          <Link to={GUIDE_MEMORY_MANAGEMENT}>but this is configurable</Link>.
+        </Note>
       </Block>
       <Block>
         <SubHeading title="Using a cache with suspense" />
