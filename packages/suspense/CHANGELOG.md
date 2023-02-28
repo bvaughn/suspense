@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.10
+* `createCache` uses `WeakRef` and `FinalizationRegistry` by default to avoid memory leaks; this can be disabled with a new `useWeakRef` config flag (see #12).
+
 ## 0.0.9
 * Change `createCache` and `createStreamingCache` signatures to use named parameters.
 * Add `evictAll` method to `createCache` and `createStreamingCache` types.
