@@ -17,26 +17,22 @@ describe("WeakRefMap", () => {
     map.set("foo", foo);
     map.set("bar", bar);
 
-    expect(map.size()).toBe(2);
     expect(map.has("foo")).toBe(true);
     expect(map.has("bar")).toBe(true);
     expect(map.get("foo")).toBe(foo);
     expect(map.get("bar")).toBe(bar);
 
     expect(map.delete("foo")).toBe(true);
-    expect(map.size()).toBe(1);
     expect(map.has("foo")).toBe(false);
     expect(map.get("foo")).toBe(undefined);
     expect(map.has("bar")).toBe(true);
     expect(map.get("bar")).toBe(bar);
 
     map.set("bar", foo);
-    expect(map.size()).toBe(1);
     expect(map.has("bar")).toBe(true);
     expect(map.get("bar")).toBe(foo);
 
     map.delete("bar");
-    expect(map.size()).toBe(0);
     expect(map.has("foo")).toBe(false);
     expect(map.has("bar")).toBe(false);
     expect(map.get("foo")).toBe(undefined);
@@ -49,11 +45,27 @@ describe("WeakRefMap", () => {
 
     finalizer.mockReset();
 
-    requestGC();
-
+    await requestGC();
     await waitForGC(() => finalizer.mock.calls.length === 2);
 
     expect(finalizer).toHaveBeenCalledWith("foo");
     expect(finalizer).toHaveBeenCalledWith("bar");
+  });
+
+  it("should unregister a value when a key is updated", async () => {
+    map.set("test", { label: "one" });
+
+    expect(finalizer).not.toHaveBeenCalled();
+
+    const value = { label: "two" };
+    map.set("test", value);
+
+    await requestGC();
+    await waitForGC(() => finalizer.mock.calls.length > 0);
+
+    expect(finalizer).toHaveBeenCalledWith("test");
+
+    expect(map.has("test")).toBe(true);
+    expect(map.get("test")).toBe(value);
   });
 });

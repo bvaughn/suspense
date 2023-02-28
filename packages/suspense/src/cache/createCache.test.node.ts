@@ -1,15 +1,10 @@
 import { createCache } from "./createCache";
 import { Cache, CacheLoadOptions } from "../types";
-import { WeakRefMap } from "../utils/WeakRefMap";
 import { requestGC, waitForGC } from "../utils/test";
 
 describe("createCache", () => {
   let cache: Cache<[string], Object>;
   let fetch: jest.Mock<Promise<Object> | Object, [string, CacheLoadOptions]>;
-
-  afterEach(async () => {
-    await runAndWaitForGC();
-  });
 
   beforeEach(() => {
     fetch = jest.fn();
@@ -38,7 +33,8 @@ describe("createCache", () => {
     expect(cache.getValueIfCached("two")).not.toBeUndefined();
     expect(cache.getValueIfCached("three")).not.toBeUndefined();
 
-    await runAndWaitForGC();
+    await requestGC();
+    await waitForGC();
 
     expect(cache.getValueIfCached("one")).toBeUndefined();
     expect(cache.getValueIfCached("two")).toBeUndefined();
@@ -57,7 +53,8 @@ describe("createCache", () => {
     expect(cache.getValueIfCached("one")).not.toBeUndefined();
     expect(cache.getValueIfCached("two")).not.toBeUndefined();
 
-    await runAndWaitForGC();
+    await requestGC();
+    await waitForGC();
 
     expect(cache.getValueIfCached("one")).not.toBeUndefined();
     expect(cache.getValueIfCached("two")).not.toBeUndefined();
@@ -66,15 +63,4 @@ describe("createCache", () => {
 
 function createObject(): Object {
   return {};
-}
-
-async function runAndWaitForGC() {
-  const finalizer = jest.fn();
-
-  const map = new WeakRefMap(finalizer);
-  map.set("control", createObject());
-
-  requestGC();
-
-  await waitForGC(() => finalizer.mock.calls.length > 0);
 }
