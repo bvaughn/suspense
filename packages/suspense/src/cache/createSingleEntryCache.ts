@@ -1,20 +1,16 @@
-import { createCache } from "./createCache";
-import { Cache, CacheLoadOptions, Thenable } from "../types";
+import { createCache, CreateCacheOptions } from "./createCache";
+import { Cache } from "../types";
 
 const key = Symbol.for("createSingleEntryCache").toString();
 
-export function createSingleEntryCache<
-  Params extends Array<any>,
-  Value
->(options: {
-  load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value;
-  debugLabel?: string;
-}): Cache<Params, Value> {
+export function createSingleEntryCache<Params extends Array<any>, Value>(
+  options: Omit<CreateCacheOptions<Params, Value>, "getKey">
+): Cache<Params, Value> {
   if (options.hasOwnProperty("getKey")) {
     throw Error("createSingleEntryCache does not support a getKey option");
   }
 
-  return createCache({
+  return createCache<Params, Value>({
     getKey: () => key,
     ...options,
   });

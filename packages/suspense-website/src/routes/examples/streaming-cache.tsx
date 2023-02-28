@@ -22,7 +22,6 @@ export default function Route() {
           to render a larger data set as it incrementally loads.
         </p>
         <p>Click the "start demo" button to fetch user data in the cache.</p>
-        {/*<Code code={demos.} />*/}
       </Block>
       <Block type="demo">
         <Demo />
