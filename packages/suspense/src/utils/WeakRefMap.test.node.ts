@@ -1,13 +1,19 @@
+import { requestGC, waitForGC } from "./test";
 import { WeakRefMap } from "./WeakRefMap";
 
 describe("WeakRefMap", () => {
-  it("should implement a basic Map-like API", () => {
-    const finalizer = jest.fn();
+  let finalizer: jest.Mock<FinalizationRegistry<string>>;
+  let map: WeakRefMap<string, object>;
 
+  beforeEach(() => {
+    finalizer = jest.fn();
+    map = new WeakRefMap(finalizer);
+  });
+
+  it("should implement a basic Map-like API", () => {
     const foo = { foo: true };
     const bar = { bar: true };
 
-    const map = new WeakRefMap(finalizer);
     map.set("foo", foo);
     map.set("bar", bar);
 
@@ -35,5 +41,19 @@ describe("WeakRefMap", () => {
     expect(map.has("bar")).toBe(false);
     expect(map.get("foo")).toBe(undefined);
     expect(map.get("bar")).toBe(undefined);
+  });
+
+  it("should call the finalizer function when a value is garbage collected", async () => {
+    map.set("foo", { foo: true });
+    map.set("bar", { bar: true });
+
+    finalizer.mockReset();
+
+    requestGC();
+
+    await waitForGC(() => finalizer.mock.calls.length === 2);
+
+    expect(finalizer).toHaveBeenCalledWith("foo");
+    expect(finalizer).toHaveBeenCalledWith("bar");
   });
 });
