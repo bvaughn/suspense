@@ -1,5 +1,4 @@
-import { GetPoint } from "./createRangeCache";
-import { ComparisonFunction } from "../../types";
+import { ComparisonFunction, GetPoint } from "../../types";
 import {
   findNearestIndexBefore,
   findNearestIndexAfter,

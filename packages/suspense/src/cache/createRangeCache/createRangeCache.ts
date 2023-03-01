@@ -4,10 +4,12 @@ import {
   STATUS_RESOLVED,
 } from "../../constants";
 import {
-  CacheLoadOptions,
+  RangeCacheLoadOptions,
   ComparisonFunction,
+  GetPoint,
   PendingRecord,
   RangeCache,
+  RangeIterator,
   Record,
   Thenable,
 } from "../../types";
@@ -24,19 +26,11 @@ const DEBUG_LOG_IN_DEV = false;
 
 type SerializableToString = { toString(): string };
 
-export type GetPoint<Point, Value> = (value: Value) => Point;
-
-export type RangeMetadata<Value> = {
+type RangeMetadata<Value> = {
   pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
 };
-
-export type RangeIterator<Point> = (
-  start: Point,
-  end: Point,
-  callback: (current: Point) => void
-) => void;
 
 export function createRangeCache<
   Point extends SerializableToString,
@@ -50,7 +44,7 @@ export function createRangeCache<
   load: (
     start: Point,
     end: Point,
-    ...params: [...Params, CacheLoadOptions]
+    ...params: [...Params, RangeCacheLoadOptions]
   ) => Thenable<Value[]> | Value[];
   rangeIterator: RangeIterator<Point>;
 }): RangeCache<Point, Params, Value> {

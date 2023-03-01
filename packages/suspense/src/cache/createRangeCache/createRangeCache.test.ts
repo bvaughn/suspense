@@ -1,4 +1,9 @@
-import { CacheLoadOptions, Deferred, RangeCache, Thenable } from "../../types";
+import {
+  RangeCacheLoadOptions,
+  Deferred,
+  RangeCache,
+  Thenable,
+} from "../../types";
 import { createDeferred } from "../../utils/createDeferred";
 import { isThenable } from "../../utils/isThenable";
 import { createRangeCache } from "./createRangeCache";
@@ -19,7 +24,7 @@ describe("createRangeCache", () => {
   let cache: RangeCache<number, [id: string], number>;
   let load: jest.Mock<
     Thenable<number[]>,
-    [start: number, end: number, id: string, options: CacheLoadOptions]
+    [start: number, end: number, id: string, options: RangeCacheLoadOptions]
   >;
   let rangeIterator: jest.Mock<
     void,
@@ -33,7 +38,7 @@ describe("createRangeCache", () => {
         start: number,
         end: number,
         id: string,
-        options: CacheLoadOptions
+        options: RangeCacheLoadOptions
       ) => createContiguousArray(start, end)
     );
 
@@ -67,7 +72,7 @@ describe("createRangeCache", () => {
           start: number,
           end: number,
           id: string,
-          options: CacheLoadOptions
+          options: RangeCacheLoadOptions
         ) => {
           abortSignals.push(options.signal);
 

@@ -1,5 +1,4 @@
-import { GetPoint } from "./createRangeCache";
-import { ComparisonFunction } from "../../types";
+import { ComparisonFunction, GetPoint } from "../../types";
 
 export function findNearestIndex<Point, Value>(
   sortedValues: Value[],
