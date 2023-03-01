@@ -1,6 +1,6 @@
 import { sliceValues } from "./sliceValues";
 
-function getPoint(value: number) {
+function getPointForValue(value: number) {
   return value;
 }
 
@@ -10,7 +10,13 @@ function comparePoints(a: number, b: number): number {
 
 describe("sliceValues", () => {
   function test(sortedValues: number[], start: number, end: number): number[] {
-    return sliceValues(sortedValues, start, end, getPoint, comparePoints);
+    return sliceValues(
+      sortedValues,
+      start,
+      end,
+      getPointForValue,
+      comparePoints
+    );
   }
 
   it("should handle an empty array", () => {

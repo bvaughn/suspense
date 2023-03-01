@@ -6,10 +6,9 @@ import {
 import {
   RangeCacheLoadOptions,
   ComparisonFunction,
-  GetPoint,
+  GetPointForValue,
   PendingRecord,
   RangeCache,
-  RangeIterator,
   Record,
   Thenable,
 } from "../../types";
@@ -17,6 +16,8 @@ import { assertPendingRecord } from "../../utils/assertPendingRecord";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
+import { defaultComparePoints } from "./defaultComparePoints";
+import { defaultGetRangeIterator } from "./defaultGetRangeIterator";
 import { findMissingRanges } from "./findMissingRanges";
 import { findNearestIndexAfter } from "./findNearestIndex";
 import { sliceValues } from "./sliceValues";
@@ -37,24 +38,24 @@ export function createRangeCache<
   Params extends Array<any>,
   Value
 >(options: {
-  comparePoints: ComparisonFunction<Point>;
+  comparePoints?: ComparisonFunction<Point>;
   debugLabel?: string;
   getKey?: (...params: Params) => string;
-  getPoint: GetPoint<Point, Value>;
+  getPointForValue: GetPointForValue<Point, Value>;
+  getRangeIterator?: (start: Point, end: Point) => Iterator<Point>;
   load: (
     start: Point,
     end: Point,
     ...params: [...Params, RangeCacheLoadOptions]
   ) => Thenable<Value[]> | Value[];
-  rangeIterator: RangeIterator<Point>;
 }): RangeCache<Point, Params, Value> {
   const {
-    comparePoints,
+    comparePoints = defaultComparePoints,
     debugLabel,
     getKey = defaultGetKey,
-    getPoint,
+    getPointForValue,
+    getRangeIterator = defaultGetRangeIterator,
     load,
-    rangeIterator,
   } = options;
 
   const rangeMap = new Map<string, RangeMetadata<Value>>();
@@ -218,7 +219,7 @@ export function createRangeCache<
     const index = findNearestIndexAfter(
       rangeMetadata.sortedValues,
       start,
-      getPoint,
+      getPointForValue,
       comparePoints
     );
 
@@ -243,8 +244,8 @@ export function createRangeCache<
       rangeMetadata.sortedValues,
       start,
       end,
-      getPoint,
-      rangeIterator,
+      getPointForValue,
+      getRangeIterator,
       comparePoints
     );
 
@@ -267,7 +268,7 @@ export function createRangeCache<
           rangeMetadata.sortedValues,
           start,
           end,
-          getPoint,
+          getPointForValue,
           comparePoints
         );
 

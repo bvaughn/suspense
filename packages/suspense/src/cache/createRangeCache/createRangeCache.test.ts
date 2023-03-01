@@ -1,3 +1,4 @@
+import { Iterator } from "typescript";
 import {
   RangeCacheLoadOptions,
   Deferred,
@@ -7,16 +8,13 @@ import {
 import { createDeferred } from "../../utils/createDeferred";
 import { isThenable } from "../../utils/isThenable";
 import { createRangeCache } from "./createRangeCache";
-
-function comparePoints(a: number, b: number): number {
-  return a - b;
-}
+import { defaultGetRangeIterator } from "./defaultGetRangeIterator";
 
 function createContiguousArray(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
 
-function getPoint(value: number) {
+function getPointForValue(value: number) {
   return value;
 }
 
@@ -25,10 +23,6 @@ describe("createRangeCache", () => {
   let load: jest.Mock<
     Thenable<number[]>,
     [start: number, end: number, id: string, options: RangeCacheLoadOptions]
-  >;
-  let rangeIterator: jest.Mock<
-    void,
-    [start: number, end: number, callback: (current: number) => void]
   >;
 
   beforeEach(() => {
@@ -42,20 +36,9 @@ describe("createRangeCache", () => {
       ) => createContiguousArray(start, end)
     );
 
-    rangeIterator = jest.fn();
-    rangeIterator.mockImplementation(
-      (start: number, end: number, callback: (current: number) => void) => {
-        for (let current = start; current <= end; current++) {
-          callback(current);
-        }
-      }
-    );
-
     cache = createRangeCache<number, [id: string], number>({
-      comparePoints,
-      getPoint,
+      getPointForValue,
       load,
-      rangeIterator,
     });
   });
 
@@ -221,6 +204,15 @@ describe("createRangeCache", () => {
     });
 
     it("should use the supplied iterator to determine which range(s) to load", async () => {
+      const getRangeIterator = jest.fn();
+      getRangeIterator.mockImplementation(defaultGetRangeIterator);
+
+      cache = createRangeCache<number, [id: string], number>({
+        getPointForValue,
+        getRangeIterator,
+        load,
+      });
+
       // Prime the cache with some initial values
       for (let index = 1; index < 10; index += 2) {
         await cache.fetchAsync(index, index, "test");
@@ -229,8 +221,25 @@ describe("createRangeCache", () => {
       const numCalls = load.mock.calls.length;
 
       // Configure our iterator to report no gaps between 3–5 and 7–9
-      rangeIterator.mockImplementation((_, __, callback) => {
-        [1, 2, 3, 5, 6, 7, 9, 10].forEach((current) => callback(current));
+      getRangeIterator.mockImplementation((start: number, end: number) => {
+        const values = [1, 2, 3, 5, 6, 7, 9, 10];
+        let index = 0;
+
+        const iterator: Iterator<number> = {
+          next() {
+            if (index < values.length) {
+              const value = values[index];
+
+              index++;
+
+              return { done: false, value };
+            }
+
+            return { done: true, value: null };
+          },
+        };
+
+        return iterator;
       });
 
       await cache.fetchAsync(1, 10, "test");

@@ -66,6 +66,18 @@ const createDeferred = {
   ),
 };
 
+const createRangeCache = {
+  cache: processExample(
+    readFileSync(join(__dirname, "createRangeCache", "cache.ts"), "utf8")
+  ),
+  cacheWithCustomComparePoint: processExample(
+    readFileSync(
+      join(__dirname, "createRangeCache", "cacheWithCustomComparePoint.ts"),
+      "utf8"
+    )
+  ),
+};
+
 const createSingleEntryCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createSingleEntryCache", "cache.ts"), "utf8")
@@ -149,6 +161,7 @@ const isThenable = {
 export {
   createCache,
   createDeferred,
+  createRangeCache,
   createSingleEntryCache,
   createStreamingCache,
   demos,

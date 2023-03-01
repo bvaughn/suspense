@@ -4,7 +4,7 @@ import {
   findNearestIndexAfter,
 } from "./findNearestIndex";
 
-function getPoint(value: number) {
+function getPointForValue(value: number) {
   return value;
 }
 
@@ -14,7 +14,12 @@ function comparePoints(a: number, b: number): number {
 
 describe("findNearestIndex", () => {
   function test(sortedValues: number[], targetValue: number): number {
-    return findNearestIndex(sortedValues, targetValue, getPoint, comparePoints);
+    return findNearestIndex(
+      sortedValues,
+      targetValue,
+      getPointForValue,
+      comparePoints
+    );
   }
 
   it("should handle an empty array", () => {
@@ -49,7 +54,7 @@ describe("findNearestIndexBefore", () => {
     return findNearestIndexBefore(
       sortedValues,
       targetValue,
-      getPoint,
+      getPointForValue,
       comparePoints
     );
   }
@@ -95,7 +100,7 @@ describe("findNearestIndexAfter", () => {
     return findNearestIndexAfter(
       sortedValues,
       targetValue,
-      getPoint,
+      getPointForValue,
       comparePoints
     );
   }

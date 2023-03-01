@@ -1,4 +1,4 @@
-import { ComparisonFunction, GetPoint } from "../../types";
+import { ComparisonFunction, GetPointForValue } from "../../types";
 import {
   findNearestIndexBefore,
   findNearestIndexAfter,
@@ -8,7 +8,7 @@ export function sliceValues<Point, Value>(
   sortedValues: Value[],
   start: Point,
   end: Point,
-  getPoint: GetPoint<Point, Value>,
+  getPointForValue: GetPointForValue<Point, Value>,
   comparePoints: ComparisonFunction<Point>
 ): Value[] {
   if (sortedValues.length === 0) {
@@ -18,14 +18,14 @@ export function sliceValues<Point, Value>(
   const startIndex = findNearestIndexAfter(
     sortedValues,
     start,
-    getPoint,
+    getPointForValue,
     comparePoints
   );
 
   const endIndex = findNearestIndexBefore(
     sortedValues,
     end,
-    getPoint,
+    getPointForValue,
     comparePoints
   );
 

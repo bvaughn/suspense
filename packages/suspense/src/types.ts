@@ -105,13 +105,7 @@ export type ComparisonFunction<T> = (a: T, b: T) => number;
 
 export type RangeTuple<Point> = [start: Point, end: Point];
 
-export type GetPoint<Point, Value> = (value: Value) => Point;
-
-export type RangeIterator<Point> = (
-  start: Point,
-  end: Point,
-  callback: (current: Point) => void
-) => void;
+export type GetPointForValue<Point, Value> = (value: Value) => Point;
 
 // Streaming cache types
 

@@ -4,18 +4,27 @@ function comparePoints(a: number, b: number): number {
   return a - b;
 }
 
-function getPoint(value: number) {
+function getPointForValue(value: number) {
   return value;
 }
 
-function rangeIterator(
-  start: number,
-  end: number,
-  callback: (current: number) => void
-) {
-  for (let current = start; current <= end; current++) {
-    callback(current);
-  }
+function getRangeIterator(start: number, end: number): Iterator<number> {
+  let current = start;
+
+  return {
+    next() {
+      let done = true;
+      let value = null;
+
+      if (current <= end) {
+        done = false;
+        value = current;
+        current++;
+      }
+
+      return { done, value };
+    },
+  };
 }
 
 describe("findMissingRanges", () => {
@@ -28,8 +37,8 @@ describe("findMissingRanges", () => {
       sortedValues,
       start,
       end,
-      getPoint,
-      rangeIterator,
+      getPointForValue,
+      getRangeIterator,
       comparePoints
     );
   }

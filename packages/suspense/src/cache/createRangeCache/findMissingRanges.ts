@@ -1,17 +1,12 @@
-import {
-  ComparisonFunction,
-  GetPoint,
-  RangeIterator,
-  RangeTuple,
-} from "../../types";
+import { ComparisonFunction, GetPointForValue, RangeTuple } from "../../types";
 import { findNearestIndex } from "./findNearestIndex";
 
 export function findMissingRanges<Point, Value>(
   sortedValues: Value[],
   start: Point,
   end: Point,
-  getPoint: GetPoint<Point, Value>,
-  rangeIterator: RangeIterator<Point>,
+  getPointForValue: GetPointForValue<Point, Value>,
+  getRangeIterator: (start: Point, end: Point) => Iterator<Point>,
   comparisonFunction: ComparisonFunction<Point>
 ): RangeTuple<Point>[] {
   if (sortedValues.length === 0) {
@@ -22,14 +17,16 @@ export function findMissingRanges<Point, Value>(
 
   let currentRange: RangeTuple<Point> | null = null;
 
-  rangeIterator(start, end, (current: Point) => {
+  const iterator = getRangeIterator(start, end);
+  const iterable: Iterable<Point> = { [Symbol.iterator]: () => iterator };
+  for (let current of iterable) {
     const index = findNearestIndex(
       sortedValues,
       current,
-      getPoint,
+      getPointForValue,
       comparisonFunction
     );
-    const foundMatch = current === getPoint(sortedValues[index]);
+    const foundMatch = current === getPointForValue(sortedValues[index]);
 
     if (foundMatch) {
       if (currentRange) {
@@ -44,7 +41,7 @@ export function findMissingRanges<Point, Value>(
         currentRange = [current, current];
       }
     }
-  });
+  }
 
   if (currentRange) {
     missingRanges.push(currentRange);

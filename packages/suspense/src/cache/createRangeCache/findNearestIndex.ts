@@ -1,9 +1,9 @@
-import { ComparisonFunction, GetPoint } from "../../types";
+import { ComparisonFunction, GetPointForValue } from "../../types";
 
 export function findNearestIndex<Point, Value>(
   sortedValues: Value[],
-  targetPoint: Point,
-  getPoint: GetPoint<Point, Value>,
+  targetPointForValue: Point,
+  getPointForValue: GetPointForValue<Point, Value>,
   comparisonFunction: ComparisonFunction<Point>
 ): number {
   let lowIndex = 0;
@@ -14,8 +14,8 @@ export function findNearestIndex<Point, Value>(
     middleIndex = (lowIndex + highIndex) >>> 1;
 
     const currentValue = sortedValues[middleIndex];
-    const currentPoint = getPoint(currentValue);
-    const value = comparisonFunction(targetPoint, currentPoint);
+    const currentPoint = getPointForValue(currentValue);
+    const value = comparisonFunction(targetPointForValue, currentPoint);
     if (value === 0) {
       return middleIndex;
     } else if (value > 0) {
@@ -32,8 +32,8 @@ export function findNearestIndex<Point, Value>(
       return 0;
   }
 
-  const middlePoint = getPoint(sortedValues[middleIndex]);
-  const value = comparisonFunction(targetPoint, middlePoint);
+  const middlePoint = getPointForValue(sortedValues[middleIndex]);
+  const value = comparisonFunction(targetPointForValue, middlePoint);
   if (value === 0) {
     return middleIndex;
   } else {
@@ -46,11 +46,11 @@ export function findNearestIndex<Point, Value>(
       lowIndex = Math.max(0, middleIndex - 1);
     }
 
-    const lowPoint = getPoint(sortedValues[lowIndex]);
-    const highPoint = getPoint(sortedValues[highIndex]);
+    const lowPoint = getPointForValue(sortedValues[lowIndex]);
+    const highPoint = getPointForValue(sortedValues[highIndex]);
 
-    return Math.abs(comparisonFunction(targetPoint, lowPoint)) <
-      Math.abs(comparisonFunction(targetPoint, highPoint))
+    return Math.abs(comparisonFunction(targetPointForValue, lowPoint)) <
+      Math.abs(comparisonFunction(targetPointForValue, highPoint))
       ? lowIndex
       : highIndex;
   }
@@ -58,38 +58,38 @@ export function findNearestIndex<Point, Value>(
 
 export function findNearestIndexBefore<Point, Value>(
   sortedValues: Value[],
-  targetPoint: Point,
-  getPoint: GetPoint<Point, Value>,
+  targetPointForValue: Point,
+  getPointForValue: GetPointForValue<Point, Value>,
   comparisonFunction: ComparisonFunction<Point>
 ): number {
   const index = findNearestIndex(
     sortedValues,
-    targetPoint,
-    getPoint,
+    targetPointForValue,
+    getPointForValue,
     comparisonFunction
   );
 
-  const point = getPoint(sortedValues[index]);
-  const comparison = comparisonFunction(point, targetPoint);
+  const point = getPointForValue(sortedValues[index]);
+  const comparison = comparisonFunction(point, targetPointForValue);
 
   return comparison > 0 ? index - 1 : index;
 }
 
 export function findNearestIndexAfter<Point, Value>(
   sortedValues: Value[],
-  targetPoint: Point,
-  getPoint: GetPoint<Point, Value>,
+  targetPointForValue: Point,
+  getPointForValue: GetPointForValue<Point, Value>,
   comparisonFunction: ComparisonFunction<Point>
 ): number {
   const index = findNearestIndex(
     sortedValues,
-    targetPoint,
-    getPoint,
+    targetPointForValue,
+    getPointForValue,
     comparisonFunction
   );
 
-  const point = getPoint(sortedValues[index]);
-  const comparison = comparisonFunction(point, targetPoint);
+  const point = getPointForValue(sortedValues[index]);
+  const comparison = comparisonFunction(point, targetPointForValue);
 
   return comparison < 0 ? index + 1 : index;
 }
