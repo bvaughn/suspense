@@ -85,8 +85,16 @@ export type CacheLoadOptions = {
   signal: AbortSignal;
 };
 
-// export interface RangeCache<Range, Params extends Array<any>, Value> {
-// }
+export type RangeCache<Point, Params extends Array<any>, Value> = {
+  evict(...params: Params): boolean;
+  evictAll(): boolean;
+  fetchAsync(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): Thenable<Value[]> | Value[];
+  fetchSuspense(start: Point, end: Point, ...params: Params): Value[];
+};
 
 export interface StreamingValues<Value, AdditionalData = undefined> {
   complete: boolean;
@@ -116,3 +124,7 @@ export interface StreamingCache<
   prefetch(...params: Params): void;
   stream(...params: Params): StreamingValues<Value, AdditionalData>;
 }
+
+export type ComparisonFunction<T> = (a: T, b: T) => number;
+
+export type RangeTuple<Point> = [start: Point, end: Point];

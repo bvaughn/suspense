@@ -18,6 +18,7 @@ import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
 import { isPendingRecord } from "../utils/isPendingRecord";
 import { WeakRefMap } from "../utils/WeakRefMap";
+import { defaultGetKey } from "../utils/defaultGetKey";
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
@@ -314,8 +315,4 @@ export function createCache<Params extends Array<any>, Value>(
     prefetch,
     subscribeToStatus,
   };
-}
-
-function defaultGetKey(...params: any[]): string {
-  return params.join(",");
 }
