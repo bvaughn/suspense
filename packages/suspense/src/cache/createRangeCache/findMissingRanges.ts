@@ -1,5 +1,5 @@
-import { GetPoint, RangeIterator } from "../cache/createRangeCache";
-import { ComparisonFunction, RangeTuple } from "../types";
+import { ComparisonFunction, RangeTuple } from "../../types";
+import { GetPoint, RangeIterator } from "./createRangeCache";
 import { findNearestIndex } from "./findNearestIndex";
 
 export function findMissingRanges<Point, Value>(
