@@ -86,6 +86,7 @@ export type CacheLoadOptions = {
 };
 
 export type RangeCache<Point, Params extends Array<any>, Value> = {
+  abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   evictAll(): boolean;
   fetchAsync(

@@ -4,6 +4,7 @@ import {
   STATUS_RESOLVED,
 } from "../../constants";
 import {
+  CacheLoadOptions,
   ComparisonFunction,
   PendingRecord,
   RangeCache,
@@ -26,6 +27,7 @@ type SerializableToString = { toString(): string };
 export type GetPoint<Point, Value> = (value: Value) => Point;
 
 export type RangeMetadata<Value> = {
+  pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
 };
@@ -48,7 +50,7 @@ export function createRangeCache<
   load: (
     start: Point,
     end: Point,
-    ...params: Params
+    ...params: [...Params, CacheLoadOptions]
   ) => Thenable<Value[]> | Value[];
   rangeIterator: RangeIterator<Point>;
 }): RangeCache<Point, Params, Value> {
@@ -81,6 +83,37 @@ export function createRangeCache<
   };
 
   debugLogInDev("Creating cache ...");
+
+  function abort(...params: Params): boolean {
+    const cacheKey = getKey(...params);
+
+    let caught;
+
+    let rangeMetadata = rangeMap.get(cacheKey);
+    if (rangeMetadata) {
+      const { pendingRecords } = rangeMetadata;
+      if (pendingRecords.size > 0) {
+        debugLogInDev("abort()", params);
+
+        for (let record of pendingRecords) {
+          try {
+            record.value.abortController.abort();
+          } catch (error) {
+            caught = error;
+          }
+        }
+        pendingRecords.clear();
+
+        if (caught !== undefined) {
+          throw caught;
+        }
+
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   function evict(...params: Params): boolean {
     debugLogInDev("evict()", params);
@@ -132,6 +165,7 @@ export function createRangeCache<
     let range = rangeMap.get(cacheKey);
     if (range == null) {
       range = {
+        pendingRecords: new Set(),
         recordMap: new Map(),
         sortedValues: [],
       };
@@ -180,11 +214,12 @@ export function createRangeCache<
 
   async function loadRangeAndMergeValues(
     rangeMetadata: RangeMetadata<Value>,
+    abortController: AbortController,
     start: Point,
     end: Point,
     ...params: Params
   ) {
-    const values = await load(start, end, ...params);
+    const values = await load(start, end, ...params, abortController);
 
     const index = findNearestIndexAfter(
       rangeMetadata.sortedValues,
@@ -205,6 +240,8 @@ export function createRangeCache<
   ) {
     assertPendingRecord(record);
 
+    rangeMetadata.pendingRecords.add(record);
+
     const { abortController, deferred } = record.value;
     const { signal } = abortController;
 
@@ -220,7 +257,13 @@ export function createRangeCache<
     try {
       await Promise.all(
         missingRanges.map(([start, end]) =>
-          loadRangeAndMergeValues(rangeMetadata, start, end, ...params)
+          loadRangeAndMergeValues(
+            rangeMetadata,
+            abortController,
+            start,
+            end,
+            ...params
+          )
         )
       );
 
@@ -243,10 +286,13 @@ export function createRangeCache<
 
         deferred.reject(error);
       }
+    } finally {
+      rangeMetadata.pendingRecords.delete(record);
     }
   }
 
   return {
+    abort,
     evict,
     evictAll,
     fetchAsync,
