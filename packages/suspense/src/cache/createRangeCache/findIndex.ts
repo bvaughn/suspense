@@ -1,11 +1,16 @@
 import { ComparisonFunction, GetPointForValue } from "../../types";
 
-export function findNearestIndex<Point, Value>(
+function binarySearch<Point, Value>(
   sortedValues: Value[],
   targetPointForValue: Point,
   getPointForValue: GetPointForValue<Point, Value>,
-  comparisonFunction: ComparisonFunction<Point>
+  comparisonFunction: ComparisonFunction<Point>,
+  exactMatch: boolean
 ): number {
+  if (sortedValues.length === 0) {
+    return -1;
+  }
+
   let lowIndex = 0;
   let highIndex = sortedValues.length - 1;
   let middleIndex = -1;
@@ -25,11 +30,8 @@ export function findNearestIndex<Point, Value>(
     }
   }
 
-  switch (sortedValues.length) {
-    case 0:
-      return -1;
-    case 1:
-      return 0;
+  if (exactMatch) {
+    return -1;
   }
 
   const middlePoint = getPointForValue(sortedValues[middleIndex]);
@@ -56,17 +58,52 @@ export function findNearestIndex<Point, Value>(
   }
 }
 
+export function findIndex<Point, Value>(
+  sortedValues: Value[],
+  targetPointForValue: Point,
+  getPointForValue: GetPointForValue<Point, Value>,
+  comparisonFunction: ComparisonFunction<Point>
+): number {
+  return binarySearch(
+    sortedValues,
+    targetPointForValue,
+    getPointForValue,
+    comparisonFunction,
+    true
+  );
+}
+
+export function findNearestIndex<Point, Value>(
+  sortedValues: Value[],
+  targetPointForValue: Point,
+  getPointForValue: GetPointForValue<Point, Value>,
+  comparisonFunction: ComparisonFunction<Point>
+): number {
+  return binarySearch(
+    sortedValues,
+    targetPointForValue,
+    getPointForValue,
+    comparisonFunction,
+    false
+  );
+}
+
 export function findNearestIndexBefore<Point, Value>(
   sortedValues: Value[],
   targetPointForValue: Point,
   getPointForValue: GetPointForValue<Point, Value>,
   comparisonFunction: ComparisonFunction<Point>
 ): number {
-  const index = findNearestIndex(
+  if (sortedValues.length === 0) {
+    return -1;
+  }
+
+  const index = binarySearch(
     sortedValues,
     targetPointForValue,
     getPointForValue,
-    comparisonFunction
+    comparisonFunction,
+    false
   );
 
   const point = getPointForValue(sortedValues[index]);
@@ -81,11 +118,16 @@ export function findNearestIndexAfter<Point, Value>(
   getPointForValue: GetPointForValue<Point, Value>,
   comparisonFunction: ComparisonFunction<Point>
 ): number {
-  const index = findNearestIndex(
+  if (sortedValues.length === 0) {
+    return -1;
+  }
+
+  const index = binarySearch(
     sortedValues,
     targetPointForValue,
     getPointForValue,
-    comparisonFunction
+    comparisonFunction,
+    false
   );
 
   const point = getPointForValue(sortedValues[index]);

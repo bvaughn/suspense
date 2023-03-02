@@ -1,8 +1,5 @@
 import { ComparisonFunction, GetPointForValue } from "../../types";
-import {
-  findNearestIndexBefore,
-  findNearestIndexAfter,
-} from "./findNearestIndex";
+import { findNearestIndexBefore, findNearestIndexAfter } from "./findIndex";
 
 export function sliceValues<Point, Value>(
   sortedValues: Value[],

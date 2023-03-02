@@ -1752,11 +1752,6 @@ base-x@^3.0.8:
   dependencies:
     safe-buffer "^5.0.1"
 
-big.js@^6.2.1:
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/big.js/-/big.js-6.2.1.tgz#7205ce763efb17c2e41f26f121c420c6a7c2744f"
-  integrity sha512-bCtHMwL9LeDIozFn+oNhhFoq+yQ3BNdnsLSASUxLciOb1vgvpHsIO1dsENiGMgbb4SkP5TrzWzRiLddn8ahVOQ==
-
 boolbase@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/boolbase/-/boolbase-1.0.0.tgz#68dff5fbe60c51eb37725ea9e3ed310dcc1e776e"
@@ -2253,6 +2248,11 @@ expect@^29.0.0, expect@^29.4.3:
     jest-matcher-utils "^29.4.3"
     jest-message-util "^29.4.3"
     jest-util "^29.4.3"
+
+extra-bigint@^1.1.10:
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/extra-bigint/-/extra-bigint-1.1.10.tgz#f8ab0c3d01015379fc46f9c9b7c9b83ff6125c22"
+  integrity sha512-HFJ1EIBxiN0AMaKGuCOW3h/7ZBpEmT8hdebL7dwiiqa4cc6ZIGmLqO4cWe+GaZD+6P1R0t1S9shYh3bP8Ly0qg==
 
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.1.0:
   version "2.1.0"

@@ -23,39 +23,55 @@ export default function Route() {
           fetches console logs for the region of a recording a user has
           "focused" on. If the user changes the focused region, additional logs
           may need to be fetched. As logs are fetched, they are merged into the
-          larger data set such that any given log is only fetched once.
+          larger data set to avoid re-fetching data when possible.
         </p>
       </Block>
       <Block>
         <SubHeading title="Creating a range cache" />
         <p>
           Unlike a regular cache, multiple methods are required to configure a
-          range cache– one for loading and additional ones for iterating over
-          and comparing range points.
+          range cache. At a minimum– one to load values (<code>load</code>) and
+          one to specify where values fall within a range (
+          <code>getPointForValue</code>).
         </p>
         <p>
-          For example, a range cache could incrementally load syntax–highlighted
+          For example, a cache could incrementally load syntax–highlighted
           source code for a range of lines.
         </p>
         <Code code={createRangeCache.cache} />
       </Block>
       <Block>
-        <SubHeading title="Custom comparison" />
+        <SubHeading title="Custom comparisons" />
         <p>
-          If a range of points are not <code>number</code>s but instead a type
-          like{" "}
+          Ranges are often numbers (e.g. 1, 3.5) but they can be other types–
+          like string or{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt">
               BigInt
             </ExternalLink>
-          </code>{" "}
-          then a custom comparison function should be provided. For example,{" "}
-          <ExternalLink to="https://www.npmjs.com/package/big.js">
-            big.js
-          </ExternalLink>{" "}
-          could be used to implement a custom comparison function.
+          </code>
+          . In that case a custom comparison function should be provided.
         </p>
-        <Code code={createRangeCache.cacheWithCustomComparePoint} />
+        <p>
+          For example, string ranges can be compared with{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare">
+              String.prototype.localeCompare
+            </ExternalLink>
+          </code>
+          .
+        </p>
+        <Code code={createRangeCache.cacheWithStringRange} />
+        <p>
+          <code>BigInt</code> ranges can be compared with an NPM package like{" "}
+          <code>
+            <ExternalLink to="https://www.npmjs.com/package/extra-bigint">
+              extra-bigint
+            </ExternalLink>
+          </code>
+          .
+        </p>
+        <Code code={createRangeCache.cacheWithBigIntRange} />
       </Block>
     </Container>
   );

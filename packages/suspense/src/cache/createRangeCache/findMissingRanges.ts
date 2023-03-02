@@ -1,51 +1,61 @@
-import { ComparisonFunction, GetPointForValue, RangeTuple } from "../../types";
-import { findNearestIndex } from "./findNearestIndex";
+import { PointUtils, RangeTuple, RangeUtils } from "../../types";
 
-export function findMissingRanges<Point, Value>(
-  sortedValues: Value[],
-  start: Point,
-  end: Point,
-  getPointForValue: GetPointForValue<Point, Value>,
-  getRangeIterator: (start: Point, end: Point) => Iterator<Point>,
-  comparisonFunction: ComparisonFunction<Point>
+// TODO Handle race between pending and loaded ranges
+
+export function findMissingRanges<Point>(
+  loadedRanges: RangeTuple<Point>[],
+  targetRange: RangeTuple<Point>,
+  rangeUtils: RangeUtils<Point>,
+  pointUtils: PointUtils<Point>
 ): RangeTuple<Point>[] {
-  if (sortedValues.length === 0) {
-    return [[start, end]];
-  }
-
-  const missingRanges: RangeTuple<Point>[] = [];
-
-  let currentRange: RangeTuple<Point> | null = null;
-
-  const iterator = getRangeIterator(start, end);
-  const iterable: Iterable<Point> = { [Symbol.iterator]: () => iterator };
-  for (let current of iterable) {
-    const index = findNearestIndex(
-      sortedValues,
-      current,
-      getPointForValue,
-      comparisonFunction
+  if (loadedRanges.length === 0) {
+    // Nothing loaded yet; we need to load the whole range
+    return [targetRange];
+  } else {
+    const container = loadedRanges.find((loadedRange) =>
+      rangeUtils.contains(loadedRange, targetRange)
     );
-    const foundMatch = current === getPointForValue(sortedValues[index]);
-
-    if (foundMatch) {
-      if (currentRange) {
-        missingRanges.push(currentRange);
-
-        currentRange = null;
-      }
-    } else {
-      if (currentRange) {
-        currentRange[1] = current;
-      } else {
-        currentRange = [current, current];
-      }
+    if (container) {
+      // This range has already been loaded fully
+      return [];
     }
   }
 
-  if (currentRange) {
-    missingRanges.push(currentRange);
-  }
+  const startIndex = loadedRanges.findIndex((loadedRange) =>
+    rangeUtils.intersects(loadedRange, targetRange)
+  );
 
-  return missingRanges;
+  if (startIndex < 0) {
+    // This range has not been loaded at all yet
+    return [targetRange];
+  } else {
+    // The range has been partially loaded; now we need to fill in the gap(s)
+
+    const missingRanges: RangeTuple<Point>[] = [];
+
+    let currentIndex = startIndex;
+    let currentRange = loadedRanges[currentIndex];
+
+    while (true) {
+      const remainder = rangeUtils.subtract(currentRange, targetRange);
+      if (remainder.length > 0) {
+        targetRange = remainder.pop();
+
+        missingRanges.push(...remainder);
+      }
+
+      currentIndex++;
+      currentRange = loadedRanges[currentIndex];
+
+      if (
+        !currentRange ||
+        pointUtils.lessThan(targetRange[1], currentRange[0])
+      ) {
+        missingRanges.push(targetRange);
+        break;
+      }
+    }
+
+    return missingRanges;
+  }
 }

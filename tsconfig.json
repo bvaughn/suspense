@@ -12,5 +12,10 @@
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules"],
-  "include": ["definitions/big.d.ts", "definitions/css.d.ts", "definitions/react.d.ts", "packages/**/*.ts", "packages/**/*.tsx"]
+  "include": [
+    "definitions/css.d.ts",
+    "definitions/react.d.ts",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ]
 }

@@ -1,4 +1,4 @@
-import { Iterator } from "typescript";
+import { compare as compareBigInt } from "extra-bigint";
 import {
   RangeCacheLoadOptions,
   Deferred,
@@ -8,7 +8,6 @@ import {
 import { createDeferred } from "../../utils/createDeferred";
 import { isThenable } from "../../utils/isThenable";
 import { createRangeCache } from "./createRangeCache";
-import { defaultGetRangeIterator } from "./defaultGetRangeIterator";
 
 function createContiguousArray(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -102,6 +101,70 @@ describe("createRangeCache", () => {
     });
   });
 
+  describe("configuration", () => {
+    it("should support bigint points via a custom comparePoints", async () => {
+      const comparePoints = jest.fn(compareBigInt);
+
+      const load = jest.fn();
+      load.mockImplementation((value) => [value]);
+
+      const bigIntCache = createRangeCache<bigint, [id: string], bigint>({
+        comparePoints,
+        getPointForValue: (value) => value,
+        load,
+      });
+
+      await bigIntCache.fetchAsync(BigInt("2"), BigInt("4"), "test");
+
+      expect(comparePoints).toHaveBeenCalled();
+
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(
+        BigInt("2"),
+        BigInt("4"),
+        "test",
+        expect.any(Object)
+      );
+
+      await bigIntCache.fetchAsync(BigInt("3"), BigInt("7"), "test");
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledWith(
+        BigInt("4"),
+        BigInt("7"),
+        "test",
+        expect.any(Object)
+      );
+    });
+
+    it("should support string points via a custom comparePoints", async () => {
+      function compareStrings(a: string, b: string) {
+        return a.localeCompare(b);
+      }
+
+      const comparePoints = jest.fn(compareStrings);
+
+      const load = jest.fn();
+      load.mockImplementation((value) => [value]);
+
+      const bigIntCache = createRangeCache<string, [id: string], string>({
+        comparePoints,
+        getPointForValue: (value) => value,
+        load,
+      });
+
+      await bigIntCache.fetchAsync("f", "l", "test");
+
+      expect(comparePoints).toHaveBeenCalled();
+
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith("f", "l", "test", expect.any(Object));
+
+      await bigIntCache.fetchAsync("a", "c", "test");
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledWith("a", "c", "test", expect.any(Object));
+    });
+  });
+
   describe("evict", () => {
     it("should evict all values for the requested parameters", async () => {
       await cache.fetchAsync(1, 5, "one");
@@ -130,7 +193,7 @@ describe("createRangeCache", () => {
 
       // Verify values have been cached
       await cache.fetchAsync(1, 1, "one");
-      await cache.fetchAsync(2, 2, "two");
+      await cache.fetchAsync(3, 3, "two");
       expect(load).toHaveBeenCalledTimes(numCalls);
 
       cache.evict("one");
@@ -181,7 +244,7 @@ describe("createRangeCache", () => {
       values = await cache.fetchAsync(3, 8, "test");
       expect(values).toEqual(createContiguousArray(3, 8));
       expect(load).toHaveBeenCalledTimes(3);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([5, 6, "test"]);
+      expect(load.mock.lastCall.slice(0, 3)).toEqual([4, 7, "test"]);
     });
 
     it("should cache ranges separately based on parameters", async () => {
@@ -201,56 +264,6 @@ describe("createRangeCache", () => {
       await cache.fetchAsync(6, 9, "two");
       expect(load).toHaveBeenCalledTimes(3);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([6, 9, "two"]);
-    });
-
-    it("should use the supplied iterator to determine which range(s) to load", async () => {
-      const getRangeIterator = jest.fn();
-      getRangeIterator.mockImplementation(defaultGetRangeIterator);
-
-      cache = createRangeCache<number, [id: string], number>({
-        getPointForValue,
-        getRangeIterator,
-        load,
-      });
-
-      // Prime the cache with some initial values
-      for (let index = 1; index < 10; index += 2) {
-        await cache.fetchAsync(index, index, "test");
-      }
-
-      const numCalls = load.mock.calls.length;
-
-      // Configure our iterator to report no gaps between 3–5 and 7–9
-      getRangeIterator.mockImplementation((start: number, end: number) => {
-        const values = [1, 2, 3, 5, 6, 7, 9, 10];
-        let index = 0;
-
-        const iterator: Iterator<number> = {
-          next() {
-            if (index < values.length) {
-              const value = values[index];
-
-              index++;
-
-              return { done: false, value };
-            }
-
-            return { done: true, value: null };
-          },
-        };
-
-        return iterator;
-      });
-
-      await cache.fetchAsync(1, 10, "test");
-      expect(load).toHaveBeenCalledTimes(numCalls + 3);
-      expect(load.mock.calls[numCalls].slice(0, 3)).toEqual([2, 2, "test"]);
-      expect(load.mock.calls[numCalls + 1].slice(0, 3)).toEqual([6, 6, "test"]);
-      expect(load.mock.calls[numCalls + 2].slice(0, 3)).toEqual([
-        10,
-        10,
-        "test",
-      ]);
     });
   });
 

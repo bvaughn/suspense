@@ -11,15 +11,21 @@ import {
   RangeCache,
   Record,
   Thenable,
+  RangeTuple,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertPendingRecord";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
+import { createPointUtils } from "./createPointUtils";
+import { createRangeUtils } from "./createRangeUtils";
 import { defaultComparePoints } from "./defaultComparePoints";
-import { defaultGetRangeIterator } from "./defaultGetRangeIterator";
 import { findMissingRanges } from "./findMissingRanges";
-import { findNearestIndexAfter } from "./findNearestIndex";
+import {
+  findIndex,
+  findNearestIndex,
+  findNearestIndexAfter,
+} from "./findIndex";
 import { sliceValues } from "./sliceValues";
 
 // Enable to help with debugging in dev
@@ -27,7 +33,8 @@ const DEBUG_LOG_IN_DEV = false;
 
 type SerializableToString = { toString(): string };
 
-type RangeMetadata<Value> = {
+type RangeMetadata<Point, Value> = {
+  cachedRanges: RangeTuple<Point>[];
   pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
@@ -42,7 +49,6 @@ export function createRangeCache<
   debugLabel?: string;
   getKey?: (...params: Params) => string;
   getPointForValue: GetPointForValue<Point, Value>;
-  getRangeIterator?: (start: Point, end: Point) => Iterator<Point>;
   load: (
     start: Point,
     end: Point,
@@ -54,11 +60,13 @@ export function createRangeCache<
     debugLabel,
     getKey = defaultGetKey,
     getPointForValue,
-    getRangeIterator = defaultGetRangeIterator,
     load,
   } = options;
 
-  const rangeMap = new Map<string, RangeMetadata<Value>>();
+  const pointUtils = createPointUtils<Point>(comparePoints);
+  const rangeUtils = createRangeUtils<Point>(pointUtils);
+
+  const rangeMap = new Map<string, RangeMetadata<Point, Value>>();
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
@@ -155,11 +163,14 @@ export function createRangeCache<
     }
   }
 
-  function getOrCreateRangeMetadata(...params: Params): RangeMetadata<Value> {
+  function getOrCreateRangeMetadata(
+    ...params: Params
+  ): RangeMetadata<Point, Value> {
     const cacheKey = getKey(...params);
     let range = rangeMap.get(cacheKey);
     if (range == null) {
       range = {
+        cachedRanges: [],
         pendingRecords: new Set(),
         recordMap: new Map(),
         sortedValues: [],
@@ -208,26 +219,61 @@ export function createRangeCache<
   }
 
   async function loadRangeAndMergeValues(
-    rangeMetadata: RangeMetadata<Value>,
+    rangeMetadata: RangeMetadata<Point, Value>,
     abortController: AbortController,
     start: Point,
     end: Point,
     ...params: Params
   ) {
+    const { cachedRanges, sortedValues } = rangeMetadata;
+
     const values = await load(start, end, ...params, abortController);
 
-    const index = findNearestIndexAfter(
-      rangeMetadata.sortedValues,
-      start,
-      getPointForValue,
-      comparePoints
+    rangeMetadata.cachedRanges = rangeUtils.mergeAll(
+      ...rangeUtils.sort(...cachedRanges, [start, end])
     );
 
-    rangeMetadata.sortedValues.splice(index, 0, ...values);
+    // Check for duplicate values near the edges because of how ranges are split
+    if (values.length > 0) {
+      const firstValue = values[0];
+      const index = findIndex(
+        sortedValues,
+        getPointForValue(firstValue),
+        getPointForValue,
+        comparePoints
+      );
+      if (index >= 0) {
+        values.splice(0, 1);
+      }
+    }
+    if (values.length > 0) {
+      const lastValue = values[values.length - 1];
+      const index = findIndex(
+        sortedValues,
+        getPointForValue(lastValue),
+        getPointForValue,
+        comparePoints
+      );
+      if (index >= 0) {
+        values.pop();
+      }
+    }
+
+    // Merge any remaining unique values
+    if (values.length > 0) {
+      const firstValue = values[0];
+      const index = findNearestIndexAfter(
+        sortedValues,
+        getPointForValue(firstValue),
+        getPointForValue,
+        comparePoints
+      );
+      sortedValues.splice(index, 0, ...values);
+    }
   }
 
   async function processPendingRecord(
-    rangeMetadata: RangeMetadata<Value>,
+    rangeMetadata: RangeMetadata<Point, Value>,
     record: Record<Value[]>,
     start: Point,
     end: Point,
@@ -240,13 +286,11 @@ export function createRangeCache<
     const { abortController, deferred } = record.value;
     const { signal } = abortController;
 
-    const missingRanges = findMissingRanges<Point, Value>(
-      rangeMetadata.sortedValues,
-      start,
-      end,
-      getPointForValue,
-      getRangeIterator,
-      comparePoints
+    const missingRanges = findMissingRanges<Point>(
+      rangeMetadata.cachedRanges,
+      [start, end],
+      rangeUtils,
+      pointUtils
     );
 
     try {

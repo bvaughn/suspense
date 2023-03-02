@@ -70,9 +70,15 @@ const createRangeCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createRangeCache", "cache.ts"), "utf8")
   ),
-  cacheWithCustomComparePoint: processExample(
+  cacheWithBigIntRange: processExample(
     readFileSync(
-      join(__dirname, "createRangeCache", "cacheWithCustomComparePoint.ts"),
+      join(__dirname, "createRangeCache", "cacheWithBigIntRange.ts"),
+      "utf8"
+    )
+  ),
+  cacheWithStringRange: processExample(
+    readFileSync(
+      join(__dirname, "createRangeCache", "cacheWithStringRange.ts"),
       "utf8"
     )
   ),
