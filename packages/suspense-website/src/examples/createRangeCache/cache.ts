@@ -28,3 +28,7 @@ const sourceCodeCache = createRangeCache<number, [fileName: string], Line>({
     return value.index;
   },
 });
+
+// REMOVE_AFTER
+
+export { sourceCodeCache };

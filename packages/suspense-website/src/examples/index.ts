@@ -82,6 +82,18 @@ const createRangeCache = {
       "utf8"
     )
   ),
+  callingAbort: processExample(
+    readFileSync(join(__dirname, "createRangeCache", "callingAbort.ts"), "utf8")
+  ),
+  evict: processExample(
+    readFileSync(join(__dirname, "createRangeCache", "evict.ts"), "utf8")
+  ),
+  loadWithAbortSignal: processExample(
+    readFileSync(
+      join(__dirname, "createRangeCache", "loadWithAbortSignal.ts"),
+      "utf8"
+    )
+  ),
 };
 
 const createSingleEntryCache = {

@@ -3,6 +3,7 @@ import Code from "../../components/Code";
 import Container from "../../components/Container";
 import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
+import Note from "../../components/Note";
 import SubHeading from "../../components/SubHeading";
 import { createRangeCache } from "../../examples";
 
@@ -72,6 +73,47 @@ export default function Route() {
           .
         </p>
         <Code code={createRangeCache.cacheWithBigIntRange} />
+      </Block>
+      <Block>
+        <SubHeading title="Aborting requests" />
+        <p>
+          Range cache supports cancellation the same way as other caches– by
+          passing an{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
+              AbortSignal
+            </ExternalLink>
+          </code>{" "}
+          to the custom <code>load</code> method.
+        </p>
+        <Code code={createRangeCache.loadWithAbortSignal} />
+        <p>
+          Requests can be cancelled from the outside using the{" "}
+          <code>abort</code> method.
+        </p>
+        <Code code={createRangeCache.callingAbort} />
+        <Note>
+          <p>
+            Aborting a range requests cancels{" "}
+            <strong>all pending requests</strong> for that set of parameters. It
+            is not possible to abort a specific range.
+          </p>
+        </Note>
+      </Block>
+      <Block>
+        <SubHeading title="Evicting values" />
+        <p>
+          Values can be evicted from a range cache using the <code>evict</code>{" "}
+          and <code>evictAll</code> methods.
+        </p>
+        <Code code={createRangeCache.evict} />
+        <Note>
+          <p>
+            Evicting values from a range cache will evict{" "}
+            <strong>all loaded values</strong> for that set of parameters. It is
+            not possible to evict a specific range.
+          </p>
+        </Note>
       </Block>
     </Container>
   );

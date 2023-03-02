@@ -21,11 +21,7 @@ import { createPointUtils } from "./createPointUtils";
 import { createRangeUtils } from "./createRangeUtils";
 import { defaultComparePoints } from "./defaultComparePoints";
 import { findMissingRanges } from "./findMissingRanges";
-import {
-  findIndex,
-  findNearestIndex,
-  findNearestIndexAfter,
-} from "./findIndex";
+import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
 
 // Enable to help with debugging in dev
