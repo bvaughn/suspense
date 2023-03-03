@@ -30,18 +30,15 @@ const DEBUG_LOG_IN_DEV = false;
 
 type SerializableToString = { toString(): string };
 
-type PendingIntervalAndThenableTuple<Point, Value> = [
-  Interval<Point>,
-  Value[] | Thenable<Value[]>
-];
+type PendingMetadata<Point, Value> = {
+  interval: Interval<Point>;
+  record: Record<Value[]>;
+  value: Thenable<Value[]> | Value[];
+};
 
 type Metadata<Point, Value> = {
   loadedIntervals: Interval<Point>[];
-  pendingIntervalAndThenableTuples: PendingIntervalAndThenableTuple<
-    Point,
-    Value
-  >[];
-  pendingRecords: Set<Record<Value[]>>;
+  pendingMetadata: PendingMetadata<Point, Value>[];
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
 };
@@ -80,37 +77,43 @@ export function createIntervalCache<
         ? `createIntervalCache[${debugLabel}]`
         : "createIntervalCache";
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
+      // console.log(
+      //   `%c${prefix}`,
+      //   "font-weight: bold; color: yellow;",
+      //   debug,
+      //   cacheKey,
+      //   ...args
+      // );
     }
   };
 
   debugLogInDev("Creating cache ...");
 
   function abort(...params: Params): boolean {
-    const cacheKey = getKey(...params);
+    const metadataMapKey = getKey(...params);
 
     let caught;
 
-    let metadata = metadataMap.get(cacheKey);
+    let metadata = metadataMap.get(metadataMapKey);
     if (metadata) {
-      const { pendingRecords } = metadata;
-      if (pendingRecords.size > 0) {
+      const { pendingMetadata } = metadata;
+      if (pendingMetadata.length > 0) {
         debugLogInDev("abort()", params);
 
-        for (let record of pendingRecords) {
+        for (let { interval, record } of pendingMetadata) {
           try {
+            const [start, end] = interval;
+
+            const recordKey = `${start}–${end}`;
+            metadata.recordMap.delete(recordKey);
+
             record.value.abortController.abort();
           } catch (error) {
             caught = error;
           }
         }
-        pendingRecords.clear();
+
+        pendingMetadata.splice(0);
 
         if (caught !== undefined) {
           throw caught;
@@ -176,8 +179,7 @@ export function createIntervalCache<
     if (metadata == null) {
       metadata = {
         loadedIntervals: [],
-        pendingIntervalAndThenableTuples: [],
-        pendingRecords: new Set(),
+        pendingMetadata: [],
         recordMap: new Map(),
         sortedValues: [],
       };
@@ -196,6 +198,7 @@ export function createIntervalCache<
     const cacheKey = `${start}–${end}`;
 
     let record = metadata.recordMap.get(cacheKey);
+    // console.log("getOrCreateRecord(%s, %s) -> %s", start, end, record);
     if (record == null) {
       const abortController = new AbortController();
       const deferred = createDeferred<Value[]>(
@@ -224,28 +227,30 @@ export function createIntervalCache<
     return record;
   }
 
-  async function processPendingIntervalAndThenableTuple(
+  async function processPendingInterval(
     metadata: Metadata<Point, Value>,
-    pendingIntervalAndThenableTuple: PendingIntervalAndThenableTuple<
-      Point,
-      Value
-    >,
+    pendingMetadata: PendingMetadata<Point, Value>,
     start: Point,
-    end: Point,
-    ...params: Params
+    end: Point
   ) {
-    const [interval, thenable] = pendingIntervalAndThenableTuple;
+    const { record, value } = pendingMetadata;
+
+    assertPendingRecord(record);
+    const { abortController } = record.value;
 
     let values;
     try {
-      values = await thenable;
+      // console.log("processPendingInterval() awaiting ...");
+      values = await value;
     } finally {
-      metadata.pendingIntervalAndThenableTuples.splice(
-        metadata.pendingIntervalAndThenableTuples.indexOf(
-          pendingIntervalAndThenableTuple
-        ),
-        1
-      );
+      const index = metadata.pendingMetadata.indexOf(pendingMetadata);
+      metadata.pendingMetadata.splice(index, 1);
+      // console.log("processPendingInterval() finally", metadata.pendingMetadata);
+    }
+
+    if (abortController.signal.aborted) {
+      // Ignore results if the request was aborted
+      return;
     }
 
     metadata.loadedIntervals = intervalUtils.mergeAll(
@@ -300,21 +305,25 @@ export function createIntervalCache<
   ) {
     assertPendingRecord(record);
 
-    metadata.pendingRecords.add(record);
-
     const { abortController, deferred } = record.value;
     const { signal } = abortController;
 
     const foundIntervals = findIntervals<Point>(
       {
         loaded: metadata.loadedIntervals,
-        pending: metadata.pendingIntervalAndThenableTuples.map(
-          ([interval]) => interval
-        ),
+        pending: metadata.pendingMetadata.map(({ interval }) => interval),
       },
       [start, end],
       intervalUtils
     );
+    // console.log(
+    //   "process(%s, %s)\n  loaded: %s,\n  pending: %s,\n  missing: %s",
+    //   start,
+    //   end,
+    //   JSON.stringify(metadata.loadedIntervals),
+    //   JSON.stringify(foundIntervals.pending),
+    //   JSON.stringify(foundIntervals.missing)
+    // );
 
     const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
@@ -322,22 +331,15 @@ export function createIntervalCache<
 
       missingThenables.push(thenable);
 
-      const pendingIntervalAndThenableTuple: PendingIntervalAndThenableTuple<
-        Point,
-        Value
-      > = [[start, end], thenable];
+      const pendingMetadata: PendingMetadata<Point, Value> = {
+        interval: [start, end],
+        record,
+        value: thenable,
+      };
 
-      metadata.pendingIntervalAndThenableTuples.push(
-        pendingIntervalAndThenableTuple
-      );
+      metadata.pendingMetadata.push(pendingMetadata);
 
-      processPendingIntervalAndThenableTuple(
-        metadata,
-        pendingIntervalAndThenableTuple,
-        start,
-        end,
-        ...params
-      );
+      processPendingInterval(metadata, pendingMetadata, start, end);
     });
 
     // Gather all of the deferred requests the new interval blocks on.
@@ -346,13 +348,11 @@ export function createIntervalCache<
     // may end up reported as single/merged blocker (e.g. [1,3])
     const pendingThenables: Array<Value[] | Thenable<Value[]>> = [];
     foundIntervals.pending.forEach(([start, end]) => {
-      metadata.pendingIntervalAndThenableTuples.forEach(
-        ([interval, deferred]) => {
-          if (intervalUtils.contains(interval, [start, end])) {
-            pendingThenables.push(deferred);
-          }
+      metadata.pendingMetadata.forEach(({ interval, value }) => {
+        if (intervalUtils.contains(interval, [start, end])) {
+          pendingThenables.push(value);
         }
-      );
+      });
     });
 
     try {
@@ -377,8 +377,6 @@ export function createIntervalCache<
 
         deferred.reject(error);
       }
-    } finally {
-      metadata.pendingRecords.delete(record);
     }
   }
 

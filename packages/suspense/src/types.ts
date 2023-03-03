@@ -62,6 +62,7 @@ export interface Deferred<T> extends Thenable<T> {
 }
 
 // Cache types
+
 export interface Cache<Params extends Array<any>, Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;

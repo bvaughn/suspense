@@ -1,8 +1,8 @@
-name: "[suspense] Jest unit tests"
+name: "[suspense] Jest (node based) unit tests"
 on: [pull_request]
 jobs:
   tests_e2e:
-    name: "[suspense] Run Jest (node based) unit tests"
+    name: "Run tests"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

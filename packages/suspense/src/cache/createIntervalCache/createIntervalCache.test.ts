@@ -316,9 +316,40 @@ describe("createIntervalCache", () => {
       });
     });
 
-    // TODO Test pending/loaded cleanup after abort
+    it("should properly cleanup after an aborted request", async () => {
+      cache.fetchAsync(1, 5, "test");
 
-    // TODO Test failed request
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+      cache.abort("test");
+
+      // Finalize the abort
+      await Promise.resolve();
+
+      const promise = cache.fetchAsync(1, 5, "test");
+
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+      await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+    });
+
+    it("should properly cleanup after a pending abort", async () => {
+      cache.fetchAsync(1, 5, "test");
+
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+      cache.abort("test");
+
+      const promise = cache.fetchAsync(1, 5, "test");
+
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+      await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+    });
   });
 
   // Most tests are written for fetchAsync

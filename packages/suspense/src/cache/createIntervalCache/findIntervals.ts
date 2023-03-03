@@ -1,8 +1,6 @@
 import { Interval, Utilities } from "interval-utilities";
 
 export type CachedIntervals<Point> = {
-  // TODO Cache failed attempts?
-  // failed: Interval<Point>[];
   loaded: Interval<Point>[];
   pending: Interval<Point>[];
 };

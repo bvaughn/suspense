@@ -21,10 +21,10 @@ export type Utilities<Point> = {
   lessThanOrEqualTo(a: Interval<Point>, b: Interval<Point>): boolean;
   merge(a: Interval<Point>, b: Interval<Point>): Interval<Point>[];
   mergeAll(...intervals: Interval<Point>[]): Interval<Point>[];
-  sort(...intervals: Interval<Point>[]): Interval<Point>[];
   separate(a: Interval<Point>, b: Interval<Point>): SeparatedInterval<Point>;
   separateAll(
     a: Interval<Point>[],
     b: Interval<Point>[]
   ): SeparatedInterval<Point>;
+  sort(...intervals: Interval<Point>[]): Interval<Point>[];
 };
