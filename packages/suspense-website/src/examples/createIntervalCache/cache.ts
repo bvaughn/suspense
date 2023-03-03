@@ -2,7 +2,7 @@ type Token = any;
 
 // REMOVE_BEFORE
 
-import { createRangeCache } from "suspense";
+import { createIntervalCache } from "suspense";
 
 interface Line {
   index: number;
@@ -10,8 +10,8 @@ interface Line {
   rawText: string;
 }
 
-const sourceCodeCache = createRangeCache<number, [fileName: string], Line>({
-  // Load lines within the specified start/end range
+const sourceCodeCache = createIntervalCache<number, [fileName: string], Line>({
+  // Load lines within the specified start/end interval
   // Note the first two params passed to function are the start/end points
   load: async (start: number, end: number, fileName: string) => {
     const response = await fetch(
@@ -21,7 +21,7 @@ const sourceCodeCache = createRangeCache<number, [fileName: string], Line>({
     return json;
   },
 
-  // Determine where a value falls within a range
+  // Determine where a value falls within a interval
   // The cache uses this to merged and sort loaded values
   // The "point" is the line number in this example
   getPointForValue: (value: Line): number => {

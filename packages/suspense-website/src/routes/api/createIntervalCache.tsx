@@ -5,18 +5,18 @@ import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import SubHeading from "../../components/SubHeading";
-import { createRangeCache } from "../../examples";
+import { createIntervalCache } from "../../examples";
 
 export default function Route() {
   return (
     <Container>
       <Block>
-        <Header title="createRangeCache" />
+        <Header title="createIntervalCache" />
       </Block>
       <Block>
         <p>
-          A "range cache" is a specialized cache that incrementally loads and
-          merges ranges of values over time.
+          An "interval cache" is a specialized cache that incrementally loads
+          and merges sets of values over time.
         </p>
         <p>
           An example of this is{" "}
@@ -28,23 +28,23 @@ export default function Route() {
         </p>
       </Block>
       <Block>
-        <SubHeading title="Creating a range cache" />
+        <SubHeading title="Creating an interval cache" />
         <p>
-          Unlike a regular cache, multiple methods are required to configure a
-          range cache. At a minimum– one to load values (<code>load</code>) and
-          one to specify where values fall within a range (
+          Unlike a regular cache, multiple methods are required to configure an
+          interval cache. At a minimum– one to load values (<code>load</code>)
+          and one to specify where values fall within an interval (
           <code>getPointForValue</code>).
         </p>
         <p>
           For example, a cache could incrementally load syntax–highlighted
           source code for a range of lines.
         </p>
-        <Code code={createRangeCache.cache} />
+        <Code code={createIntervalCache.cache} />
       </Block>
       <Block>
         <SubHeading title="Custom comparisons" />
         <p>
-          Ranges are often numbers (e.g. 1, 3.5) but they can be other types–
+          Intervals are often numbers (e.g. 1, 3.5) but they can be other types–
           like string or{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt">
@@ -54,7 +54,7 @@ export default function Route() {
           . In that case a custom comparison function should be provided.
         </p>
         <p>
-          For example, string ranges can be compared with{" "}
+          For example, string intervals can be compared with{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare">
               String.prototype.localeCompare
@@ -62,9 +62,9 @@ export default function Route() {
           </code>
           .
         </p>
-        <Code code={createRangeCache.cacheWithStringRange} />
+        <Code code={createIntervalCache.cacheWithStringInterval} />
         <p>
-          <code>BigInt</code> ranges can be compared with an NPM package like{" "}
+          <code>BigInt</code> intervals can be compared with an NPM package like{" "}
           <code>
             <ExternalLink to="https://www.npmjs.com/package/extra-bigint">
               extra-bigint
@@ -72,12 +72,12 @@ export default function Route() {
           </code>
           .
         </p>
-        <Code code={createRangeCache.cacheWithBigIntRange} />
+        <Code code={createIntervalCache.cacheWithBigIntInterval} />
       </Block>
       <Block>
         <SubHeading title="Aborting requests" />
         <p>
-          Range cache supports cancellation the same way as other caches– by
+          Interval cache supports cancellation the same way as other caches– by
           passing an{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
@@ -86,32 +86,32 @@ export default function Route() {
           </code>{" "}
           to the custom <code>load</code> method.
         </p>
-        <Code code={createRangeCache.loadWithAbortSignal} />
+        <Code code={createIntervalCache.loadWithAbortSignal} />
         <p>
           Requests can be cancelled from the outside using the{" "}
           <code>abort</code> method.
         </p>
-        <Code code={createRangeCache.callingAbort} />
+        <Code code={createIntervalCache.callingAbort} />
         <Note>
           <p>
-            Aborting a range requests cancels{" "}
+            Aborting an interval requests cancels{" "}
             <strong>all pending requests</strong> for that set of parameters. It
-            is not possible to abort a specific range.
+            is not possible to abort a specific interval.
           </p>
         </Note>
       </Block>
       <Block>
         <SubHeading title="Evicting values" />
         <p>
-          Values can be evicted from a range cache using the <code>evict</code>{" "}
-          and <code>evictAll</code> methods.
+          Values can be evicted from an interval cache using the{" "}
+          <code>evict</code> and <code>evictAll</code> methods.
         </p>
-        <Code code={createRangeCache.evict} />
+        <Code code={createIntervalCache.evict} />
         <Note>
           <p>
-            Evicting values from a range cache will evict{" "}
+            Evicting values from an interval cache will evict{" "}
             <strong>all loaded values</strong> for that set of parameters. It is
-            not possible to evict a specific range.
+            not possible to evict a specific interval.
           </p>
         </Note>
       </Block>

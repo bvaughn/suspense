@@ -77,27 +77,27 @@ export function configure<Point>(
     }
   }
 
-  function mergeAll(...sortedRanges: Interval<Point>[]): Interval<Point>[] {
-    if (sortedRanges.length === 0) {
+  function mergeAll(...sortedIntervals: Interval<Point>[]): Interval<Point>[] {
+    if (sortedIntervals.length === 0) {
       return [];
-    } else if (sortedRanges.length === 1) {
-      return sortedRanges;
+    } else if (sortedIntervals.length === 1) {
+      return sortedIntervals;
     }
 
     const merged: Interval<Point>[] = [];
 
-    let prevRange: Interval<Point> = sortedRanges[0];
-    let currentRange: Interval<Point> | null = null;
+    let prevInterval: Interval<Point> = sortedIntervals[0];
+    let currentInterval: Interval<Point> | null = null;
 
-    for (let index = 1; index < sortedRanges.length; index++) {
-      currentRange = sortedRanges[index];
+    for (let index = 1; index < sortedIntervals.length; index++) {
+      currentInterval = sortedIntervals[index];
 
-      const tempMerged = merge(prevRange, currentRange);
-      prevRange = tempMerged.pop();
+      const tempMerged = merge(prevInterval, currentInterval);
+      prevInterval = tempMerged.pop();
       merged.push(...tempMerged);
     }
 
-    merged.push(prevRange);
+    merged.push(prevInterval);
 
     return merged;
   }
@@ -162,12 +162,12 @@ export function configure<Point>(
     while (currentA !== null && currentB !== null) {
       const separatedLoop = separate(currentA, currentB);
 
-      // It's always okay to push all overlapping ranges
+      // It's always okay to push all overlapping intervals
       separated.ab.push(...separatedLoop.ab);
 
-      // If the ends of the current range align, we can push all excluded ranges
-      // Else we should keep the last range for whichever comes last
-      // because it might overlap with the next range in the other set
+      // If the ends of the current interval align, we can push all excluded intervals
+      // Else we should keep the last interval for whichever comes last
+      // because it might overlap with the next interval in the other set
       if (pointUtils.equals(currentA[1], currentB[1])) {
         separated.b.push(...separatedLoop.b);
         separated.a.push(...separatedLoop.a);
@@ -206,8 +206,8 @@ export function configure<Point>(
     return separated;
   }
 
-  function sort(...ranges: Interval<Point>[]): Interval<Point>[] {
-    return ranges.sort(compare);
+  function sort(...intervals: Interval<Point>[]): Interval<Point>[] {
+    return intervals.sort(compare);
   }
 
   return {

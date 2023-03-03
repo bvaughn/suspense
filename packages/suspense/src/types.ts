@@ -83,9 +83,9 @@ export type CacheLoadOptions = {
   signal: AbortSignal;
 };
 
-// Range cache types
+// Interval cache types
 
-export type RangeCache<Point, Params extends Array<any>, Value> = {
+export type IntervalCache<Point, Params extends Array<any>, Value> = {
   abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   evictAll(): boolean;
@@ -97,7 +97,7 @@ export type RangeCache<Point, Params extends Array<any>, Value> = {
   fetchSuspense(start: Point, end: Point, ...params: Params): Value[];
 };
 
-export type RangeCacheLoadOptions = {
+export type IntervalCacheLoadOptions = {
   signal: AbortSignal;
 };
 

@@ -1,14 +1,14 @@
 import { compare as compareBigInt } from "extra-bigint";
 
 import {
-  RangeCacheLoadOptions,
+  IntervalCacheLoadOptions,
   Deferred,
-  RangeCache,
+  IntervalCache,
   Thenable,
 } from "../../types";
 import { createDeferred } from "../../utils/createDeferred";
 import { isThenable } from "../../utils/isThenable";
-import { createRangeCache } from "./createRangeCache";
+import { createIntervalCache } from "./createIntervalCache";
 
 function createContiguousArray(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -18,11 +18,11 @@ function getPointForValue(value: number) {
   return value;
 }
 
-describe("createRangeCache", () => {
-  let cache: RangeCache<number, [id: string], number>;
+describe("createIntervalCache", () => {
+  let cache: IntervalCache<number, [id: string], number>;
   let load: jest.Mock<
     Thenable<number[]>,
-    [start: number, end: number, id: string, options: RangeCacheLoadOptions]
+    [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
   >;
 
   beforeEach(() => {
@@ -32,11 +32,11 @@ describe("createRangeCache", () => {
         start: number,
         end: number,
         id: string,
-        options: RangeCacheLoadOptions
+        options: IntervalCacheLoadOptions
       ) => createContiguousArray(start, end)
     );
 
-    cache = createRangeCache<number, [id: string], number>({
+    cache = createIntervalCache<number, [id: string], number>({
       getPointForValue,
       load,
     });
@@ -55,7 +55,7 @@ describe("createRangeCache", () => {
           start: number,
           end: number,
           id: string,
-          options: RangeCacheLoadOptions
+          options: IntervalCacheLoadOptions
         ) => {
           abortSignals.push(options.signal);
 
@@ -109,7 +109,7 @@ describe("createRangeCache", () => {
       const load = jest.fn();
       load.mockImplementation((value) => [value]);
 
-      const bigIntCache = createRangeCache<bigint, [id: string], bigint>({
+      const bigIntCache = createIntervalCache<bigint, [id: string], bigint>({
         comparePoints,
         getPointForValue: (value) => value,
         load,
@@ -147,7 +147,7 @@ describe("createRangeCache", () => {
       const load = jest.fn();
       load.mockImplementation((value) => [value]);
 
-      const bigIntCache = createRangeCache<string, [id: string], string>({
+      const bigIntCache = createIntervalCache<string, [id: string], string>({
         comparePoints,
         getPointForValue: (value) => value,
         load,
@@ -231,7 +231,7 @@ describe("createRangeCache", () => {
   });
 
   describe("fetchAsync", () => {
-    it("should progressively fetch and fill-in values for missing ranges", async () => {
+    it("should progressively fetch and fill-in values for missing intervals", async () => {
       let values = await cache.fetchAsync(2, 4, "test");
       expect(values).toEqual(createContiguousArray(2, 4));
       expect(load).toHaveBeenCalledTimes(1);
@@ -248,12 +248,12 @@ describe("createRangeCache", () => {
       expect(load.mock.lastCall.slice(0, 3)).toEqual([4, 7, "test"]);
     });
 
-    it("should cache ranges separately based on parameters", async () => {
+    it("should cache intervals separately based on parameters", async () => {
       await cache.fetchAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([1, 10, "one"]);
 
-      // These ranges have already been loaded for key "one",
+      // These intervals have already been loaded for key "one",
       await cache.fetchAsync(2, 4, "one");
       await cache.fetchAsync(6, 9, "one");
       expect(load).toHaveBeenCalledTimes(1);
@@ -274,12 +274,12 @@ describe("createRangeCache", () => {
             start: number,
             end: number,
             id: string,
-            options: RangeCacheLoadOptions
+            options: IntervalCacheLoadOptions
           ) => Promise.resolve(createContiguousArray(start, end))
         );
       });
 
-      it("should wait for pending requests rather than load the same range twice", async () => {
+      it("should wait for pending requests rather than load the same interval twice", async () => {
         const promiseA = cache.fetchAsync(1, 5, "test");
         const promiseB = cache.fetchAsync(1, 5, "test");
 
@@ -290,7 +290,7 @@ describe("createRangeCache", () => {
         await expect(promiseB).resolves.toEqual(createContiguousArray(1, 5));
       });
 
-      it("should request new ranges when pending requests only cover part of the requested range", async () => {
+      it("should request new intervals when pending requests only cover part of the requested interval", async () => {
         const promiseA = cache.fetchAsync(1, 4, "test");
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(1, 4, "test", expect.any(Object));
@@ -299,7 +299,7 @@ describe("createRangeCache", () => {
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(4, 5, "test", expect.any(Object));
 
-        // Given the above requests, this range is already pending
+        // Given the above requests, this interval is already pending
         const promiseC = cache.fetchAsync(3, 5, "test");
         expect(load).toHaveBeenCalledTimes(2);
 

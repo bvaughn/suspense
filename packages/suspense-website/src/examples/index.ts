@@ -66,31 +66,34 @@ const createDeferred = {
   ),
 };
 
-const createRangeCache = {
+const createIntervalCache = {
   cache: processExample(
-    readFileSync(join(__dirname, "createRangeCache", "cache.ts"), "utf8")
+    readFileSync(join(__dirname, "createIntervalCache", "cache.ts"), "utf8")
   ),
-  cacheWithBigIntRange: processExample(
+  cacheWithBigIntInterval: processExample(
     readFileSync(
-      join(__dirname, "createRangeCache", "cacheWithBigIntRange.ts"),
+      join(__dirname, "createIntervalCache", "cacheWithBigIntInterval.ts"),
       "utf8"
     )
   ),
-  cacheWithStringRange: processExample(
+  cacheWithStringInterval: processExample(
     readFileSync(
-      join(__dirname, "createRangeCache", "cacheWithStringRange.ts"),
+      join(__dirname, "createIntervalCache", "cacheWithStringInterval.ts"),
       "utf8"
     )
   ),
   callingAbort: processExample(
-    readFileSync(join(__dirname, "createRangeCache", "callingAbort.ts"), "utf8")
+    readFileSync(
+      join(__dirname, "createIntervalCache", "callingAbort.ts"),
+      "utf8"
+    )
   ),
   evict: processExample(
-    readFileSync(join(__dirname, "createRangeCache", "evict.ts"), "utf8")
+    readFileSync(join(__dirname, "createIntervalCache", "evict.ts"), "utf8")
   ),
   loadWithAbortSignal: processExample(
     readFileSync(
-      join(__dirname, "createRangeCache", "loadWithAbortSignal.ts"),
+      join(__dirname, "createIntervalCache", "loadWithAbortSignal.ts"),
       "utf8"
     )
   ),
@@ -179,7 +182,7 @@ const isThenable = {
 export {
   createCache,
   createDeferred,
-  createRangeCache,
+  createIntervalCache,
   createSingleEntryCache,
   createStreamingCache,
   demos,

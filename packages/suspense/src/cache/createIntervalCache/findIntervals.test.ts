@@ -1,18 +1,22 @@
 import { configure as configureIntervalUtilities } from "interval-utilities";
 
-import { CachedRanges, findRanges, FoundRanges } from "./findRanges";
+import {
+  CachedIntervals,
+  findIntervals,
+  FoundIntervals,
+} from "./findIntervals";
 
-describe("findRanges", () => {
+describe("findIntervals", () => {
   const comparePoints = (a: number, b: number) => a - b;
   const intervalUtilities = configureIntervalUtilities(comparePoints);
 
   function test(
     start: number,
     end: number,
-    cached: Partial<CachedRanges<number>>
-  ): FoundRanges<number> {
+    cached: Partial<CachedIntervals<number>>
+  ): FoundIntervals<number> {
     const { loaded = [], pending = [] } = cached;
-    return findRanges(
+    return findIntervals(
       {
         loaded,
         pending,
@@ -22,7 +26,7 @@ describe("findRanges", () => {
     );
   }
 
-  it("should support initial case (no loaded or pending ranges)", () => {
+  it("should support initial case (no loaded or pending intervals)", () => {
     expect(test(0, 5, {})).toEqual({
       missing: [[0, 5]],
       pending: [],
@@ -98,7 +102,7 @@ describe("findRanges", () => {
     });
   });
 
-  it("should support ranges with multiple overlapping gaps", () => {
+  it("should support intervals with multiple overlapping gaps", () => {
     expect(
       test(3, 7, {
         loaded: [
@@ -143,7 +147,7 @@ describe("findRanges", () => {
     });
   });
 
-  it("should merge missing ranges to avoid unnecessary loads", () => {
+  it("should merge missing intervals to avoid unnecessary loads", () => {
     expect(
       test(1, 7, {
         loaded: [
@@ -160,7 +164,7 @@ describe("findRanges", () => {
     });
   });
 
-  it("should merge missing ranges when there are overlapping missing and pending ranges", () => {
+  it("should merge missing intervals when there are overlapping missing and pending intervals", () => {
     // This case demonstrates awkward overlap
     //    missing: [1,2], [2,6], and [6,7]
     //    pending: [2,2]
@@ -168,7 +172,7 @@ describe("findRanges", () => {
     // It looks silly when we are dealing with sequential numbers (e.g. 1, 2, 3)
     // but it's a side effect of supporting data types like BigInts
     //
-    // In this case, the missing ranges should get merged and the (contained) pending range should be removed
+    // In this case, the missing intervals should get merged and the (contained) pending interval should be removed
     expect(
       test(1, 7, {
         loaded: [

@@ -6,11 +6,11 @@ type Value = any;
 // REMOVE_BEFORE
 
 import { compare } from "extra-bigint";
-import { createRangeCache } from "suspense";
+import { createIntervalCache } from "suspense";
 
 type Point = bigint;
 
-createRangeCache<Point, [], Value>({
+createIntervalCache<Point, [], Value>({
   load,
   comparePoints: compare,
   getPointForValue,

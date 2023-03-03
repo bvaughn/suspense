@@ -8,7 +8,7 @@ import Note from "../components/Note";
 import {
   CREATE_CACHE,
   CREATE_DEFERRED,
-  CREATE_RANGE_CACHE,
+  CREATE_INTERVAL_CACHE,
   CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
   GUIDE_ABORT_A_REQUEST,
@@ -58,8 +58,8 @@ export default function Route() {
         <ul>
           <LinkListItem children="createCache" to={CREATE_CACHE} type="code" />
           <LinkListItem
-            children="creatRangeCache"
-            to={CREATE_RANGE_CACHE}
+            children="creatIntervalCache"
+            to={CREATE_INTERVAL_CACHE}
             type="code"
           />
           <LinkListItem

@@ -8,9 +8,9 @@ const getPointForValue = (value: Line) => value.index;
 
 // REMOVE_BEFORE
 
-import { CacheLoadOptions, createRangeCache } from "suspense";
+import { CacheLoadOptions, createIntervalCache } from "suspense";
 
-createRangeCache<number, [fileName: string], Line>({
+createIntervalCache<number, [fileName: string], Line>({
   load: async (
     start: number,
     end: number,

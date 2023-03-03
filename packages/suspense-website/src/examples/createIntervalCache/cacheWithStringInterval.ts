@@ -5,7 +5,7 @@ type Value = any;
 
 // REMOVE_BEFORE
 
-import { createRangeCache } from "suspense";
+import { createIntervalCache } from "suspense";
 
 type Point = string;
 
@@ -13,7 +13,7 @@ function compare(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-createRangeCache<Point, [], Value>({
+createIntervalCache<Point, [], Value>({
   load,
   comparePoints: compare,
   getPointForValue,

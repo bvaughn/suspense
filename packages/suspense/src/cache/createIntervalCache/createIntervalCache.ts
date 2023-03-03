@@ -9,11 +9,11 @@ import {
   STATUS_RESOLVED,
 } from "../../constants";
 import {
-  RangeCacheLoadOptions,
+  IntervalCacheLoadOptions,
   ComparisonFunction,
   GetPointForValue,
   PendingRecord,
-  RangeCache,
+  IntervalCache,
   Record,
   Thenable,
 } from "../../types";
@@ -21,7 +21,7 @@ import { assertPendingRecord } from "../../utils/assertPendingRecord";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
-import { findRanges } from "./findRanges";
+import { findIntervals } from "./findIntervals";
 import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
 
@@ -30,20 +30,23 @@ const DEBUG_LOG_IN_DEV = false;
 
 type SerializableToString = { toString(): string };
 
-type PendingRangeAndThenableTuple<Point, Value> = [
+type PendingIntervalAndThenableTuple<Point, Value> = [
   Interval<Point>,
   Value[] | Thenable<Value[]>
 ];
 
-type RangeMetadata<Point, Value> = {
-  loadedRanges: Interval<Point>[];
-  pendingRangeAndThenableTuples: PendingRangeAndThenableTuple<Point, Value>[];
+type Metadata<Point, Value> = {
+  loadedIntervals: Interval<Point>[];
+  pendingIntervalAndThenableTuples: PendingIntervalAndThenableTuple<
+    Point,
+    Value
+  >[];
   pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
 };
 
-export function createRangeCache<
+export function createIntervalCache<
   Point extends SerializableToString,
   Params extends Array<any>,
   Value
@@ -55,9 +58,9 @@ export function createRangeCache<
   load: (
     start: Point,
     end: Point,
-    ...params: [...Params, RangeCacheLoadOptions]
+    ...params: [...Params, IntervalCacheLoadOptions]
   ) => Thenable<Value[]> | Value[];
-}): RangeCache<Point, Params, Value> {
+}): IntervalCache<Point, Params, Value> {
   const {
     comparePoints = defaultComparePoints,
     debugLabel,
@@ -66,16 +69,16 @@ export function createRangeCache<
     load,
   } = options;
 
-  const rangeUtils = configureIntervalUtilities<Point>(comparePoints);
+  const intervalUtils = configureIntervalUtilities<Point>(comparePoints);
 
-  const rangeMap = new Map<string, RangeMetadata<Point, Value>>();
+  const metadataMap = new Map<string, Metadata<Point, Value>>();
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel
-        ? `createRangeCache[${debugLabel}]`
-        : "createRangeCache";
+        ? `createIntervalCache[${debugLabel}]`
+        : "createIntervalCache";
 
       console.log(
         `%c${prefix}`,
@@ -94,9 +97,9 @@ export function createRangeCache<
 
     let caught;
 
-    let rangeMetadata = rangeMap.get(cacheKey);
-    if (rangeMetadata) {
-      const { pendingRecords } = rangeMetadata;
+    let metadata = metadataMap.get(cacheKey);
+    if (metadata) {
+      const { pendingRecords } = metadata;
       if (pendingRecords.size > 0) {
         debugLogInDev("abort()", params);
 
@@ -125,15 +128,15 @@ export function createRangeCache<
 
     const cacheKey = getKey(...params);
 
-    return rangeMap.delete(cacheKey);
+    return metadataMap.delete(cacheKey);
   }
 
   function evictAll(): boolean {
-    debugLogInDev(`evictAll()`, undefined, `${rangeMap.size} records`);
+    debugLogInDev(`evictAll()`, undefined, `${metadataMap.size} records`);
 
-    const hadValues = rangeMap.size > 0;
+    const hadValues = metadataMap.size > 0;
 
-    rangeMap.clear();
+    metadataMap.clear();
 
     return hadValues;
   }
@@ -165,23 +168,23 @@ export function createRangeCache<
     }
   }
 
-  function getOrCreateRangeMetadata(
+  function getOrCreateIntervalMetadata(
     ...params: Params
-  ): RangeMetadata<Point, Value> {
+  ): Metadata<Point, Value> {
     const cacheKey = getKey(...params);
-    let range = rangeMap.get(cacheKey);
-    if (range == null) {
-      range = {
-        loadedRanges: [],
-        pendingRangeAndThenableTuples: [],
+    let metadata = metadataMap.get(cacheKey);
+    if (metadata == null) {
+      metadata = {
+        loadedIntervals: [],
+        pendingIntervalAndThenableTuples: [],
         pendingRecords: new Set(),
         recordMap: new Map(),
         sortedValues: [],
       };
 
-      rangeMap.set(cacheKey, range);
+      metadataMap.set(cacheKey, metadata);
     }
-    return range;
+    return metadata;
   }
 
   function getOrCreateRecord(
@@ -189,10 +192,10 @@ export function createRangeCache<
     end: Point,
     ...params: Params
   ): Record<Value[]> {
-    const rangeMetadata = getOrCreateRangeMetadata(...params);
+    const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = `${start}–${end}`;
 
-    let record = rangeMetadata.recordMap.get(cacheKey);
+    let record = metadata.recordMap.get(cacheKey);
     if (record == null) {
       const abortController = new AbortController();
       const deferred = createDeferred<Value[]>(
@@ -207,10 +210,10 @@ export function createRangeCache<
         },
       } as Record<Value[]>;
 
-      rangeMetadata.recordMap.set(cacheKey, record);
+      metadata.recordMap.set(cacheKey, record);
 
       processPendingRecord(
-        rangeMetadata,
+        metadata,
         record as PendingRecord<Value[]>,
         start,
         end,
@@ -221,36 +224,39 @@ export function createRangeCache<
     return record;
   }
 
-  async function processPendingRangeAndThenableTuple(
-    rangeMetadata: RangeMetadata<Point, Value>,
-    pendingRangeAndThenableTuple: PendingRangeAndThenableTuple<Point, Value>,
+  async function processPendingIntervalAndThenableTuple(
+    metadata: Metadata<Point, Value>,
+    pendingIntervalAndThenableTuple: PendingIntervalAndThenableTuple<
+      Point,
+      Value
+    >,
     start: Point,
     end: Point,
     ...params: Params
   ) {
-    const [range, thenable] = pendingRangeAndThenableTuple;
+    const [interval, thenable] = pendingIntervalAndThenableTuple;
 
     let values;
     try {
       values = await thenable;
     } finally {
-      rangeMetadata.pendingRangeAndThenableTuples.splice(
-        rangeMetadata.pendingRangeAndThenableTuples.indexOf(
-          pendingRangeAndThenableTuple
+      metadata.pendingIntervalAndThenableTuples.splice(
+        metadata.pendingIntervalAndThenableTuples.indexOf(
+          pendingIntervalAndThenableTuple
         ),
         1
       );
     }
 
-    rangeMetadata.loadedRanges = rangeUtils.mergeAll(
-      ...rangeUtils.sort(...rangeMetadata.loadedRanges, [start, end])
+    metadata.loadedIntervals = intervalUtils.mergeAll(
+      ...intervalUtils.sort(...metadata.loadedIntervals, [start, end])
     );
 
-    // Check for duplicate values near the edges because of how ranges are split
+    // Check for duplicate values near the edges because of how intervals are split
     if (values.length > 0) {
       const firstValue = values[0];
       const index = findIndex(
-        rangeMetadata.sortedValues,
+        metadata.sortedValues,
         getPointForValue(firstValue),
         getPointForValue,
         comparePoints
@@ -262,7 +268,7 @@ export function createRangeCache<
     if (values.length > 0) {
       const lastValue = values[values.length - 1];
       const index = findIndex(
-        rangeMetadata.sortedValues,
+        metadata.sortedValues,
         getPointForValue(lastValue),
         getPointForValue,
         comparePoints
@@ -276,17 +282,17 @@ export function createRangeCache<
     if (values.length > 0) {
       const firstValue = values[0];
       const index = findNearestIndexAfter(
-        rangeMetadata.sortedValues,
+        metadata.sortedValues,
         getPointForValue(firstValue),
         getPointForValue,
         comparePoints
       );
-      rangeMetadata.sortedValues.splice(index, 0, ...values);
+      metadata.sortedValues.splice(index, 0, ...values);
     }
   }
 
   async function processPendingRecord(
-    rangeMetadata: RangeMetadata<Point, Value>,
+    metadata: Metadata<Point, Value>,
     record: Record<Value[]>,
     start: Point,
     end: Point,
@@ -294,55 +300,55 @@ export function createRangeCache<
   ) {
     assertPendingRecord(record);
 
-    rangeMetadata.pendingRecords.add(record);
+    metadata.pendingRecords.add(record);
 
     const { abortController, deferred } = record.value;
     const { signal } = abortController;
 
-    const foundRanges = findRanges<Point>(
+    const foundIntervals = findIntervals<Point>(
       {
-        loaded: rangeMetadata.loadedRanges,
-        pending: rangeMetadata.pendingRangeAndThenableTuples.map(
-          ([range]) => range
+        loaded: metadata.loadedIntervals,
+        pending: metadata.pendingIntervalAndThenableTuples.map(
+          ([interval]) => interval
         ),
       },
       [start, end],
-      rangeUtils
+      intervalUtils
     );
 
     const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
-    foundRanges.missing.forEach(([start, end]) => {
+    foundIntervals.missing.forEach(([start, end]) => {
       const thenable = load(start, end, ...params, abortController);
 
       missingThenables.push(thenable);
 
-      const pendingRangeAndThenableTuple: PendingRangeAndThenableTuple<
+      const pendingIntervalAndThenableTuple: PendingIntervalAndThenableTuple<
         Point,
         Value
       > = [[start, end], thenable];
 
-      rangeMetadata.pendingRangeAndThenableTuples.push(
-        pendingRangeAndThenableTuple
+      metadata.pendingIntervalAndThenableTuples.push(
+        pendingIntervalAndThenableTuple
       );
 
-      processPendingRangeAndThenableTuple(
-        rangeMetadata,
-        pendingRangeAndThenableTuple,
+      processPendingIntervalAndThenableTuple(
+        metadata,
+        pendingIntervalAndThenableTuple,
         start,
         end,
         ...params
       );
     });
 
-    // Gather all of the deferred requests the new range blocks on.
+    // Gather all of the deferred requests the new interval blocks on.
     // Can we make this more efficient than a nested loop?
     // It's tricky since requests initiated separately (e.g. [1,2] and [2,4])
     // may end up reported as single/merged blocker (e.g. [1,3])
     const pendingThenables: Array<Value[] | Thenable<Value[]>> = [];
-    foundRanges.pending.forEach(([start, end]) => {
-      rangeMetadata.pendingRangeAndThenableTuples.forEach(
-        ([range, deferred]) => {
-          if (rangeUtils.contains(range, [start, end])) {
+    foundIntervals.pending.forEach(([start, end]) => {
+      metadata.pendingIntervalAndThenableTuples.forEach(
+        ([interval, deferred]) => {
+          if (intervalUtils.contains(interval, [start, end])) {
             pendingThenables.push(deferred);
           }
         }
@@ -355,7 +361,7 @@ export function createRangeCache<
       if (!signal.aborted) {
         record.status = STATUS_RESOLVED;
         record.value = sliceValues<Point, Value>(
-          rangeMetadata.sortedValues,
+          metadata.sortedValues,
           start,
           end,
           getPointForValue,
@@ -372,7 +378,7 @@ export function createRangeCache<
         deferred.reject(error);
       }
     } finally {
-      rangeMetadata.pendingRecords.delete(record);
+      metadata.pendingRecords.delete(record);
     }
   }
 
