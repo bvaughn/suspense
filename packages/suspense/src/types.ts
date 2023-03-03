@@ -116,6 +116,12 @@ export type PointUtils<Point> = {
   lessThanOrEqualTo(a: Point, b: Point): boolean;
 };
 
+export type SeparatedRanges<Point> = {
+  a: RangeTuple<Point>[];
+  ab: RangeTuple<Point>[];
+  b: RangeTuple<Point>[];
+};
+
 export type RangeUtils<Point> = {
   compare(a: RangeTuple<Point>, b: RangeTuple<Point>): number;
   contains(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
@@ -128,7 +134,11 @@ export type RangeUtils<Point> = {
   merge(a: RangeTuple<Point>, b: RangeTuple<Point>): RangeTuple<Point>[];
   mergeAll(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[];
   sort(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[];
-  subtract(a: RangeTuple<Point>, b: RangeTuple<Point>): RangeTuple<Point>[];
+  separate(a: RangeTuple<Point>, b: RangeTuple<Point>): SeparatedRanges<Point>;
+  separateAll(
+    a: RangeTuple<Point>[],
+    b: RangeTuple<Point>[]
+  ): SeparatedRanges<Point>;
 };
 
 // Streaming cache types

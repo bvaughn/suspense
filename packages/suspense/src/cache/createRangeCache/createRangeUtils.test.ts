@@ -321,6 +321,200 @@ describe("createRangeUtils", () => {
     });
   });
 
+  describe("separate", () => {
+    it("should support exact matches", () => {
+      const { separate } = rangeUtils;
+      expect(separate([1, 5], [1, 5])).toEqual({
+        a: [],
+        b: [],
+        ab: [[1, 5]],
+      });
+      expect(separate([-2, 5], [-2, 5])).toEqual({
+        a: [],
+        b: [],
+        ab: [[-2, 5]],
+      });
+      expect(separate([-10, -5], [-10, -5])).toEqual({
+        a: [],
+        b: [],
+        ab: [[-10, -5]],
+      });
+    });
+
+    it("should support subsets", () => {
+      const { separate } = rangeUtils;
+      expect(separate([1, 10], [1, 5])).toEqual({
+        a: [[5, 10]],
+        b: [],
+        ab: [[1, 5]],
+      });
+      expect(separate([-10, -2], [-8, -5])).toEqual({
+        a: [[-10, -8], [-5, -2], ,],
+        b: [],
+        ab: [[-8, -5]],
+      });
+      expect(separate([-2, 5], [3, 5])).toEqual({
+        a: [[-2, 3]],
+        b: [],
+        ab: [[3, 5]],
+      });
+    });
+
+    it("should support supersets", () => {
+      const { separate } = rangeUtils;
+      expect(separate([2, 4], [1, 10])).toEqual({
+        a: [],
+        b: [
+          [1, 2],
+          [4, 10],
+        ],
+        ab: [[2, 4]],
+      });
+
+      expect(separate([-10, -5], [-20, 0])).toEqual({
+        a: [],
+        b: [
+          [-20, -10],
+          [-5, 0],
+        ],
+        ab: [[-10, -5]],
+      });
+
+      expect(separate([2, 5], [-10, 5])).toEqual({
+        a: [],
+        b: [[-10, 2]],
+        ab: [[2, 5]],
+      });
+    });
+
+    it("should support intersecting ranges", () => {
+      const { separate } = rangeUtils;
+      expect(separate([1, 5], [2, 6])).toEqual({
+        a: [[1, 2]],
+        b: [[5, 6]],
+        ab: [[2, 5]],
+      });
+
+      expect(separate([-20, -10], [-15, -5])).toEqual({
+        a: [[-20, -15]],
+        b: [[-10, -5]],
+        ab: [[-15, -10]],
+      });
+    });
+
+    it("should support non-intersecting ranges", () => {
+      const { separate } = rangeUtils;
+      expect(separate([-10, -5], [5, 10])).toEqual({
+        a: [[-10, -5]],
+        b: [[5, 10]],
+        ab: [],
+      });
+    });
+  });
+
+  describe("separateAll", () => {
+    it("case one (intersecting)", () => {
+      const { separateAll } = rangeUtils;
+      expect(
+        separateAll(
+          [
+            [0, 0],
+            [3, 5],
+          ],
+          [[2, 4]]
+        )
+      ).toEqual({
+        a: [
+          [0, 0],
+          [4, 5],
+        ],
+        b: [[2, 3]],
+        ab: [[3, 4]],
+      });
+    });
+
+    it("case two (intersecting)", () => {
+      const { separateAll } = rangeUtils;
+      expect(
+        separateAll(
+          [
+            [0, 3],
+            [5, 5],
+          ],
+          [
+            [1, 1],
+            [3, 3],
+          ]
+        )
+      ).toEqual({
+        a: [
+          [0, 1],
+          [1, 3],
+          [5, 5],
+        ],
+        b: [],
+        ab: [
+          [1, 1],
+          [3, 3],
+        ],
+      });
+    });
+
+    it("case three (non intersecting)", () => {
+      const { separateAll } = rangeUtils;
+      expect(
+        separateAll(
+          [
+            [0, 0],
+            [3, 4],
+            [6, 6],
+          ],
+          [
+            [1, 2],
+            [5, 5],
+          ]
+        )
+      ).toEqual({
+        a: [
+          [0, 0],
+          [3, 4],
+          [6, 6],
+        ],
+        b: [
+          [1, 2],
+          [5, 5],
+        ],
+        ab: [],
+      });
+    });
+
+    it("case three (non intersecting, sparse)", () => {
+      const { separateAll } = rangeUtils;
+      expect(
+        separateAll(
+          [
+            [3, 3],
+            [5, 6],
+          ],
+          [
+            [0, 1],
+            [8, 8],
+          ]
+        )
+      ).toEqual({
+        a: [
+          [3, 3],
+          [5, 6],
+        ],
+        b: [
+          [0, 1],
+          [8, 8],
+        ],
+        ab: [],
+      });
+    });
+  });
+
   describe("sort", () => {
     it("should handle edge cases", () => {
       const { sort } = rangeUtils;
@@ -382,46 +576,6 @@ describe("createRangeUtils", () => {
         [-8, 2],
         [1, 5],
       ]);
-    });
-  });
-
-  describe("subtract", () => {
-    it("should not subtract exact matches", () => {
-      const { subtract } = rangeUtils;
-      expect(subtract([1, 5], [1, 5])).toEqual([]);
-      expect(subtract([-2, 5], [-2, 5])).toEqual([]);
-      expect(subtract([-10, -5], [-10, -5])).toEqual([]);
-    });
-
-    it("should not subtract subsets", () => {
-      const { subtract } = rangeUtils;
-      expect(subtract([1, 5], [2, 4])).toEqual([]);
-      expect(subtract([1, 5], [1, 4])).toEqual([]);
-      expect(subtract([1, 5], [2, 5])).toEqual([]);
-    });
-
-    it("should supersets", () => {
-      const { subtract } = rangeUtils;
-      expect(subtract([2, 4], [1, 5])).toEqual([
-        [1, 2],
-        [4, 5],
-      ]);
-      expect(subtract([1, 4], [1, 5])).toEqual([[4, 5]]);
-      expect(subtract([3, 5], [1, 5])).toEqual([[1, 3]]);
-    });
-
-    it("should subtract intersecting ranges", () => {
-      const { subtract } = rangeUtils;
-      expect(subtract([2, 4], [1, 3])).toEqual([[1, 2]]);
-      expect(subtract([2, 4], [3, 7])).toEqual([[4, 7]]);
-      expect(subtract([-5, -2], [-10, -4])).toEqual([[-10, -5]]);
-      expect(subtract([-5, -2], [-3, -1])).toEqual([[-2, -1]]);
-    });
-
-    it("should subtract non-intersecting ranges", () => {
-      const { subtract } = rangeUtils;
-      expect(subtract([1, 3], [5, 10])).toEqual([[5, 10]]);
-      expect(subtract([5, 10], [1, 3])).toEqual([[1, 3]]);
     });
   });
 });

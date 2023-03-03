@@ -20,7 +20,7 @@ import { isPendingRecord } from "../../utils/isPendingRecord";
 import { createPointUtils } from "./createPointUtils";
 import { createRangeUtils } from "./createRangeUtils";
 import { defaultComparePoints } from "./defaultComparePoints";
-import { findMissingRanges } from "./findMissingRanges";
+import { findRanges } from "./findRanges";
 import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
 
@@ -29,8 +29,14 @@ const DEBUG_LOG_IN_DEV = false;
 
 type SerializableToString = { toString(): string };
 
+type PendingRangeAndThenableTuple<Point, Value> = [
+  RangeTuple<Point>,
+  Value[] | Thenable<Value[]>
+];
+
 type RangeMetadata<Point, Value> = {
-  cachedRanges: RangeTuple<Point>[];
+  loadedRanges: RangeTuple<Point>[];
+  pendingRangeAndThenableTuples: PendingRangeAndThenableTuple<Point, Value>[];
   pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
@@ -166,7 +172,8 @@ export function createRangeCache<
     let range = rangeMap.get(cacheKey);
     if (range == null) {
       range = {
-        cachedRanges: [],
+        loadedRanges: [],
+        pendingRangeAndThenableTuples: [],
         pendingRecords: new Set(),
         recordMap: new Map(),
         sortedValues: [],
@@ -214,26 +221,36 @@ export function createRangeCache<
     return record;
   }
 
-  async function loadRangeAndMergeValues(
+  async function processPendingRangeAndThenableTuple(
     rangeMetadata: RangeMetadata<Point, Value>,
-    abortController: AbortController,
+    pendingRangeAndThenableTuple: PendingRangeAndThenableTuple<Point, Value>,
     start: Point,
     end: Point,
     ...params: Params
   ) {
-    const { cachedRanges, sortedValues } = rangeMetadata;
+    const [range, thenable] = pendingRangeAndThenableTuple;
 
-    const values = await load(start, end, ...params, abortController);
+    let values;
+    try {
+      values = await thenable;
+    } finally {
+      rangeMetadata.pendingRangeAndThenableTuples.splice(
+        rangeMetadata.pendingRangeAndThenableTuples.indexOf(
+          pendingRangeAndThenableTuple
+        ),
+        1
+      );
+    }
 
-    rangeMetadata.cachedRanges = rangeUtils.mergeAll(
-      ...rangeUtils.sort(...cachedRanges, [start, end])
+    rangeMetadata.loadedRanges = rangeUtils.mergeAll(
+      ...rangeUtils.sort(...rangeMetadata.loadedRanges, [start, end])
     );
 
     // Check for duplicate values near the edges because of how ranges are split
     if (values.length > 0) {
       const firstValue = values[0];
       const index = findIndex(
-        sortedValues,
+        rangeMetadata.sortedValues,
         getPointForValue(firstValue),
         getPointForValue,
         comparePoints
@@ -245,7 +262,7 @@ export function createRangeCache<
     if (values.length > 0) {
       const lastValue = values[values.length - 1];
       const index = findIndex(
-        sortedValues,
+        rangeMetadata.sortedValues,
         getPointForValue(lastValue),
         getPointForValue,
         comparePoints
@@ -259,12 +276,12 @@ export function createRangeCache<
     if (values.length > 0) {
       const firstValue = values[0];
       const index = findNearestIndexAfter(
-        sortedValues,
+        rangeMetadata.sortedValues,
         getPointForValue(firstValue),
         getPointForValue,
         comparePoints
       );
-      sortedValues.splice(index, 0, ...values);
+      rangeMetadata.sortedValues.splice(index, 0, ...values);
     }
   }
 
@@ -282,25 +299,58 @@ export function createRangeCache<
     const { abortController, deferred } = record.value;
     const { signal } = abortController;
 
-    const missingRanges = findMissingRanges<Point>(
-      rangeMetadata.cachedRanges,
+    const foundRanges = findRanges<Point>(
+      {
+        loaded: rangeMetadata.loadedRanges,
+        pending: rangeMetadata.pendingRangeAndThenableTuples.map(
+          ([range]) => range
+        ),
+      },
       [start, end],
-      rangeUtils,
-      pointUtils
+      rangeUtils
     );
 
-    try {
-      await Promise.all(
-        missingRanges.map(([start, end]) =>
-          loadRangeAndMergeValues(
-            rangeMetadata,
-            abortController,
-            start,
-            end,
-            ...params
-          )
-        )
+    const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
+    foundRanges.missing.forEach(([start, end]) => {
+      const thenable = load(start, end, ...params, abortController);
+
+      missingThenables.push(thenable);
+
+      const pendingRangeAndThenableTuple: PendingRangeAndThenableTuple<
+        Point,
+        Value
+      > = [[start, end], thenable];
+
+      rangeMetadata.pendingRangeAndThenableTuples.push(
+        pendingRangeAndThenableTuple
       );
+
+      processPendingRangeAndThenableTuple(
+        rangeMetadata,
+        pendingRangeAndThenableTuple,
+        start,
+        end,
+        ...params
+      );
+    });
+
+    // Gather all of the deferred requests the new range blocks on.
+    // Can we make this more efficient than a nested loop?
+    // It's tricky since requests initiated separately (e.g. [1,2] and [2,4])
+    // may end up reported as single/merged blocker (e.g. [1,3])
+    const pendingThenables: Array<Value[] | Thenable<Value[]>> = [];
+    foundRanges.pending.forEach(([start, end]) => {
+      rangeMetadata.pendingRangeAndThenableTuples.forEach(
+        ([range, deferred]) => {
+          if (rangeUtils.contains(range, [start, end])) {
+            pendingThenables.push(deferred);
+          }
+        }
+      );
+    });
+
+    try {
+      await Promise.all([...missingThenables, ...pendingThenables]);
 
       if (!signal.aborted) {
         record.status = STATUS_RESOLVED;

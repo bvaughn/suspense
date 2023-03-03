@@ -1,4 +1,9 @@
-import { PointUtils, RangeTuple, RangeUtils } from "../../types";
+import {
+  PointUtils,
+  RangeTuple,
+  RangeUtils,
+  SeparatedRanges,
+} from "../../types";
 
 export function createRangeUtils<Point>(
   pointUtils: PointUtils<Point>
@@ -94,43 +99,123 @@ export function createRangeUtils<Point>(
 
     for (let index = 1; index < sortedRanges.length; index++) {
       currentRange = sortedRanges[index];
-      //console.log(`${index}: %s, %s`, prevRange, currentRange);
 
       const tempMerged = merge(prevRange, currentRange);
-      //console.log(`  ->`, ...tempMerged);
       prevRange = tempMerged.pop();
       merged.push(...tempMerged);
-      //console.log(`  -> ->`, merged.length);
     }
 
-    //console.log(prevRange);
     merged.push(prevRange);
 
     return merged;
   }
 
-  function sort(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[] {
-    return ranges.sort(compare);
-  }
-
-  function subtract(
+  function separate(
     a: RangeTuple<Point>,
     b: RangeTuple<Point>
-  ): RangeTuple<Point>[] {
-    if (equals(a, b) || contains(a, b)) {
-      return [];
+  ): SeparatedRanges<Point> {
+    const separated: SeparatedRanges<Point> = {
+      a: [],
+      ab: [],
+      b: [],
+    };
+
+    if (equals(a, b)) {
+      separated.ab.push(a);
     } else if (!intersects(a, b)) {
-      return [b];
+      separated.a.push(a);
+      separated.b.push(b);
     } else {
-      const tuples: RangeTuple<Point>[] = [];
-      if (pointUtils.lessThan(b[0], a[0])) {
-        tuples.push([b[0], a[0]]);
+      const [a0, a1] = a;
+      const [b0, b1] = b;
+
+      if (pointUtils.lessThan(a0, b0)) {
+        separated.a.push([a0, b0]);
+      } else if (pointUtils.greaterThan(a0, b0)) {
+        separated.b.push([b0, a0]);
       }
-      if (pointUtils.lessThan(a[1], b[1])) {
-        tuples.push([a[1], b[1]]);
+
+      if (pointUtils.lessThan(a0, b0)) {
+        separated.ab.push([b0, pointUtils.lessThan(a1, b1) ? a1 : b1]);
+      } else {
+        separated.ab.push([a0, pointUtils.lessThan(a1, b1) ? a1 : b1]);
       }
-      return tuples;
+
+      if (pointUtils.lessThan(a1, b1)) {
+        separated.b.push([a1, b1]);
+      } else if (pointUtils.greaterThan(a1, b1)) {
+        separated.a.push([b1, a1]);
+      }
     }
+
+    return separated;
+  }
+
+  function separateAll(
+    a: RangeTuple<Point>[],
+    b: RangeTuple<Point>[]
+  ): SeparatedRanges<Point> {
+    const separated: SeparatedRanges<Point> = {
+      a: [],
+      ab: [],
+      b: [],
+    };
+
+    let currentA: RangeTuple<Point> | null = a[0] ?? null;
+    let currentB: RangeTuple<Point> | null = b[0] ?? null;
+
+    let indexA = 0;
+    let indexB = 0;
+
+    while (currentA !== null && currentB !== null) {
+      const separatedLoop = separate(currentA, currentB);
+
+      // It's always okay to push all overlapping ranges
+      separated.ab.push(...separatedLoop.ab);
+
+      // If the ends of the current range align, we can push all excluded ranges
+      // Else we should keep the last range for whichever comes last
+      // because it might overlap with the next range in the other set
+      if (pointUtils.equals(currentA[1], currentB[1])) {
+        separated.b.push(...separatedLoop.b);
+        separated.a.push(...separatedLoop.a);
+
+        currentA = a[++indexA] ?? null;
+        currentB = b[++indexB] ?? null;
+      } else if (pointUtils.greaterThan(currentA[1], currentB[1])) {
+        currentA = separatedLoop.a.pop();
+
+        separated.b.push(...separatedLoop.b);
+        separated.a.push(...separatedLoop.a);
+
+        currentB = b[++indexB] ?? null;
+      } else {
+        currentB = separatedLoop.b.pop();
+
+        separated.b.push(...separatedLoop.b);
+        separated.a.push(...separatedLoop.a);
+
+        currentA = a[++indexA] ?? null;
+      }
+    }
+
+    while (currentA !== null) {
+      separated.a.push(currentA);
+
+      currentA = a[++indexA] ?? null;
+    }
+
+    while (currentB !== null) {
+      separated.b.push(currentB);
+
+      currentB = b[++indexB] ?? null;
+    }
+
+    return separated;
+  }
+
+  function sort(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[] {
+    return ranges.sort(compare);
   }
 
   return {
@@ -144,7 +229,8 @@ export function createRangeUtils<Point>(
     lessThanOrEqualTo,
     merge,
     mergeAll,
+    separate,
+    separateAll,
     sort,
-    subtract,
   };
 }

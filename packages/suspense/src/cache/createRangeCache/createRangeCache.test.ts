@@ -159,9 +159,9 @@ describe("createRangeCache", () => {
       expect(load).toHaveBeenCalledTimes(1);
       expect(load).toHaveBeenCalledWith("f", "l", "test", expect.any(Object));
 
-      await bigIntCache.fetchAsync("a", "c", "test");
+      await bigIntCache.fetchAsync("a", "g", "test");
       expect(load).toHaveBeenCalledTimes(2);
-      expect(load).toHaveBeenCalledWith("a", "c", "test", expect.any(Object));
+      expect(load).toHaveBeenCalledWith("a", "f", "test", expect.any(Object));
     });
   });
 
@@ -264,6 +264,55 @@ describe("createRangeCache", () => {
       await cache.fetchAsync(6, 9, "two");
       expect(load).toHaveBeenCalledTimes(3);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([6, 9, "two"]);
+    });
+
+    describe("concurrent requests", () => {
+      beforeEach(() => {
+        load.mockImplementation(
+          async (
+            start: number,
+            end: number,
+            id: string,
+            options: RangeCacheLoadOptions
+          ) => Promise.resolve(createContiguousArray(start, end))
+        );
+      });
+
+      it("should wait for pending requests rather than load the same range twice", async () => {
+        const promiseA = cache.fetchAsync(1, 5, "test");
+        const promiseB = cache.fetchAsync(1, 5, "test");
+
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+        await expect(promiseA).resolves.toEqual(createContiguousArray(1, 5));
+        await expect(promiseB).resolves.toEqual(createContiguousArray(1, 5));
+      });
+
+      it("should request new ranges when pending requests only cover part of the requested range", async () => {
+        const promiseA = cache.fetchAsync(1, 4, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 4, "test", expect.any(Object));
+
+        const promiseB = cache.fetchAsync(2, 5, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(4, 5, "test", expect.any(Object));
+
+        // Given the above requests, this range is already pending
+        const promiseC = cache.fetchAsync(3, 5, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+
+        // All of the above requests should resolve to the correct values
+        await expect(promiseA).resolves.toEqual(createContiguousArray(1, 4));
+        await expect(promiseB).resolves.toEqual(createContiguousArray(2, 5));
+        await expect(promiseC).resolves.toEqual(createContiguousArray(3, 5));
+
+        // The above requests would have returned some duplicate values (e.g. 1,2,3,4 + 4,5)
+        // These should have been filtered (e.g. 1,2,3,4,5)const promiseC = cache.fetchAsync(3, 5, "test");
+        const promiseD = cache.fetchAsync(1, 5, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+        await expect(promiseD).resolves.toEqual(createContiguousArray(1, 5));
+      });
     });
   });
 
