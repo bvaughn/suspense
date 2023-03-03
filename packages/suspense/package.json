@@ -28,6 +28,10 @@
     "react-dom": "latest",
     "ts-jest": "^29.0.5"
   },
+  "dependencies": {
+    "interval-utilities": "latest",
+    "point-utilities": "latest"
+  },
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"

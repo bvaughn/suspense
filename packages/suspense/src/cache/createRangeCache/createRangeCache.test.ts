@@ -1,4 +1,5 @@
 import { compare as compareBigInt } from "extra-bigint";
+
 import {
   RangeCacheLoadOptions,
   Deferred,
@@ -314,6 +315,10 @@ describe("createRangeCache", () => {
         await expect(promiseD).resolves.toEqual(createContiguousArray(1, 5));
       });
     });
+
+    // TODO Test pending/loaded cleanup after abort
+
+    // TODO Test failed request
   });
 
   // Most tests are written for fetchAsync

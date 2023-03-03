@@ -1,10 +1,10 @@
-import { ComparisonFunction, PointUtils } from "../../types";
+import { ComparePoints, Utilities } from "./types";
 
-export function createPointUtils<Point>(
-  comparisonFunction: ComparisonFunction<Point>
-): PointUtils<Point> {
+export function configure<Point>(
+  comparePoints: ComparePoints<Point>
+): Utilities<Point> {
   function compare(a: Point, b: Point): number {
-    const result = comparisonFunction(a, b);
+    const result = comparePoints(a, b);
     if (result === 0) {
       return 0;
     } else {
@@ -13,23 +13,23 @@ export function createPointUtils<Point>(
   }
 
   function equals(a: Point, b: Point): boolean {
-    return comparisonFunction(a, b) === 0;
+    return comparePoints(a, b) === 0;
   }
 
   function greaterThan(a: Point, b: Point): boolean {
-    return comparisonFunction(a, b) > 0;
+    return comparePoints(a, b) > 0;
   }
 
   function greaterThanOrEqualTo(a: Point, b: Point): boolean {
-    return comparisonFunction(a, b) >= 0;
+    return comparePoints(a, b) >= 0;
   }
 
   function lessThan(a: Point, b: Point): boolean {
-    return comparisonFunction(a, b) < 0;
+    return comparePoints(a, b) < 0;
   }
 
   function lessThanOrEqualTo(a: Point, b: Point): boolean {
-    return comparisonFunction(a, b) <= 0;
+    return comparePoints(a, b) <= 0;
   }
 
   return {

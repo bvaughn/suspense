@@ -1,16 +1,16 @@
-import { PointUtils } from "../../types";
-import { createPointUtils } from "./createPointUtils";
+import { configure } from "./configure";
+import { Utilities } from "./types";
 
 describe("createPointUtils", () => {
-  let pointUtils: PointUtils<number>;
+  let utilities: Utilities<number>;
 
   beforeEach(() => {
-    pointUtils = createPointUtils<number>((a: number, b: number) => a - b);
+    utilities = configure<number>((a: number, b: number) => a - b);
   });
 
   describe("compare", () => {
     it("should work", () => {
-      const { compare } = pointUtils;
+      const { compare } = utilities;
       expect(compare(10, 10)).toBe(0);
       expect(compare(10, 0)).toBe(1);
       expect(compare(0, 10)).toBe(-1);
@@ -22,7 +22,7 @@ describe("createPointUtils", () => {
 
   describe("equals", () => {
     it("should work", () => {
-      const { equals } = pointUtils;
+      const { equals } = utilities;
       expect(equals(-1, -1)).toBe(true);
       expect(equals(0, 0)).toBe(true);
       expect(equals(1, 1)).toBe(true);
@@ -34,7 +34,7 @@ describe("createPointUtils", () => {
 
   describe("greaterThan", () => {
     it("should work", () => {
-      const { greaterThan } = pointUtils;
+      const { greaterThan } = utilities;
       expect(greaterThan(1, 0)).toBe(true);
       expect(greaterThan(0, 0)).toBe(false);
       expect(greaterThan(0, 1)).toBe(false);
@@ -47,7 +47,7 @@ describe("createPointUtils", () => {
 
   describe("greaterThanOrEqualTo", () => {
     it("should work", () => {
-      const { greaterThanOrEqualTo } = pointUtils;
+      const { greaterThanOrEqualTo } = utilities;
       expect(greaterThanOrEqualTo(1, 0)).toBe(true);
       expect(greaterThanOrEqualTo(0, 0)).toBe(true);
       expect(greaterThanOrEqualTo(0, 1)).toBe(false);
@@ -61,7 +61,7 @@ describe("createPointUtils", () => {
 
   describe("lessThan", () => {
     it("should work", () => {
-      const { lessThan } = pointUtils;
+      const { lessThan } = utilities;
       expect(lessThan(1, 0)).toBe(false);
       expect(lessThan(0, 0)).toBe(false);
       expect(lessThan(0, 1)).toBe(true);
@@ -74,7 +74,7 @@ describe("createPointUtils", () => {
 
   describe("lessThanOrEqualTo", () => {
     it("should work", () => {
-      const { lessThanOrEqualTo } = pointUtils;
+      const { lessThanOrEqualTo } = utilities;
       expect(lessThanOrEqualTo(1, 0)).toBe(false);
       expect(lessThanOrEqualTo(0, 0)).toBe(true);
       expect(lessThanOrEqualTo(0, 1)).toBe(true);

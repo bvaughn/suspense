@@ -1,25 +1,22 @@
-import { RangeUtils } from "../../types";
-import { createPointUtils } from "./createPointUtils";
-import { createRangeUtils } from "./createRangeUtils";
+import { Utilities } from "./types";
+import { configure } from "./configure";
 
-describe("createRangeUtils", () => {
-  let rangeUtils: RangeUtils<number>;
+describe("interval-utilities", () => {
+  let utilities: Utilities<number>;
 
   beforeEach(() => {
-    rangeUtils = createRangeUtils<number>(
-      createPointUtils((a: number, b: number) => a - b)
-    );
+    utilities = configure<number>((a: number, b: number) => a - b);
   });
 
   describe("compare", () => {
     it("should handle ranges with different start points", () => {
-      const { compare } = rangeUtils;
+      const { compare } = utilities;
       expect(compare([0, 3], [2, 5])).toBe(-1);
       expect(compare([2, 4], [1, 3])).toBe(1);
     });
 
     it("should handle ranges with the same start points", () => {
-      const { compare } = rangeUtils;
+      const { compare } = utilities;
       expect(compare([1, 3], [1, 5])).toBe(-1);
       expect(compare([-5, -2], [-5, -4])).toBe(1);
       expect(compare([-3, 5], [-3, 1])).toBe(1);
@@ -27,7 +24,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should handle ranges with the same start and end points", () => {
-      const { compare } = rangeUtils;
+      const { compare } = utilities;
       expect(compare([2, 4], [2, 4])).toBe(0);
       expect(compare([-5, -3], [-5, -3])).toBe(0);
     });
@@ -35,14 +32,14 @@ describe("createRangeUtils", () => {
 
   describe("contains", () => {
     it("should accept exact matches", () => {
-      const { contains } = rangeUtils;
+      const { contains } = utilities;
       expect(contains([0, 0], [0, 0])).toBe(true);
       expect(contains([1, 4], [1, 4])).toBe(true);
       expect(contains([-5, 2], [-5, 2])).toBe(true);
     });
 
     it("should accept subsets", () => {
-      const { contains } = rangeUtils;
+      const { contains } = utilities;
       expect(contains([1, 10], [1, 2])).toBe(true);
       expect(contains([1, 10], [5, 8])).toBe(true);
       expect(contains([1, 10], [10, 10])).toBe(true);
@@ -51,7 +48,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should reject partial intersections", () => {
-      const { contains } = rangeUtils;
+      const { contains } = utilities;
       expect(contains([2, 4], [1, 2])).toBe(false);
       expect(contains([2, 4], [1, 3])).toBe(false);
       expect(contains([2, 4], [3, 5])).toBe(false);
@@ -61,7 +58,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should reject non intersections", () => {
-      const { contains } = rangeUtils;
+      const { contains } = utilities;
       expect(contains([1, 4], [-5, -2])).toBe(false);
       expect(contains([-5, -10], [1, 4])).toBe(false);
       expect(contains([1, 4], [5, 10])).toBe(false);
@@ -71,14 +68,14 @@ describe("createRangeUtils", () => {
 
   describe("equals", () => {
     it("should accept exact ranges", () => {
-      const { equals } = rangeUtils;
+      const { equals } = utilities;
       expect(equals([1, 5], [1, 5])).toBe(true);
       expect(equals([-1, 5], [-1, 5])).toBe(true);
       expect(equals([-1, -5], [-1, -5])).toBe(true);
     });
 
     it("should reject supersets and subsets", () => {
-      const { equals } = rangeUtils;
+      const { equals } = utilities;
       expect(equals([1, 5], [2, 4])).toBe(false);
       expect(equals([1, 5], [1, 4])).toBe(false);
       expect(equals([1, 5], [2, 5])).toBe(false);
@@ -88,7 +85,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should reject intersecting ranges", () => {
-      const { equals } = rangeUtils;
+      const { equals } = utilities;
       expect(equals([2, 4], [1, 2])).toBe(false);
       expect(equals([2, 4], [1, 3])).toBe(false);
       expect(equals([2, 4], [3, 5])).toBe(false);
@@ -98,7 +95,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should reject non intersecting ranges", () => {
-      const { equals } = rangeUtils;
+      const { equals } = utilities;
       expect(equals([1, 4], [-5, -2])).toBe(false);
       expect(equals([-5, -10], [1, 4])).toBe(false);
       expect(equals([1, 4], [5, 10])).toBe(false);
@@ -108,13 +105,13 @@ describe("createRangeUtils", () => {
 
   describe("greaterThan", () => {
     it("should handle ranges with different start points", () => {
-      const { greaterThan } = rangeUtils;
+      const { greaterThan } = utilities;
       expect(greaterThan([0, 3], [2, 5])).toBe(false);
       expect(greaterThan([2, 4], [1, 3])).toBe(true);
     });
 
     it("should handle ranges with the same start points", () => {
-      const { greaterThan } = rangeUtils;
+      const { greaterThan } = utilities;
       expect(greaterThan([1, 3], [1, 5])).toBe(false);
       expect(greaterThan([-5, -2], [-5, -4])).toBe(true);
       expect(greaterThan([-3, 5], [-3, 1])).toBe(true);
@@ -122,7 +119,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should handle ranges with the same start and end points", () => {
-      const { greaterThan } = rangeUtils;
+      const { greaterThan } = utilities;
       expect(greaterThan([2, 4], [2, 4])).toBe(false);
       expect(greaterThan([-5, -3], [-5, -3])).toBe(false);
     });
@@ -130,13 +127,13 @@ describe("createRangeUtils", () => {
 
   describe("greaterThanOrEqualTo", () => {
     it("should handle ranges with different start points", () => {
-      const { greaterThanOrEqualTo } = rangeUtils;
+      const { greaterThanOrEqualTo } = utilities;
       expect(greaterThanOrEqualTo([0, 3], [2, 5])).toBe(false);
       expect(greaterThanOrEqualTo([2, 4], [1, 3])).toBe(true);
     });
 
     it("should handle ranges with the same start points", () => {
-      const { greaterThanOrEqualTo } = rangeUtils;
+      const { greaterThanOrEqualTo } = utilities;
       expect(greaterThanOrEqualTo([1, 3], [1, 5])).toBe(false);
       expect(greaterThanOrEqualTo([-5, -2], [-5, -4])).toBe(true);
       expect(greaterThanOrEqualTo([-3, 5], [-3, 1])).toBe(true);
@@ -144,7 +141,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should handle ranges with the same start and end points", () => {
-      const { greaterThanOrEqualTo } = rangeUtils;
+      const { greaterThanOrEqualTo } = utilities;
       expect(greaterThanOrEqualTo([2, 4], [2, 4])).toBe(true);
       expect(greaterThanOrEqualTo([-5, -3], [-5, -3])).toBe(true);
     });
@@ -152,14 +149,14 @@ describe("createRangeUtils", () => {
 
   describe("intersects", () => {
     it("should accept exact matches", () => {
-      const { intersects } = rangeUtils;
+      const { intersects } = utilities;
       expect(intersects([0, 0], [0, 0])).toBe(true);
       expect(intersects([1, 4], [1, 4])).toBe(true);
       expect(intersects([-5, 2], [-5, 2])).toBe(true);
     });
 
     it("should accept subsets", () => {
-      const { intersects } = rangeUtils;
+      const { intersects } = utilities;
       expect(intersects([1, 10], [1, 2])).toBe(true);
       expect(intersects([1, 10], [5, 8])).toBe(true);
       expect(intersects([1, 10], [10, 10])).toBe(true);
@@ -168,7 +165,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should accept partial intersections", () => {
-      const { intersects } = rangeUtils;
+      const { intersects } = utilities;
       expect(intersects([2, 4], [1, 2])).toBe(true);
       expect(intersects([2, 4], [1, 3])).toBe(true);
       expect(intersects([2, 4], [3, 5])).toBe(true);
@@ -178,7 +175,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should reject non intersections", () => {
-      const { intersects } = rangeUtils;
+      const { intersects } = utilities;
       expect(intersects([1, 4], [-5, -2])).toBe(false);
       expect(intersects([-5, -10], [1, 4])).toBe(false);
       expect(intersects([1, 4], [5, 10])).toBe(false);
@@ -188,13 +185,13 @@ describe("createRangeUtils", () => {
 
   describe("lessThan", () => {
     it("should handle ranges with different start points", () => {
-      const { lessThan } = rangeUtils;
+      const { lessThan } = utilities;
       expect(lessThan([0, 3], [2, 5])).toBe(true);
       expect(lessThan([2, 4], [1, 3])).toBe(false);
     });
 
     it("should handle ranges with the same start points", () => {
-      const { lessThan } = rangeUtils;
+      const { lessThan } = utilities;
       expect(lessThan([1, 3], [1, 5])).toBe(true);
       expect(lessThan([-5, -2], [-5, -4])).toBe(false);
       expect(lessThan([-3, 5], [-3, 1])).toBe(false);
@@ -202,7 +199,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should handle ranges with the same start and end points", () => {
-      const { lessThan } = rangeUtils;
+      const { lessThan } = utilities;
       expect(lessThan([2, 4], [2, 4])).toBe(false);
       expect(lessThan([-5, -3], [-5, -3])).toBe(false);
     });
@@ -210,13 +207,13 @@ describe("createRangeUtils", () => {
 
   describe("lessThanOrEqualTo", () => {
     it("should handle ranges with different start points", () => {
-      const { lessThanOrEqualTo } = rangeUtils;
+      const { lessThanOrEqualTo } = utilities;
       expect(lessThanOrEqualTo([0, 3], [2, 5])).toBe(true);
       expect(lessThanOrEqualTo([2, 4], [1, 3])).toBe(false);
     });
 
     it("should handle ranges with the same start points", () => {
-      const { lessThanOrEqualTo } = rangeUtils;
+      const { lessThanOrEqualTo } = utilities;
       expect(lessThanOrEqualTo([1, 3], [1, 5])).toBe(true);
       expect(lessThanOrEqualTo([-5, -2], [-5, -4])).toBe(false);
       expect(lessThanOrEqualTo([-3, 5], [-3, 1])).toBe(false);
@@ -224,7 +221,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should handle ranges with the same start and end points", () => {
-      const { lessThanOrEqualTo } = rangeUtils;
+      const { lessThanOrEqualTo } = utilities;
       expect(lessThanOrEqualTo([2, 4], [2, 4])).toBe(true);
       expect(lessThanOrEqualTo([-5, -3], [-5, -3])).toBe(true);
     });
@@ -232,12 +229,12 @@ describe("createRangeUtils", () => {
 
   describe("merge", () => {
     it("should return an exact match", () => {
-      const { merge } = rangeUtils;
+      const { merge } = utilities;
       expect(merge([1, 5], [1, 5])).toEqual([[1, 5]]);
     });
 
     it("should return the larger range when one contains the other", () => {
-      const { merge } = rangeUtils;
+      const { merge } = utilities;
       expect(merge([1, 5], [2, 4])).toEqual([[1, 5]]);
       expect(merge([1, 5], [1, 4])).toEqual([[1, 5]]);
       expect(merge([2, 4], [1, 5])).toEqual([[1, 5]]);
@@ -245,7 +242,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should merge intersecting ranges", () => {
-      const { merge } = rangeUtils;
+      const { merge } = utilities;
       expect(merge([1, 3], [3, 5])).toEqual([[1, 5]]);
       expect(merge([1, 4], [2, 5])).toEqual([[1, 5]]);
       expect(merge([3, 5], [1, 3])).toEqual([[1, 5]]);
@@ -253,7 +250,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should not merge non-intersecting ranges", () => {
-      const { merge } = rangeUtils;
+      const { merge } = utilities;
       expect(merge([1, 3], [5, 10])).toEqual([
         [1, 3],
         [5, 10],
@@ -267,20 +264,20 @@ describe("createRangeUtils", () => {
 
   describe("mergeAll", () => {
     it("should handle edge cases", () => {
-      const { mergeAll } = rangeUtils;
+      const { mergeAll } = utilities;
       expect(mergeAll()).toEqual([]);
       expect(mergeAll([1, 5])).toEqual([[1, 5]]);
     });
 
     it("should handle ranges that are equal", () => {
-      const { mergeAll } = rangeUtils;
+      const { mergeAll } = utilities;
       expect(mergeAll([1, 5], [1, 5], [1, 5])).toEqual([[1, 5]]);
       expect(mergeAll([-10, -5], [-10, -5])).toEqual([[-10, -5]]);
       expect(mergeAll([0, 0], [0, 0], [0, 0], [0, 0])).toEqual([[0, 0]]);
     });
 
     it("should merge subsets and supersets", () => {
-      const { mergeAll } = rangeUtils;
+      const { mergeAll } = utilities;
       expect(mergeAll([1, 5], [1, 10], [2, 4], [8, 8])).toEqual([[1, 10]]);
       expect(mergeAll([1, 10], [3, 7], [3, 10])).toEqual([[1, 10]]);
       expect(mergeAll([1, 5], [1, 10], [2, 9])).toEqual([[1, 10]]);
@@ -290,7 +287,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should merge intersecting ranges", () => {
-      const { mergeAll } = rangeUtils;
+      const { mergeAll } = utilities;
       expect(mergeAll([1, 5], [2, 7])).toEqual([[1, 7]]);
       expect(mergeAll([-10, -5], [-15, -8])).toEqual([[-15, -5]]);
       expect(mergeAll([2, 7], [1, 5])).toEqual([[1, 7]]);
@@ -302,7 +299,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should not merge non-intersecting ranges", () => {
-      const { mergeAll } = rangeUtils;
+      const { mergeAll } = utilities;
       expect(mergeAll([1, 5], [6, 9], [10, 15])).toEqual([
         [1, 5],
         [6, 9],
@@ -323,7 +320,7 @@ describe("createRangeUtils", () => {
 
   describe("separate", () => {
     it("should support exact matches", () => {
-      const { separate } = rangeUtils;
+      const { separate } = utilities;
       expect(separate([1, 5], [1, 5])).toEqual({
         a: [],
         b: [],
@@ -342,7 +339,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should support subsets", () => {
-      const { separate } = rangeUtils;
+      const { separate } = utilities;
       expect(separate([1, 10], [1, 5])).toEqual({
         a: [[5, 10]],
         b: [],
@@ -361,7 +358,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should support supersets", () => {
-      const { separate } = rangeUtils;
+      const { separate } = utilities;
       expect(separate([2, 4], [1, 10])).toEqual({
         a: [],
         b: [
@@ -388,7 +385,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should support intersecting ranges", () => {
-      const { separate } = rangeUtils;
+      const { separate } = utilities;
       expect(separate([1, 5], [2, 6])).toEqual({
         a: [[1, 2]],
         b: [[5, 6]],
@@ -403,7 +400,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should support non-intersecting ranges", () => {
-      const { separate } = rangeUtils;
+      const { separate } = utilities;
       expect(separate([-10, -5], [5, 10])).toEqual({
         a: [[-10, -5]],
         b: [[5, 10]],
@@ -414,7 +411,7 @@ describe("createRangeUtils", () => {
 
   describe("separateAll", () => {
     it("case one (intersecting)", () => {
-      const { separateAll } = rangeUtils;
+      const { separateAll } = utilities;
       expect(
         separateAll(
           [
@@ -434,7 +431,7 @@ describe("createRangeUtils", () => {
     });
 
     it("case two (intersecting)", () => {
-      const { separateAll } = rangeUtils;
+      const { separateAll } = utilities;
       expect(
         separateAll(
           [
@@ -461,7 +458,7 @@ describe("createRangeUtils", () => {
     });
 
     it("case three (non intersecting)", () => {
-      const { separateAll } = rangeUtils;
+      const { separateAll } = utilities;
       expect(
         separateAll(
           [
@@ -489,7 +486,7 @@ describe("createRangeUtils", () => {
     });
 
     it("case three (non intersecting, sparse)", () => {
-      const { separateAll } = rangeUtils;
+      const { separateAll } = utilities;
       expect(
         separateAll(
           [
@@ -517,13 +514,13 @@ describe("createRangeUtils", () => {
 
   describe("sort", () => {
     it("should handle edge cases", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort()).toEqual([]);
       expect(sort([1, 5])).toEqual([[1, 5]]);
     });
 
     it("should handle ranges that are equal", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort([1, 5], [1, 5])).toEqual([
         [1, 5],
         [1, 5],
@@ -541,7 +538,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should sort ranges that are subsets or supersets", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort([2, 4], [1, 10], [1, 5], [8, 8])).toEqual([
         [1, 5],
         [1, 10],
@@ -551,7 +548,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should sort ranges that have the same starting point", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort([1, 5], [1, 2], [1, 8])).toEqual([
         [1, 2],
         [1, 5],
@@ -560,7 +557,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should sort ranges that intersect", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort([1, 5], [4, 10], [3, 8], [0, 2])).toEqual([
         [0, 2],
         [1, 5],
@@ -570,7 +567,7 @@ describe("createRangeUtils", () => {
     });
 
     it("should sort ranges that do not intersect", () => {
-      const { sort } = rangeUtils;
+      const { sort } = utilities;
       expect(sort([1, 5], [-10, -5], [-8, 2])).toEqual([
         [-10, -5],
         [-8, 2],

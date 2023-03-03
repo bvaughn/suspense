@@ -1,11 +1,10 @@
-import { createPointUtils } from "./createPointUtils";
-import { createRangeUtils } from "./createRangeUtils";
+import { configure as configureIntervalUtilities } from "interval-utilities";
+
 import { CachedRanges, findRanges, FoundRanges } from "./findRanges";
 
 describe("findRanges", () => {
   const comparePoints = (a: number, b: number) => a - b;
-  const pointUtils = createPointUtils(comparePoints);
-  const rangeUtils = createRangeUtils(pointUtils);
+  const intervalUtilities = configureIntervalUtilities(comparePoints);
 
   function test(
     start: number,
@@ -19,7 +18,7 @@ describe("findRanges", () => {
         pending,
       },
       [start, end],
-      rangeUtils
+      intervalUtilities
     );
   }
 

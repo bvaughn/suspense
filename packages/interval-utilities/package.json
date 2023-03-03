@@ -1,0 +1,32 @@
+{
+  "name": "interval-utilities",
+  "version": "0.0.1",
+  "description": "Dependency-free utility functions for performing mathematical set operations on intervals and arrays of intervals",
+  "author": "Brian Vaughn <brian.david.vaughn@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvaughn/suspense.git"
+  },
+  "source": "src/index.ts",
+  "main": "dist/interval-utilities.js",
+  "module": "dist/interval-utilities.module.js",
+  "types": "dist/interval-utilities.d.ts",
+  "scripts": {
+    "build": "parcel build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "watch": "parcel watch"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "jest": "^29.4.3",
+    "ts-jest": "^29.0.5"
+  },
+  "dependencies": {
+    "point-utilities": "latest"
+  },
+  "browserslist": [
+    "Chrome 79"
+  ]
+}

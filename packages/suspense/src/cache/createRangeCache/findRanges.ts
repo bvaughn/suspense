@@ -1,21 +1,21 @@
-import { RangeTuple, RangeUtils } from "../../types";
+import { Interval, Utilities } from "interval-utilities";
 
 export type CachedRanges<Point> = {
   // TODO Cache failed attempts?
-  // failed: RangeTuple<Point>[];
-  loaded: RangeTuple<Point>[];
-  pending: RangeTuple<Point>[];
+  // failed: Interval<Point>[];
+  loaded: Interval<Point>[];
+  pending: Interval<Point>[];
 };
 
 export type FoundRanges<Point> = {
-  missing: RangeTuple<Point>[];
-  pending: RangeTuple<Point>[];
+  missing: Interval<Point>[];
+  pending: Interval<Point>[];
 };
 
 export function findRanges<Point>(
   cachedRanges: CachedRanges<Point>,
-  targetRange: RangeTuple<Point>,
-  rangeUtils: RangeUtils<Point>
+  targetRange: Interval<Point>,
+  rangeUtils: Utilities<Point>
 ): FoundRanges<Point> {
   // Remove ranges that have already finished loading
   const { b: pendingOrNotLoadedRanges } = rangeUtils.separateAll(

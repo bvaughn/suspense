@@ -103,43 +103,7 @@ export type RangeCacheLoadOptions = {
 
 export type ComparisonFunction<T> = (a: T, b: T) => number;
 
-export type RangeTuple<Point> = [start: Point, end: Point];
-
 export type GetPointForValue<Point, Value> = (value: Value) => Point;
-
-export type PointUtils<Point> = {
-  compare(a: Point, b: Point): number;
-  equals(a: Point, b: Point): boolean;
-  greaterThan(a: Point, b: Point): boolean;
-  greaterThanOrEqualTo(a: Point, b: Point): boolean;
-  lessThan(a: Point, b: Point): boolean;
-  lessThanOrEqualTo(a: Point, b: Point): boolean;
-};
-
-export type SeparatedRanges<Point> = {
-  a: RangeTuple<Point>[];
-  ab: RangeTuple<Point>[];
-  b: RangeTuple<Point>[];
-};
-
-export type RangeUtils<Point> = {
-  compare(a: RangeTuple<Point>, b: RangeTuple<Point>): number;
-  contains(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  equals(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  greaterThan(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  greaterThanOrEqualTo(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  intersects(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  lessThan(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  lessThanOrEqualTo(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean;
-  merge(a: RangeTuple<Point>, b: RangeTuple<Point>): RangeTuple<Point>[];
-  mergeAll(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[];
-  sort(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[];
-  separate(a: RangeTuple<Point>, b: RangeTuple<Point>): SeparatedRanges<Point>;
-  separateAll(
-    a: RangeTuple<Point>[],
-    b: RangeTuple<Point>[]
-  ): SeparatedRanges<Point>;
-};
 
 // Streaming cache types
 

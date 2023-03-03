@@ -1,31 +1,29 @@
-import {
-  PointUtils,
-  RangeTuple,
-  RangeUtils,
-  SeparatedRanges,
-} from "../../types";
+import { configure as configurePointUtilities } from "point-utilities";
+import { ComparePoints, Interval, SeparatedInterval, Utilities } from "./types";
 
-export function createRangeUtils<Point>(
-  pointUtils: PointUtils<Point>
-): RangeUtils<Point> {
-  function compare(a: RangeTuple<Point>, b: RangeTuple<Point>): number {
+export function configure<Point>(
+  comparePoints: ComparePoints<Point>
+): Utilities<Point> {
+  const pointUtils = configurePointUtilities(comparePoints);
+
+  function compare(a: Interval<Point>, b: Interval<Point>): number {
     const start = pointUtils.compare(a[0], b[0]);
     const end = pointUtils.compare(a[1], b[1]);
     return start === 0 ? end : start;
   }
 
-  function contains(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean {
+  function contains(a: Interval<Point>, b: Interval<Point>): boolean {
     return (
       pointUtils.lessThanOrEqualTo(a[0], b[0]) &&
       pointUtils.greaterThanOrEqualTo(a[1], b[1])
     );
   }
 
-  function equals(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean {
+  function equals(a: Interval<Point>, b: Interval<Point>): boolean {
     return pointUtils.equals(a[0], b[0]) && pointUtils.equals(a[1], b[1]);
   }
 
-  function greaterThan(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean {
+  function greaterThan(a: Interval<Point>, b: Interval<Point>): boolean {
     if (pointUtils.greaterThan(a[0], b[0])) {
       return true;
     } else if (pointUtils.equals(a[0], b[0])) {
@@ -36,20 +34,20 @@ export function createRangeUtils<Point>(
   }
 
   function greaterThanOrEqualTo(
-    a: RangeTuple<Point>,
-    b: RangeTuple<Point>
+    a: Interval<Point>,
+    b: Interval<Point>
   ): boolean {
     return !lessThan(a, b);
   }
 
-  function intersects(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean {
+  function intersects(a: Interval<Point>, b: Interval<Point>): boolean {
     return (
       pointUtils.greaterThanOrEqualTo(a[1], b[0]) &&
       pointUtils.greaterThanOrEqualTo(b[1], a[0])
     );
   }
 
-  function lessThan(a: RangeTuple<Point>, b: RangeTuple<Point>): boolean {
+  function lessThan(a: Interval<Point>, b: Interval<Point>): boolean {
     if (pointUtils.lessThan(a[0], b[0])) {
       return true;
     } else if (pointUtils.equals(a[0], b[0])) {
@@ -59,17 +57,11 @@ export function createRangeUtils<Point>(
     }
   }
 
-  function lessThanOrEqualTo(
-    a: RangeTuple<Point>,
-    b: RangeTuple<Point>
-  ): boolean {
+  function lessThanOrEqualTo(a: Interval<Point>, b: Interval<Point>): boolean {
     return !greaterThan(a, b);
   }
 
-  function merge(
-    a: RangeTuple<Point>,
-    b: RangeTuple<Point>
-  ): RangeTuple<Point>[] {
+  function merge(a: Interval<Point>, b: Interval<Point>): Interval<Point>[] {
     if (contains(a, b)) {
       return [a];
     } else if (contains(b, a)) {
@@ -85,17 +77,17 @@ export function createRangeUtils<Point>(
     }
   }
 
-  function mergeAll(...sortedRanges: RangeTuple<Point>[]): RangeTuple<Point>[] {
+  function mergeAll(...sortedRanges: Interval<Point>[]): Interval<Point>[] {
     if (sortedRanges.length === 0) {
       return [];
     } else if (sortedRanges.length === 1) {
       return sortedRanges;
     }
 
-    const merged: RangeTuple<Point>[] = [];
+    const merged: Interval<Point>[] = [];
 
-    let prevRange: RangeTuple<Point> = sortedRanges[0];
-    let currentRange: RangeTuple<Point> | null = null;
+    let prevRange: Interval<Point> = sortedRanges[0];
+    let currentRange: Interval<Point> | null = null;
 
     for (let index = 1; index < sortedRanges.length; index++) {
       currentRange = sortedRanges[index];
@@ -111,10 +103,10 @@ export function createRangeUtils<Point>(
   }
 
   function separate(
-    a: RangeTuple<Point>,
-    b: RangeTuple<Point>
-  ): SeparatedRanges<Point> {
-    const separated: SeparatedRanges<Point> = {
+    a: Interval<Point>,
+    b: Interval<Point>
+  ): SeparatedInterval<Point> {
+    const separated: SeparatedInterval<Point> = {
       a: [],
       ab: [],
       b: [],
@@ -152,17 +144,17 @@ export function createRangeUtils<Point>(
   }
 
   function separateAll(
-    a: RangeTuple<Point>[],
-    b: RangeTuple<Point>[]
-  ): SeparatedRanges<Point> {
-    const separated: SeparatedRanges<Point> = {
+    a: Interval<Point>[],
+    b: Interval<Point>[]
+  ): SeparatedInterval<Point> {
+    const separated: SeparatedInterval<Point> = {
       a: [],
       ab: [],
       b: [],
     };
 
-    let currentA: RangeTuple<Point> | null = a[0] ?? null;
-    let currentB: RangeTuple<Point> | null = b[0] ?? null;
+    let currentA: Interval<Point> | null = a[0] ?? null;
+    let currentB: Interval<Point> | null = b[0] ?? null;
 
     let indexA = 0;
     let indexB = 0;
@@ -214,7 +206,7 @@ export function createRangeUtils<Point>(
     return separated;
   }
 
-  function sort(...ranges: RangeTuple<Point>[]): RangeTuple<Point>[] {
+  function sort(...ranges: Interval<Point>[]): Interval<Point>[] {
     return ranges.sort(compare);
   }
 

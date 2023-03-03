@@ -1,4 +1,9 @@
 import {
+  configure as configureIntervalUtilities,
+  Interval,
+} from "interval-utilities";
+
+import {
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -11,15 +16,11 @@ import {
   RangeCache,
   Record,
   Thenable,
-  RangeTuple,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertPendingRecord";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
-import { createPointUtils } from "./createPointUtils";
-import { createRangeUtils } from "./createRangeUtils";
-import { defaultComparePoints } from "./defaultComparePoints";
 import { findRanges } from "./findRanges";
 import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
@@ -30,12 +31,12 @@ const DEBUG_LOG_IN_DEV = false;
 type SerializableToString = { toString(): string };
 
 type PendingRangeAndThenableTuple<Point, Value> = [
-  RangeTuple<Point>,
+  Interval<Point>,
   Value[] | Thenable<Value[]>
 ];
 
 type RangeMetadata<Point, Value> = {
-  loadedRanges: RangeTuple<Point>[];
+  loadedRanges: Interval<Point>[];
   pendingRangeAndThenableTuples: PendingRangeAndThenableTuple<Point, Value>[];
   pendingRecords: Set<Record<Value[]>>;
   recordMap: Map<string, Record<Value[]>>;
@@ -65,8 +66,7 @@ export function createRangeCache<
     load,
   } = options;
 
-  const pointUtils = createPointUtils<Point>(comparePoints);
-  const rangeUtils = createRangeUtils<Point>(pointUtils);
+  const rangeUtils = configureIntervalUtilities<Point>(comparePoints);
 
   const rangeMap = new Map<string, RangeMetadata<Point, Value>>();
 
@@ -383,4 +383,8 @@ export function createRangeCache<
     fetchAsync,
     fetchSuspense,
   };
+}
+
+function defaultComparePoints(a: any, b: any): number {
+  return a - b;
 }
