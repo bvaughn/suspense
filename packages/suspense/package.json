@@ -15,6 +15,7 @@
   "scripts": {
     "build": "parcel build",
     "test": "jest",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand --watch",
     "test:node": "node --expose-gc node_modules/.bin/jest --config=jest.config.node.js",
     "test:node:watch": "node --expose-gc node_modules/.bin/jest --config=jest.config.node.js --watch",
     "test:watch": "jest --watch",
