@@ -38,6 +38,7 @@ type PendingMetadata<Point, Value> = {
 };
 
 type Metadata<Point, Value> = {
+  failedIntervals: Interval<Point>[];
   loadedIntervals: Interval<Point>[];
   pendingMetadata: PendingMetadata<Point, Value>[];
   recordMap: Map<string, Record<Value[]>>;
@@ -149,7 +150,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): Thenable<Value[]> | Value[] {
-    debugLogInDev("fetchAsync()", params, start, end);
+    debugLogInDev(`fetchAsync(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.status) {
@@ -163,7 +164,7 @@ export function createIntervalCache<
   }
 
   function fetchSuspense(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev("fetchSuspense()", params, start, end);
+    debugLogInDev(`fetchSuspense(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     if (record.status === STATUS_RESOLVED) {
@@ -182,6 +183,7 @@ export function createIntervalCache<
     let metadata = metadataMap.get(cacheKey);
     if (metadata == null) {
       metadata = {
+        failedIntervals: [],
         loadedIntervals: [],
         pendingMetadata: [],
         recordMap: new Map(),
@@ -245,56 +247,63 @@ export function createIntervalCache<
     let values;
     try {
       values = isThenable(value) ? await value : value;
+
+      if (abortController.signal.aborted) {
+        // Ignore results if the request was aborted
+        return;
+      }
+
+      metadata.loadedIntervals = intervalUtils.mergeAll(
+        ...intervalUtils.sort(...metadata.loadedIntervals, [start, end])
+      );
+
+      // Check for duplicate values near the edges because of how intervals are split
+      if (values.length > 0) {
+        const firstValue = values[0];
+        const index = findIndex(
+          metadata.sortedValues,
+          getPointForValue(firstValue),
+          getPointForValue,
+          comparePoints
+        );
+        if (index >= 0) {
+          values.splice(0, 1);
+        }
+      }
+      if (values.length > 0) {
+        const lastValue = values[values.length - 1];
+        const index = findIndex(
+          metadata.sortedValues,
+          getPointForValue(lastValue),
+          getPointForValue,
+          comparePoints
+        );
+        if (index >= 0) {
+          values.pop();
+        }
+      }
+
+      // Merge any remaining unique values
+      if (values.length > 0) {
+        const firstValue = values[0];
+        const index = findNearestIndexAfter(
+          metadata.sortedValues,
+          getPointForValue(firstValue),
+          getPointForValue,
+          comparePoints
+        );
+        metadata.sortedValues.splice(index, 0, ...values);
+      }
+    } catch (error) {
+      // Ignore the error here;
+      // the caller will handle it.
+
+      metadata.failedIntervals = intervalUtils.mergeAll(
+        ...intervalUtils.sort(...metadata.failedIntervals, [start, end])
+      );
     } finally {
       const index = metadata.pendingMetadata.indexOf(pendingMetadata);
       metadata.pendingMetadata.splice(index, 1);
-    }
-
-    if (abortController.signal.aborted) {
-      // Ignore results if the request was aborted
-      return;
-    }
-
-    metadata.loadedIntervals = intervalUtils.mergeAll(
-      ...intervalUtils.sort(...metadata.loadedIntervals, [start, end])
-    );
-
-    // Check for duplicate values near the edges because of how intervals are split
-    if (values.length > 0) {
-      const firstValue = values[0];
-      const index = findIndex(
-        metadata.sortedValues,
-        getPointForValue(firstValue),
-        getPointForValue,
-        comparePoints
-      );
-      if (index >= 0) {
-        values.splice(0, 1);
-      }
-    }
-    if (values.length > 0) {
-      const lastValue = values[values.length - 1];
-      const index = findIndex(
-        metadata.sortedValues,
-        getPointForValue(lastValue),
-        getPointForValue,
-        comparePoints
-      );
-      if (index >= 0) {
-        values.pop();
-      }
-    }
-
-    // Merge any remaining unique values
-    if (values.length > 0) {
-      const firstValue = values[0];
-      const index = findNearestIndexAfter(
-        metadata.sortedValues,
-        getPointForValue(firstValue),
-        getPointForValue,
-        comparePoints
-      );
-      metadata.sortedValues.splice(index, 0, ...values);
     }
   }
 
@@ -320,13 +329,34 @@ export function createIntervalCache<
     );
 
     debugLogInDev(
-      "processPendingRecord()",
+      `processPendingRecord(${start}, ${end})`,
       params,
       "\n-> metadata:",
       metadata,
       "\n-> found:",
       foundIntervals
     );
+
+    // If any of the unloaded intervals contain a failed request,
+    // we shouldn't try loading them again
+    // This is admittedly somewhat arbitrary but matches Replay's functionality
+    const previouslyFailedInterval = foundIntervals.missing.find(
+      (missingInterval) =>
+        metadata.failedIntervals.find((failedInterval) =>
+          intervalUtils.contains(missingInterval, failedInterval)
+        )
+    );
+    if (previouslyFailedInterval != null) {
+      const error = Error(
+        `Cannot load interval that contains previously failed interval`
+      );
+      record.status = STATUS_REJECTED;
+      record.value = error;
+
+      deferred.reject(error);
+
+      return;
+    }
 
     const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
@@ -359,7 +389,16 @@ export function createIntervalCache<
     });
 
     try {
-      await Promise.all([...missingThenables, ...pendingThenables]);
+      const values = await Promise.all([
+        ...missingThenables,
+        ...pendingThenables,
+      ]);
+
+      debugLogInDev(
+        `processPendingRecord(${start}, ${end}): resolved`,
+        params,
+        values
+      );
 
       if (!signal.aborted) {
         record.status = STATUS_RESOLVED;
@@ -374,6 +413,12 @@ export function createIntervalCache<
         deferred.resolve(record.value);
       }
     } catch (error) {
+      debugLogInDev(
+        `processPendingRecord(${start}, ${end}): failed`,
+        params,
+        error?.message || error
+      );
+
       if (!signal.aborted) {
         record.status = STATUS_REJECTED;
         record.value = error;

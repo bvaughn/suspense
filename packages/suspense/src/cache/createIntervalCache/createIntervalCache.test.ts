@@ -27,13 +27,8 @@ describe("createIntervalCache", () => {
 
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation(
-      async (
-        start: number,
-        end: number,
-        id: string,
-        options: IntervalCacheLoadOptions
-      ) => createContiguousArray(start, end)
+    load.mockImplementation(async (start: number, end: number) =>
+      createContiguousArray(start, end)
     );
 
     cache = createIntervalCache<number, [id: string], number>({
@@ -228,41 +223,6 @@ describe("createIntervalCache", () => {
       await cache.fetchAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 2);
     });
-
-    // TODO
-    xit("should retry the same interval after a failed attempt has been evicted", async () => {
-      jest.useFakeTimers();
-
-      // Prime the cache
-      cache.fetchAsync(1, 4, "test");
-      cache.fetchAsync(6, 8, "test");
-
-      let pending: Deferred<number[]>[] = [];
-      load.mockImplementation(async () => {
-        const deferred = createDeferred<number[]>();
-        pending.push(deferred);
-        return deferred;
-      });
-
-      // Request an interval that will result in two requests: 5,6 and 8,9
-      let promise = cache.fetchAsync(5, 9, "test");
-      expect(pending).toHaveLength(2);
-
-      pending[0].resolve([5, 6]);
-      pending[1].reject(new Error("Expected"));
-
-      // The failed interval will fail future requests that contain it
-      await expect(cache.fetchAsync(5, 9, "test")).toThrow("Expected");
-      await expect(cache.fetchAsync(9, 9, "test")).toThrow("Expected");
-
-      // Evicting the failed interval will allow it to be requested again
-      cache.evictAll();
-
-      await expect(await cache.fetchAsync(7, 8, "test")).toEqual([7, 8]);
-      await expect(await cache.fetchAsync(5, 9, "test")).toEqual([
-        5, 6, 7, 8, 9,
-      ]);
-    });
   });
 
   describe("fetchAsync", () => {
@@ -351,39 +311,145 @@ describe("createIntervalCache", () => {
       });
     });
 
-    it("should properly cleanup after an aborted request", async () => {
-      cache.fetchAsync(1, 5, "test");
+    describe("aborted requests", () => {
+      it("should properly cleanup after an aborted request", async () => {
+        cache.fetchAsync(1, 5, "test");
 
-      expect(load).toHaveBeenCalledTimes(1);
-      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
 
-      cache.abort("test");
+        cache.abort("test");
 
-      // Finalize the abort
-      await Promise.resolve();
+        // Finalize the abort
+        await Promise.resolve();
 
-      const promise = cache.fetchAsync(1, 5, "test");
+        const promise = cache.fetchAsync(1, 5, "test");
 
-      expect(load).toHaveBeenCalledTimes(2);
-      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
 
-      await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+        await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+      });
+
+      it("should properly cleanup after a pending abort", async () => {
+        cache.fetchAsync(1, 5, "test");
+
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+        cache.abort("test");
+
+        const promise = cache.fetchAsync(1, 5, "test");
+
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+
+        await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+      });
     });
 
-    it("should properly cleanup after a pending abort", async () => {
-      cache.fetchAsync(1, 5, "test");
+    describe("failed requests", () => {
+      beforeEach(() => {
+        load.mockImplementation(async (start: number, end: number) =>
+          Promise.resolve(createContiguousArray(start, end))
+        );
+      });
 
-      expect(load).toHaveBeenCalledTimes(1);
-      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+      it("should not load an interval that contains a previously failed interval", async () => {
+        const deferred = createDeferred<number[]>();
+        load.mockReturnValueOnce(deferred);
 
-      cache.abort("test");
+        const promise = cache.fetchAsync(2, 4, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        deferred.reject(new Error("Expected"));
+        await expect(() => promise).rejects.toThrow("Expected");
 
-      const promise = cache.fetchAsync(1, 5, "test");
+        // Wait for promise rejection to finish
+        await Promise.resolve();
 
-      expect(load).toHaveBeenCalledTimes(2);
-      expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(() => cache.fetchAsync(1, 5, "test")).toThrow(
+          "Cannot load interval"
+        );
+      });
 
-      await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
+      it("should load an interval that is pert of (contained) by one that failed previously", async () => {
+        const deferred = createDeferred<number[]>();
+        load.mockReturnValueOnce(deferred);
+
+        const promise = cache.fetchAsync(1, 5, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        deferred.reject(new Error("Expected"));
+        await expect(() => promise).rejects.toThrow("Expected");
+
+        // Wait for promise rejection to finish
+        await Promise.resolve();
+
+        const result = await cache.fetchAsync(2, 4, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(2, 4, "test", expect.any(Object));
+        expect(result).toEqual(createContiguousArray(2, 4));
+      });
+
+      it("should merge loaded values that intersect with a previously failed interval", async () => {
+        const deferred = createDeferred<number[]>();
+        load.mockReturnValueOnce(deferred);
+
+        const promise = cache.fetchAsync(4, 8, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        deferred.reject(new Error("Expected"));
+        await expect(() => promise).rejects.toThrow("Expected");
+
+        // Wait for promise rejection to finish
+        await Promise.resolve();
+
+        const result = await cache.fetchAsync(2, 6, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(2, 6, "test", expect.any(Object));
+        expect(result).toEqual(createContiguousArray(2, 6));
+      });
+
+      it("should retry an interval if the record has been evicted", async () => {
+        // Prime the cache
+        cache.fetchAsync(1, 4, "test");
+        cache.fetchAsync(6, 8, "test");
+
+        // Request an interval that will result in two requests: 5,6 and 8,9
+        const deferredResolves = createDeferred<number[]>();
+        const deferredRejects = createDeferred<number[]>();
+        load.mockImplementation(async (start: number, end: number) => {
+          if (start === 5) {
+            return deferredResolves;
+          } else {
+            return deferredRejects;
+          }
+        });
+        let promise = cache.fetchAsync(5, 9, "test");
+        deferredResolves.resolve([5, 6]);
+        deferredRejects.reject(new Error("Expected"));
+        await expect(() => promise).rejects.toThrow("Expected");
+
+        // The failed interval will fail future requests that contain it
+        await expect(cache.fetchAsync(5, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
+        await expect(cache.fetchAsync(9, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
+
+        // Evicting the failed interval will allow it to be requested again
+        cache.evictAll();
+
+        // Reset mock so any future fetches will succeed
+        load.mockImplementation(async (start: number, end: number) =>
+          createContiguousArray(start, end)
+        );
+
+        let values = await cache.fetchAsync(7, 8, "test");
+        await expect(values).toEqual(createContiguousArray(7, 8));
+
+        values = await cache.fetchAsync(5, 9, "test");
+        await expect(values).toEqual(createContiguousArray(5, 9));
+      });
     });
   });
 
