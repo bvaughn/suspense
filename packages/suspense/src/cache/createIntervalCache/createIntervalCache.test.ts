@@ -228,6 +228,41 @@ describe("createIntervalCache", () => {
       await cache.fetchAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 2);
     });
+
+    // TODO
+    xit("should retry the same interval after a failed attempt has been evicted", async () => {
+      jest.useFakeTimers();
+
+      // Prime the cache
+      cache.fetchAsync(1, 4, "test");
+      cache.fetchAsync(6, 8, "test");
+
+      let pending: Deferred<number[]>[] = [];
+      load.mockImplementation(async () => {
+        const deferred = createDeferred<number[]>();
+        pending.push(deferred);
+        return deferred;
+      });
+
+      // Request an interval that will result in two requests: 5,6 and 8,9
+      let promise = cache.fetchAsync(5, 9, "test");
+      expect(pending).toHaveLength(2);
+
+      pending[0].resolve([5, 6]);
+      pending[1].reject(new Error("Expected"));
+
+      // The failed interval will fail future requests that contain it
+      await expect(cache.fetchAsync(5, 9, "test")).toThrow("Expected");
+      await expect(cache.fetchAsync(9, 9, "test")).toThrow("Expected");
+
+      // Evicting the failed interval will allow it to be requested again
+      cache.evictAll();
+
+      await expect(await cache.fetchAsync(7, 8, "test")).toEqual([7, 8]);
+      await expect(await cache.fetchAsync(5, 9, "test")).toEqual([
+        5, 6, 7, 8, 9,
+      ]);
+    });
   });
 
   describe("fetchAsync", () => {

@@ -41,7 +41,7 @@ export function createCache<Params extends Array<any>, Value>(
   const { useWeakRef = true } = config;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 

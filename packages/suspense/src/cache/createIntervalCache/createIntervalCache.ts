@@ -24,6 +24,7 @@ import { isPendingRecord } from "../../utils/isPendingRecord";
 import { findIntervals } from "./findIntervals";
 import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
+import { isThenable } from "../../utils/isThenable";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -71,19 +72,19 @@ export function createIntervalCache<
   const metadataMap = new Map<string, Metadata<Point, Value>>();
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel
         ? `createIntervalCache[${debugLabel}]`
         : "createIntervalCache";
 
-      // console.log(
-      //   `%c${prefix}`,
-      //   "font-weight: bold; color: yellow;",
-      //   debug,
-      //   cacheKey,
-      //   ...args
-      // );
+      console.log(
+        `%c${prefix}`,
+        "font-weight: bold; color: yellow;",
+        debug,
+        cacheKey,
+        ...args
+      );
     }
   };
 
@@ -130,7 +131,6 @@ export function createIntervalCache<
     debugLogInDev("evict()", params);
 
     const cacheKey = getKey(...params);
-
     return metadataMap.delete(cacheKey);
   }
 
@@ -149,6 +149,8 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): Thenable<Value[]> | Value[] {
+    debugLogInDev("fetchAsync()", params, start, end);
+
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.status) {
       case STATUS_PENDING:
@@ -161,6 +163,8 @@ export function createIntervalCache<
   }
 
   function fetchSuspense(start: Point, end: Point, ...params: Params): Value[] {
+    debugLogInDev("fetchSuspense()", params, start, end);
+
     const record = getOrCreateRecord(start, end, ...params);
     if (record.status === STATUS_RESOLVED) {
       return record.value;
@@ -198,7 +202,6 @@ export function createIntervalCache<
     const cacheKey = `${start}–${end}`;
 
     let record = metadata.recordMap.get(cacheKey);
-    // console.log("getOrCreateRecord(%s, %s) -> %s", start, end, record);
     if (record == null) {
       const abortController = new AbortController();
       const deferred = createDeferred<Value[]>(
@@ -236,16 +239,15 @@ export function createIntervalCache<
     const { record, value } = pendingMetadata;
 
     assertPendingRecord(record);
+
     const { abortController } = record.value;
 
     let values;
     try {
-      // console.log("processPendingInterval() awaiting ...");
-      values = await value;
+      values = isThenable(value) ? await value : value;
     } finally {
       const index = metadata.pendingMetadata.indexOf(pendingMetadata);
       metadata.pendingMetadata.splice(index, 1);
-      // console.log("processPendingInterval() finally", metadata.pendingMetadata);
     }
 
     if (abortController.signal.aborted) {
@@ -316,14 +318,15 @@ export function createIntervalCache<
       [start, end],
       intervalUtils
     );
-    // console.log(
-    //   "process(%s, %s)\n  loaded: %s,\n  pending: %s,\n  missing: %s",
-    //   start,
-    //   end,
-    //   JSON.stringify(metadata.loadedIntervals),
-    //   JSON.stringify(foundIntervals.pending),
-    //   JSON.stringify(foundIntervals.missing)
-    // );
+
+    debugLogInDev(
+      "processPendingRecord()",
+      params,
+      "\n-> metadata:",
+      metadata,
+      "\n-> found:",
+      foundIntervals
+    );
 
     const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
