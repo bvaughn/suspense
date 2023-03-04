@@ -8,7 +8,7 @@ import {
 
 describe("findIntervals", () => {
   const comparePoints = (a: number, b: number) => a - b;
-  const intervalUtilities = configureIntervalUtilities(comparePoints);
+  const intervalUtilities = configureIntervalUtilities<number>(comparePoints);
 
   function test(
     start: number,
@@ -16,7 +16,7 @@ describe("findIntervals", () => {
     cached: Partial<CachedIntervals<number>>
   ): FoundIntervals<number> {
     const { loaded = [], pending = [] } = cached;
-    return findIntervals(
+    return findIntervals<number>(
       {
         loaded,
         pending,

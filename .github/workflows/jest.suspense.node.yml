@@ -1,13 +1,14 @@
-name: "[suspense] Jest (node based) unit tests"
+name: "[suspense] Jest unit tests (node/GC)"
 on: [pull_request]
 jobs:
-  tests_e2e:
-    name: "Run tests"
+  tests-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-      - name: Initialize Yarn and install package dependencies
-        run: yarn & yarn install
+      - name: Initialize dependencies
+        run: npm install
+      - name: Build NPM packages
+        run: npm run prerelease
       - name: Run tests
-        run: cd packages/suspense && yarn test:node
+        run: cd packages/suspense && npm run test:node

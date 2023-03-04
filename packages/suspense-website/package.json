@@ -8,10 +8,6 @@
     "watch": "parcel 'index.html'"
   },
   "devDependencies": {
-    "@types/lodash.shuffle": "^4.2.7",
-    "kill-port": "latest"
-  },
-  "dependencies": {
     "@codemirror/lang-css": "latest",
     "@codemirror/lang-html": "latest",
     "@codemirror/lang-javascript": "latest",
@@ -19,7 +15,9 @@
     "@codemirror/language": "latest",
     "@codemirror/state": "latest",
     "@lezer/highlight": "latest",
+    "@types/lodash.shuffle": "^4.2.7",
     "extra-bigint": "^1.1.10",
+    "kill-port": "latest",
     "localforage": "latest",
     "lodash.shuffle": "^4.2.0",
     "match-sorter": "latest",
