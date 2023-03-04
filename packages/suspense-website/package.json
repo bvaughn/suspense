@@ -5,6 +5,7 @@
   "scripts": {
     "build": "parcel build 'index.html'",
     "kill-port": "kill-port ${PORT:-1234}",
+    "test": "",
     "watch": "parcel 'index.html'"
   },
   "devDependencies": {

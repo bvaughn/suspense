@@ -10,8 +10,8 @@ jobs:
         with:
           version: 7
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install -r
       - name: Build NPM packages
         run: pnpm run prerelease
       - name: Run tests
-        run: cd packages/suspense && pnpm run test
+        run: cd packages/suspense && pnpm run test:browser

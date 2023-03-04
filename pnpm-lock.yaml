@@ -40,22 +40,26 @@ importers:
       jest: ^29.4.3
       point-utilities: workspace:^
       ts-jest: ^29.0.5
+      typescript: ^4.9.5
     dependencies:
       point-utilities: link:../point-utilities
     devDependencies:
       '@types/jest': 29.4.0
       jest: 29.4.3
-      ts-jest: 29.0.5_jest@29.4.3
+      ts-jest: 29.0.5_orzzknleilowtsz34rkaotjvzm
+      typescript: 4.9.5
 
   packages/point-utilities:
     specifiers:
       '@types/jest': ^29.4.0
       jest: ^29.4.3
       ts-jest: ^29.0.5
+      typescript: ^4.9.5
     devDependencies:
       '@types/jest': 29.4.0
       jest: 29.4.3
-      ts-jest: 29.0.5_jest@29.4.3
+      ts-jest: 29.0.5_orzzknleilowtsz34rkaotjvzm
+      typescript: 4.9.5
 
   packages/suspense:
     specifiers:
@@ -68,6 +72,7 @@ importers:
       react: latest
       react-dom: latest
       ts-jest: ^29.0.5
+      typescript: ^4.9.5
     dependencies:
       interval-utilities: link:../interval-utilities
       point-utilities: link:../point-utilities
@@ -78,7 +83,8 @@ importers:
       jest-environment-jsdom: 29.4.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      ts-jest: 29.0.5_jest@29.4.3
+      ts-jest: 29.0.5_orzzknleilowtsz34rkaotjvzm
+      typescript: 4.9.5
 
   packages/suspense-website:
     specifiers:
@@ -4333,7 +4339,7 @@ packages:
       punycode: 2.3.0
     dev: true
 
-  /ts-jest/29.0.5_jest@29.4.3:
+  /ts-jest/29.0.5_orzzknleilowtsz34rkaotjvzm:
     resolution: {integrity: sha512-PL3UciSgIpQ7f6XjVOmbi96vmDHUqAyqDr8YxzopDqX3kfgYtX1cuNeBjP+L9sFXi6nzsGGA6R3fP3DDDJyrxA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     hasBin: true
@@ -4362,6 +4368,7 @@ packages:
       lodash.memoize: 4.1.2
       make-error: 1.3.6
       semver: 7.3.8
+      typescript: 4.9.5
       yargs-parser: 21.1.1
     dev: true
 
