@@ -25,7 +25,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "point-utilities": "workspace:^"
+    "point-utilities": "^0.0.2"
   },
   "browserslist": [
     "Chrome 79"
