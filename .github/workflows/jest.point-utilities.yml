@@ -1,13 +1,12 @@
 name: "[point-utilities] Jest unit tests"
 on: [pull_request]
 jobs:
-  tests_e2e:
+  install:
+    uses: ./.github/workflows/install.yml
+  tests:
     name: "Run tests"
     runs-on: ubuntu-latest
+    needs: [install]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - name: Initialize Yarn and install package dependencies
-        run: yarn & yarn install
       - name: Run tests
         run: cd packages/point-utilities && yarn test
