@@ -66,6 +66,39 @@ const createDeferred = {
   ),
 };
 
+const createIntervalCache = {
+  cache: processExample(
+    readFileSync(join(__dirname, "createIntervalCache", "cache.ts"), "utf8")
+  ),
+  cacheWithBigIntInterval: processExample(
+    readFileSync(
+      join(__dirname, "createIntervalCache", "cacheWithBigIntInterval.ts"),
+      "utf8"
+    )
+  ),
+  cacheWithStringInterval: processExample(
+    readFileSync(
+      join(__dirname, "createIntervalCache", "cacheWithStringInterval.ts"),
+      "utf8"
+    )
+  ),
+  callingAbort: processExample(
+    readFileSync(
+      join(__dirname, "createIntervalCache", "callingAbort.ts"),
+      "utf8"
+    )
+  ),
+  evict: processExample(
+    readFileSync(join(__dirname, "createIntervalCache", "evict.ts"), "utf8")
+  ),
+  loadWithAbortSignal: processExample(
+    readFileSync(
+      join(__dirname, "createIntervalCache", "loadWithAbortSignal.ts"),
+      "utf8"
+    )
+  ),
+};
+
 const createSingleEntryCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createSingleEntryCache", "cache.ts"), "utf8")
@@ -154,6 +187,7 @@ const isThenable = {
 export {
   createCache,
   createDeferred,
+  createIntervalCache,
   createSingleEntryCache,
   createStreamingCache,
   demos,

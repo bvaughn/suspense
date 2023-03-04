@@ -19,6 +19,7 @@ import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
 import { isPendingRecord } from "../utils/isPendingRecord";
 import { WeakRefMap } from "../utils/WeakRefMap";
+import { defaultGetKey } from "../utils/defaultGetKey";
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
@@ -49,7 +50,7 @@ export function createCache<Params extends Array<any>, Value>(
   const { useWeakRef = true } = config;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
@@ -330,8 +331,4 @@ export function createCache<Params extends Array<any>, Value>(
     prefetch,
     subscribeToStatus,
   };
-}
-
-function defaultGetKey(...params: any[]): string {
-  return params.join(",");
 }

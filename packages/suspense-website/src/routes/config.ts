@@ -1,6 +1,7 @@
 // API
 export const CREATE_CACHE = "/createCache";
 export const CREATE_DEFERRED = "/createDeferred";
+export const CREATE_INTERVAL_CACHE = "/createIntervalCache";
 export const CREATE_SINGLE_ENTRY_CACHE = "/createSingleEntryCache";
 export const CREATE_STREAMING_CACHE = "/createStreamingCache";
 export const IS_THENNABLE = "/isThenable";

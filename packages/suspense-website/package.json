@@ -5,8 +5,7 @@
   "scripts": {
     "build": "parcel build 'index.html'",
     "kill-port": "kill-port ${PORT:-1234}",
-    "test:e2e": "playwright test",
-    "test:e2e:debug": "DEBUG=true playwright test",
+    "test": "",
     "watch": "parcel 'index.html'"
   },
   "devDependencies": {
@@ -21,15 +20,15 @@
     "@codemirror/language": "latest",
     "@codemirror/state": "latest",
     "@lezer/highlight": "latest",
-    "@playwright/test": "latest",
+    "extra-bigint": "^1.1.10",
     "localforage": "latest",
     "lodash.shuffle": "^4.2.0",
     "match-sorter": "latest",
-    "playwright": "latest",
     "react": "experimental",
     "react-dom": "experimental",
     "react-router-dom": "latest",
     "react-virtualized-auto-sizer": "latest",
-    "sort-by": "latest"
+    "sort-by": "latest",
+    "suspense": "workspace:^"
   }
 }

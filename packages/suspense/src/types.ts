@@ -61,6 +61,8 @@ export interface Deferred<T> extends Thenable<T> {
   resolve(value?: T): void;
 }
 
+// Cache types
+
 export interface Cache<Params extends Array<any>, Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
@@ -78,15 +80,33 @@ export interface Cache<Params extends Array<any>, Value> {
   ): UnsubscribeCallback;
 }
 
-export type RejectRange = (error: Error) => void;
-export type ResolveRange<Value> = (values: Value[]) => void;
-
 export type CacheLoadOptions = {
   signal: AbortSignal;
 };
 
-// export interface RangeCache<Range, Params extends Array<any>, Value> {
-// }
+// Interval cache types
+
+export type IntervalCache<Point, Params extends Array<any>, Value> = {
+  abort(...params: Params): boolean;
+  evict(...params: Params): boolean;
+  evictAll(): boolean;
+  fetchAsync(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): Thenable<Value[]> | Value[];
+  fetchSuspense(start: Point, end: Point, ...params: Params): Value[];
+};
+
+export type IntervalCacheLoadOptions = {
+  signal: AbortSignal;
+};
+
+export type ComparisonFunction<T> = (a: T, b: T) => number;
+
+export type GetPointForValue<Point, Value> = (value: Value) => Point;
+
+// Streaming cache types
 
 export interface StreamingValues<Value, AdditionalData = undefined> {
   complete: boolean;

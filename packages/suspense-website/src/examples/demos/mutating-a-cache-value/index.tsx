@@ -10,7 +10,7 @@ import Loader from "../../../components/Loader";
 import { AddComment } from "./AddComment";
 import { SaveButton } from "./SaveButton";
 
-type Comment = typeof staticComments[0];
+type Comment = (typeof staticComments)[0];
 
 export type ApiClient = {
   addComment: (body: string) => Promise<Comment[]>;
