@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.12
+* Fixed external dependency version.
+
 ## 0.0.11
 * Add `createIntervalCache` type for incrementally loading and merging sets of values over time.
 
