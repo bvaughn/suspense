@@ -42,34 +42,37 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
   const refresh = useCacheRefresh();
 
-  const mutate = useCallback(async (options: MutateOptions<Params, Value>) => {
-    const { effect, mutate, params } = options;
+  const mutate = useCallback(
+    async (options: MutateOptions<Params, Value>) => {
+      const { effect, mutate, params } = options;
 
-    let cacheCalls: [value: Value, ...params: Params][] = [];
+      let cacheCalls: [value: Value, ...params: Params][] = [];
 
-    // Allow external mutations (e.g. API calls) to finish first
-    await mutate((value: Value, ...params: Params) => {
-      cacheCalls.push([value, ...params]);
-    });
+      // Allow external mutations (e.g. API calls) to finish first
+      await mutate((value: Value, ...params: Params) => {
+        cacheCalls.push([value, ...params]);
+      });
 
-    // If this mutation is related to a specific record, clear the stale record from the in-memory cache
-    if (params != null) {
-      cache.evict(...params);
-    }
+      // If this mutation is related to a specific record, clear the stale record from the in-memory cache
+      if (params != null) {
+        cache.evict(...params);
+      }
 
-    // If the mutation returned any updated values, (e.g. API responses)
-    // pre-cache them before re-rendering to avoid unnecessary fetches
-    cacheCalls.forEach(([value, ...params]) => {
-      cache.cache(value, ...params);
-    });
+      // If the mutation returned any updated values, (e.g. API responses)
+      // pre-cache them before re-rendering to avoid unnecessary fetches
+      cacheCalls.forEach(([value, ...params]) => {
+        cache.cache(value, ...params);
+      });
 
-    if (effect) {
-      pendingEffectsRef.current.push(effect);
-    }
+      if (effect) {
+        pendingEffectsRef.current.push(effect);
+      }
 
-    // Finally schedule an update with React (which will fetch the updated data)
-    startTransition(refresh);
-  }, []);
+      // Finally schedule an update with React (which will fetch the updated data)
+      startTransition(refresh);
+    },
+    [cache, refresh, startTransition]
+  );
 
   return [isPending, mutate];
 }
