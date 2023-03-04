@@ -14,8 +14,8 @@ import { posts } from "../posts.json";
 import { users } from "../users.json";
 import { Posts } from "./Posts";
 
-export type Post = typeof posts[0];
-export type User = typeof users[0];
+export type Post = (typeof posts)[0];
+export type User = (typeof users)[0];
 
 export type Metadata = {
   postCount: number;

@@ -14,19 +14,28 @@
   "types": "dist/suspense.d.ts",
   "scripts": {
     "build": "parcel build",
-    "test": "jest",
-    "test:node": "node --expose-gc node_modules/.bin/jest --config=jest.config.node.js",
-    "test:node:watch": "node --expose-gc node_modules/.bin/jest --config=jest.config.node.js --watch",
+    "test": "pnpm run test:browser & pnpm run test:node",
+    "test:browser": "jest",
+    "test:browser:watch": "jest --watch",
+    "test:node": "node --expose-gc node_modules/jest/bin/jest.js --config=jest.config.node.js",
+    "test:node:debug": "node --inspect-brk node_modules/jest/bin/jest.js --runInBand --watch",
+    "test:node:watch": "node --expose-gc node_modules/jest/bin/jest.js --config=jest.config.node.js --watch",
     "test:watch": "jest --watch",
     "watch": "parcel watch"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
+    "extra-bigint": "^1.1.10",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "^29.4.3",
     "react": "latest",
     "react-dom": "latest",
-    "ts-jest": "^29.0.5"
+    "ts-jest": "^29.0.5",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "interval-utilities": "workspace:^",
+    "point-utilities": "workspace:^"
   },
   "peerDependencies": {
     "react": "^18.0.0",

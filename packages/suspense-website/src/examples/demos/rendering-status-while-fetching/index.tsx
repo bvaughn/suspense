@@ -17,7 +17,7 @@ import styles from "./style.module.css";
 // Fake API data
 import { users } from "../users.json";
 
-type User = typeof users[0];
+type User = (typeof users)[0];
 
 function getRandomUsers(): User[] {
   return shuffle(users).slice(0, 5);

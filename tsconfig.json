@@ -7,15 +7,15 @@
     "noImplicitAny": true,
     "jsx": "react-jsx",
     "resolveJsonModule": true,
+    /*"strict": true, TODO */
+    "target": "es2018",
     "types": ["jest", "node"]
   },
   "exclude": ["node_modules"],
   "include": [
-    "css.d.ts",
-    "react.d.ts",
+    "definitions/css.d.ts",
+    "definitions/react.d.ts",
     "packages/**/*.ts",
     "packages/**/*.tsx"
-  ],
-  "strict": true,
-  "target": "es2018"
+  ]
 }

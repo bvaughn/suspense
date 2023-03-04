@@ -11,12 +11,12 @@ import { createDeferred } from "../utils/createDeferred";
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
+  let load: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [string]>;
 
   beforeEach(() => {
-    fetch = jest.fn();
-    fetch.mockImplementation((key: string) => {
+    load = jest.fn();
+    load.mockImplementation((key: string) => {
       if (key.startsWith("async")) {
         return Promise.resolve(key);
       } else if (key.startsWith("error")) {
@@ -32,7 +32,7 @@ describe("createCache", () => {
     cache = createCache<[string], string>({
       debugLabel: "cache",
       getKey: getCacheKey,
-      load: fetch,
+      load,
     });
   });
 
@@ -51,7 +51,7 @@ describe("createCache", () => {
     it("should abort an active request", () => {
       let abortSignal: AbortSignal | null = null;
       let deferred: Deferred<string> | null = null;
-      fetch.mockImplementation(async (...args) => {
+      load.mockImplementation(async (...args) => {
         abortSignal = args[1].signal;
         deferred = createDeferred();
         return deferred;
@@ -71,7 +71,7 @@ describe("createCache", () => {
 
     it("should restart an aborted request on next fetch", async () => {
       let deferred: Deferred<string> | null = null;
-      fetch.mockImplementation(async () => {
+      load.mockImplementation(async () => {
         deferred = createDeferred();
         return deferred;
       });
@@ -86,7 +86,7 @@ describe("createCache", () => {
 
       const fetchTwo = cache.fetchAsync("async");
       expect(cache.getStatus("async")).toBe(STATUS_PENDING);
-      expect(fetch).toHaveBeenCalled();
+      expect(load).toHaveBeenCalled();
 
       // At this point, even if the first request completes– it should be ignored.
       initialDeferred!.resolve("async");
@@ -114,7 +114,7 @@ describe("createCache", () => {
       expect(cache.getValueIfCached("sync-1")).toEqual("SYNC");
       expect(cache.getValueIfCached("async-1")).toEqual("ASYNC");
 
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
     });
   });
 
@@ -126,7 +126,7 @@ describe("createCache", () => {
       expect(cache.getValueIfCached("sync-1")).toEqual("VALUE 1");
       expect(cache.getValueIfCached("sync-2")).toEqual("VALUE 2");
 
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
 
       cache.evict("sync-1");
 
@@ -138,11 +138,11 @@ describe("createCache", () => {
       cache.cache("VALUE", "sync");
       cache.evict("sync");
 
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
 
       cache.fetchAsync("sync");
 
-      expect(fetch).toHaveBeenCalled();
+      expect(load).toHaveBeenCalled();
     });
   });
 
@@ -154,7 +154,7 @@ describe("createCache", () => {
       expect(cache.getValueIfCached("sync-1")).toEqual("VALUE 1");
       expect(cache.getValueIfCached("sync-2")).toEqual("VALUE 2");
 
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
 
       cache.evictAll();
 
@@ -166,14 +166,14 @@ describe("createCache", () => {
       cache.cache("VALUE 1", "sync-1");
       cache.cache("VALUE 2", "sync-2");
 
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
 
       cache.evictAll();
 
       cache.fetchAsync("sync-1");
       cache.fetchAsync("sync-2");
 
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -193,7 +193,7 @@ describe("createCache", () => {
     });
 
     it("should transition from pending to rejected", async () => {
-      fetch.mockReturnValue(Promise.reject("Expected"));
+      load.mockReturnValue(Promise.reject("Expected"));
 
       const willReject = cache.fetchAsync("error");
 
@@ -236,7 +236,34 @@ describe("createCache", () => {
       expect(cache.fetchAsync("sync")).toBe("sync");
       expect(cache.fetchAsync("sync")).toBe("sync");
 
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("fetchSuspense", () => {
+    it("should suspend on async values", async () => {
+      try {
+        cache.fetchSuspense("async");
+
+        throw new Error("should have suspended");
+      } catch (thenable) {
+        expect(isThenable(thenable)).toBe(true);
+
+        await thenable;
+
+        expect(cache.fetchSuspense("async")).toBe("async");
+      }
+    });
+
+    it("should not suspend on sync values", () => {
+      expect(cache.fetchSuspense("sync")).toBe("sync");
+    });
+
+    it("should only fetch the same value once (per key)", () => {
+      expect(cache.fetchSuspense("sync")).toBe("sync");
+      expect(cache.fetchSuspense("sync")).toBe("sync");
+
+      expect(load).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -273,7 +300,7 @@ describe("createCache", () => {
 
     it("should not trigger a fetch", () => {
       expect(cache.getValueIfCached("sync")).toBeUndefined();
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
     });
 
     it("should return undefined for values that are pending", () => {
@@ -293,48 +320,21 @@ describe("createCache", () => {
     });
   });
 
-  describe("fetchSuspense", () => {
-    it("should suspend on async values", async () => {
-      try {
-        cache.fetchSuspense("async");
-
-        throw new Error("should have suspended");
-      } catch (thenable) {
-        expect(isThenable(thenable)).toBe(true);
-
-        await thenable;
-
-        expect(cache.fetchSuspense("async")).toBe("async");
-      }
-    });
-
-    it("should not suspend on sync values", () => {
-      expect(cache.fetchSuspense("sync")).toBe("sync");
-    });
-
-    it("should only fetch the same value once (per key)", () => {
-      expect(cache.fetchSuspense("sync")).toBe("sync");
-      expect(cache.fetchSuspense("sync")).toBe("sync");
-
-      expect(fetch).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe("prefetch", () => {
     it("should start fetching a resource", async () => {
       cache.prefetch("sync-1");
 
-      fetch.mockReset();
+      load.mockReset();
 
       // Verify value already loaded
       cache.fetchAsync("sync-1");
-      expect(fetch).not.toHaveBeenCalled();
+      expect(load).not.toHaveBeenCalled();
       expect(cache.getValue("sync-1")).toEqual("sync-1");
 
       // Verify other values fetch independently
       cache.fetchAsync("sync-2");
-      expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.lastCall[0]).toEqual("sync-2");
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load.mock.lastCall[0]).toEqual("sync-2");
     });
   });
 

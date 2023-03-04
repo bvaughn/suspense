@@ -12,6 +12,7 @@ import {
   StreamingValues,
 } from "../types";
 import { warnInDev } from "../utils/warnInDev";
+import { defaultGetKey } from "../utils/defaultGetKey";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -22,13 +23,13 @@ export function createStreamingCache<
   AdditionalData = undefined
 >(options: {
   debugLabel?: string;
-  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void;
   getKey?: (...params: Params) => string;
+  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
   const { debugLabel, getKey = defaultGetKey, load } = options;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV === "development") {
+    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
@@ -237,8 +238,4 @@ export function createStreamingCache<
     prefetch,
     stream,
   };
-}
-
-function defaultGetKey(...params: any[]): string {
-  return params.join(",");
 }
