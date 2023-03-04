@@ -24,7 +24,7 @@
     "ts-jest": "^29.0.5"
   },
   "dependencies": {
-    "point-utilities": "latest"
+    "point-utilities": "^0.0.2"
   },
   "browserslist": [
     "Chrome 79"
