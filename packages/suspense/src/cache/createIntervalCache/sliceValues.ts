@@ -1,30 +1,21 @@
-import { ComparisonFunction, GetPointForValue } from "../../types";
-import { findNearestIndexBefore, findNearestIndexAfter } from "./findIndex";
+import { Utilities } from "point-utilities";
+
+import { GetPointForValue } from "../../types";
 
 export function sliceValues<Point, Value>(
   sortedValues: Value[],
   start: Point,
   end: Point,
   getPointForValue: GetPointForValue<Point, Value>,
-  comparePoints: ComparisonFunction<Point>
+  pointUtils: Utilities<Point>
 ): Value[] {
   if (sortedValues.length === 0) {
     return [];
   }
 
-  const startIndex = findNearestIndexAfter(
-    sortedValues,
-    start,
-    getPointForValue,
-    comparePoints
-  );
-
-  const endIndex = findNearestIndexBefore(
-    sortedValues,
-    end,
-    getPointForValue,
-    comparePoints
-  );
+  const sortedPoints = sortedValues.map(getPointForValue);
+  const startIndex = pointUtils.findNearestIndexAfter(sortedPoints, start);
+  const endIndex = pointUtils.findNearestIndexBefore(sortedPoints, end);
 
   return sortedValues.slice(startIndex, endIndex + 1);
 }

@@ -1,6 +1,6 @@
 {
   "name": "point-utilities",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Dependency-free utility functions for performing comparison operations",
   "author": "Brian Vaughn <brian.david.vaughn@gmail.com>",
   "license": "MIT",

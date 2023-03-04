@@ -2,6 +2,7 @@ import {
   configure as configureIntervalUtilities,
   Interval,
 } from "interval-utilities";
+import { configure as configurePointUtilities } from "point-utilities";
 
 import {
   STATUS_PENDING,
@@ -22,7 +23,6 @@ import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
 import { findIntervals } from "./findIntervals";
-import { findIndex, findNearestIndexAfter } from "./findIndex";
 import { sliceValues } from "./sliceValues";
 import { isThenable } from "../../utils/isThenable";
 
@@ -69,6 +69,7 @@ export function createIntervalCache<
   } = options;
 
   const intervalUtils = configureIntervalUtilities<Point>(comparePoints);
+  const pointUtils = configurePointUtilities<Point>(comparePoints);
 
   const metadataMap = new Map<string, Metadata<Point, Value>>();
 
@@ -257,14 +258,14 @@ export function createIntervalCache<
         ...intervalUtils.sort(...metadata.loadedIntervals, [start, end])
       );
 
+      const sortedPoints = metadata.sortedValues.map(getPointForValue);
+
       // Check for duplicate values near the edges because of how intervals are split
       if (values.length > 0) {
         const firstValue = values[0];
-        const index = findIndex(
-          metadata.sortedValues,
-          getPointForValue(firstValue),
-          getPointForValue,
-          comparePoints
+        const index = pointUtils.findIndex(
+          sortedPoints,
+          getPointForValue(firstValue)
         );
         if (index >= 0) {
           values.splice(0, 1);
@@ -272,11 +273,9 @@ export function createIntervalCache<
       }
       if (values.length > 0) {
         const lastValue = values[values.length - 1];
-        const index = findIndex(
-          metadata.sortedValues,
-          getPointForValue(lastValue),
-          getPointForValue,
-          comparePoints
+        const index = pointUtils.findIndex(
+          sortedPoints,
+          getPointForValue(lastValue)
         );
         if (index >= 0) {
           values.pop();
@@ -286,11 +285,9 @@ export function createIntervalCache<
       // Merge any remaining unique values
       if (values.length > 0) {
         const firstValue = values[0];
-        const index = findNearestIndexAfter(
-          metadata.sortedValues,
-          getPointForValue(firstValue),
-          getPointForValue,
-          comparePoints
+        const index = pointUtils.findNearestIndexAfter(
+          sortedPoints,
+          getPointForValue(firstValue)
         );
         metadata.sortedValues.splice(index, 0, ...values);
       }
@@ -407,7 +404,7 @@ export function createIntervalCache<
           start,
           end,
           getPointForValue,
-          comparePoints
+          pointUtils
         );
 
         deferred.resolve(record.value);

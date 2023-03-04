@@ -64,6 +64,49 @@ utils.equals(1, 1); // true
 utils.equals(1, 3); // false
 ```
 
+#### `utils.findIndex(sortedPoints: Point[], point: Point): number`
+
+Find the index of a point within a sorted list of points. If no match found, -1 is returned.
+
+```js
+utils.findIndex([1, 2], 2); // 1
+utils.findIndex([1, 2, 3], 3); // 2
+utils.findIndex([10, 20, 30], 18); // -1
+```
+
+#### `utils.findNearestIndex(sortedPoints: Point[], point: Point): number`
+
+Find the index of a point within a sorted list of points. If no match found, the index of the point with the closest value is returned.
+
+```js
+utils.findNearestIndex([1], 1); // 0
+utils.findNearestIndex([1, 2, 3], 2); // 1
+utils.findNearestIndex([10, 20, 30], 26); // 2
+utils.findNearestIndex([10, 20, 30], 40); // 2
+```
+
+#### `utils.findNearestIndexAfter(sortedPoints: Point[], point: Point): number`
+
+Within a sorted list of points, find the index of the first point that is larger than the value specified.
+
+```js
+utils.findNearestIndexAfter([1, 2, 3], 1); // 0
+utils.findNearestIndexAfter([10, 20, 30], 11); // 1
+utils.findNearestIndexAfter([10, 20, 30], 29); // 2
+utils.findNearestIndexAfter([10, 20, 30], 31); // 3
+```
+
+#### `utils.findNearestIndexBefore(sortedPoints: Point[], point: Point): number`
+
+Within a sorted list of points, find the index of the last point that is smaller than the value specified.
+
+```js
+utils.findNearestIndexBefore([1], 0); // -1
+utils.findNearestIndexBefore([1, 2, 3], 1); // 0
+utils.findNearestIndexBefore([10, 20, 30], 21); // 1
+utils.findNearestIndexBefore([10, 20, 30], 31); // 2
+```
+
 #### `utils.greaterThan(a: Point, b: Point): boolean`
 
 Compares two points to see if one is greater than the other.

@@ -1,3 +1,4 @@
+import { configure } from "point-utilities";
 import { sliceValues } from "./sliceValues";
 
 function getPointForValue(value: number) {
@@ -15,7 +16,7 @@ describe("sliceValues", () => {
       start,
       end,
       getPointForValue,
-      comparePoints
+      configure(comparePoints)
     );
   }
 

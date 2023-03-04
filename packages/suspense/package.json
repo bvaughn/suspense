@@ -30,8 +30,8 @@
     "ts-jest": "^29.0.5"
   },
   "dependencies": {
-    "interval-utilities": "latest",
-    "point-utilities": "latest"
+    "interval-utilities": "^0.0.1",
+    "point-utilities": "^0.0.2"
   },
   "peerDependencies": {
     "react": "^18.0.0",
