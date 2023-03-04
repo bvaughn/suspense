@@ -20,6 +20,8 @@
     "@codemirror/language": "latest",
     "@codemirror/state": "latest",
     "@lezer/highlight": "latest",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
     "extra-bigint": "^1.1.10",
     "localforage": "latest",
     "lodash.shuffle": "^4.2.0",
