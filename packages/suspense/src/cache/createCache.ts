@@ -18,7 +18,6 @@ import {
 import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
 import { isPendingRecord } from "../utils/isPendingRecord";
-import { WeakRefMap } from "../utils/WeakRefMap";
 import { defaultGetKey } from "../utils/defaultGetKey";
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
@@ -40,8 +39,6 @@ function identity(): Object {
 function subscribeToCacheRefreshes(): void {
   getCacheForType<Object>(identity);
 }
-
-const WearRefMapSymbol = Symbol.for("WearRefMap");
 
 export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
@@ -68,10 +65,6 @@ export function createCache<Params extends Array<any>, Value>(
 
   const recordMap = new Map<string, Record<Value>>();
   const subscriberMap = new Map<string, Set<StatusCallback>>();
-  const weakRefMap = new WeakRefMap<string, Value>((cacheKey: string) => {
-    recordMap.delete(cacheKey);
-    subscriberMap.delete(cacheKey);
-  });
 
   function abort(...params: Params): boolean {
     const cacheKey = getKey(...params);
@@ -80,7 +73,6 @@ export function createCache<Params extends Array<any>, Value>(
       debugLogInDev("abort()", params);
 
       recordMap.delete(cacheKey);
-      weakRefMap.delete(cacheKey);
 
       record.value.abortController.abort();
 
@@ -99,7 +91,7 @@ export function createCache<Params extends Array<any>, Value>(
       value: null,
     };
 
-    writeRecordValue(record, value, ...params);
+    writeRecordValue(record, value);
 
     debugLogInDev("cache()", params, value);
 
@@ -110,8 +102,6 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
 
     debugLogInDev(`evict()`, params);
-
-    weakRefMap.delete(cacheKey);
 
     return recordMap.delete(cacheKey);
   }
@@ -248,7 +238,7 @@ export function createCache<Params extends Array<any>, Value>(
       if (!abortSignal.aborted) {
         record.status = STATUS_RESOLVED;
 
-        writeRecordValue(record, value, ...params);
+        writeRecordValue(record, value);
 
         deferred.resolve(value);
       }
@@ -266,11 +256,13 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: Record<Value>, ...params: Params): Value {
+  function readRecordValue(
+    record: Record<Value>,
+    ...params: Params
+  ): Value | undefined {
     const value = record.value;
-    if (value === WearRefMapSymbol) {
-      const cacheKey = getKey(...params);
-      return weakRefMap.get(cacheKey);
+    if (value instanceof WeakRef) {
+      return value.deref();
     } else {
       return value;
     }
@@ -303,16 +295,9 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function writeRecordValue(
-    record: Record<Value>,
-    value: Value,
-    ...params: Params
-  ): void {
+  function writeRecordValue(record: Record<Value>, value: Value): void {
     if (useWeakRef && value != null && typeof value === "object") {
-      record.value = WearRefMapSymbol;
-
-      const cacheKey = getKey(...params);
-      weakRefMap.set(cacheKey, value);
+      record.value = new WeakRef(value);
     } else {
       record.value = value;
     }
