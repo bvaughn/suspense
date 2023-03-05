@@ -14,8 +14,8 @@ type Comment = (typeof staticComments)[0];
 
 export type ApiClient = {
   addComment: (body: string) => Promise<Comment[]>;
-  deleteComment: (commentId: number) => Promise<void>;
-  editComment: (id: number, body: string) => Promise<Comment>;
+  deleteComment: (commentId: number) => Promise<Comment[]>;
+  editComment: (id: number, body: string) => Promise<Comment[]>;
   fetchComments: () => Promise<Comment[]>;
 };
 
@@ -47,13 +47,13 @@ function createDummyApiClient(): ApiClient {
     },
     deleteComment: async (commentId: number) => {
       deletions.add(commentId);
+
+      return await apiClient.fetchComments();
     },
     editComment: async (id: number, body: string) => {
       edits.set(id, body);
 
-      const comment = staticComments.find((comment) => comment.id === id);
-
-      return { ...comment, body };
+      return await apiClient.fetchComments();
     },
     fetchComments: async () => {
       // Simulate network latency
@@ -109,7 +109,7 @@ function Comment({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [isPending, mutate] = useCacheMutation(commentsCache);
+  const { isPending, mutateAsync } = useCacheMutation(commentsCache);
 
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
@@ -125,15 +125,7 @@ function Comment({
       return;
     }
 
-    mutate({
-      mutate: async () => {
-        await apiClient.editComment(comment.id, body);
-      },
-      effect: async () => {
-        setHasPendingChanges(false);
-      },
-      params: [apiClient],
-    });
+    mutateAsync([apiClient], () => apiClient.editComment(comment.id, body));
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -148,12 +140,7 @@ function Comment({
   };
 
   const deleteComment = () => {
-    mutate({
-      mutate: async () => {
-        await apiClient.deleteComment(comment.id);
-      },
-      params: [apiClient],
-    });
+    mutateAsync([apiClient], () => apiClient.deleteComment(comment.id));
   };
 
   const saveComment = () => {
