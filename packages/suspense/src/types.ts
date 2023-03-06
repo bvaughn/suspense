@@ -74,9 +74,9 @@ export interface Cache<Params extends Array<any>, Value> {
   getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
-  readAsync(...params: Params): Thenable<Value> | Value;
-  read(...params: Params): Value;
   prefetch(...params: Params): void;
+  read(...params: Params): Value;
+  readAsync(...params: Params): Thenable<Value> | Value;
   subscribeToStatus(
     callback: StatusCallback,
     ...params: Params
