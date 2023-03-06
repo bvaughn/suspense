@@ -150,7 +150,7 @@ const demos = {
   mutatingCacheValue: {
     addComment: processExample(
       readFileSync(
-        join(__dirname, "demos", "mutating-a-cache-value", "AddComment.tsx"),
+        join(__dirname, "demos", "mutating-cache-values", "AddComment.tsx"),
         "utf8"
       )
     ),

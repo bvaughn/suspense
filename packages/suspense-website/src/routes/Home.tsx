@@ -112,7 +112,7 @@ export default function Route() {
             type="plaintext"
           />
           <LinkListItem
-            children="Mutating a cache value"
+            children="Mutating cache values"
             to={GUIDE_MUTATING_A_CACHE_VALUE}
             type="plaintext"
           />

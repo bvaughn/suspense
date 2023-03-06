@@ -12,5 +12,5 @@ export const USE_STREAMING_CACHE = "/useStreamingValues";
 export const GUIDE_ABORT_A_REQUEST = "/guide/abort-a-request";
 export const GUIDE_FETCH_WITH_STATUS = "/guide/rendering-cache-status";
 export const GUIDE_MEMORY_MANAGEMENT = "/guide/memory-management";
-export const GUIDE_MUTATING_A_CACHE_VALUE = "/guide/mutating-a-cache-value";
+export const GUIDE_MUTATING_A_CACHE_VALUE = "/guide/mutating-cache-values";
 export const GUIDE_STREAMING_CACHE = "/guide/writing-a-streaming-cache";

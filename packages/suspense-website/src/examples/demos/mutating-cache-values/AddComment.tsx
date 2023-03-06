@@ -66,14 +66,17 @@ import { useCacheMutation } from "suspense";
 function AddComment({ apiClient }: { apiClient: ApiClient }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Pass the cache we want to mutate
   const { isPending, mutateAsync } = useCacheMutation(commentsCache);
 
   const addComment = async () => {
     const input = inputRef.current;
     if (input.value) {
       mutateAsync([apiClient], async () => {
+        // Post the new comment to the remote server (async)
         const newComments = await apiClient.addComment(input.value);
 
+        // Clear the input field once the new comment has been created
         inputRef.current!.value = "";
 
         return newComments;
@@ -81,6 +84,7 @@ function AddComment({ apiClient }: { apiClient: ApiClient }) {
     }
   };
 
+  // Disable form inputs while a mutation is pending
   return (
     <>
       <Input
