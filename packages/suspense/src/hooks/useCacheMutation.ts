@@ -1,58 +1,48 @@
 import {
   unstable_useCacheRefresh as useCacheRefresh,
   useCallback,
-  useLayoutEffect,
-  useRef,
   useTransition,
 } from "react";
 import { InternalCache } from "../cache/createCache";
-import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_NOT_STARTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
-
-type EffectCallback = () => Promise<void>;
 
 type MutationCallback<Value> = () => Promise<Value>;
 
 export type MutateAsync<Params extends Array<any>, Value> = (
   params: Params,
   callback: MutationCallback<Value>
-) => void;
+) => Promise<void>;
 
 export type MutateSync<Params extends Array<any>, Value> = (
   params: Params,
   newValue: Value
 ) => void;
 
-export function useCacheMutation<Params extends Array<any>, Value>(
-  cache: Cache<Params, Value>
-): {
+export type MutationApi<Params extends Array<any>, Value> = {
   isPending: boolean;
   mutateAsync: MutateAsync<Params, Value>;
   mutateSync: MutateSync<Params, Value>;
-} {
+};
+
+export function useCacheMutation<Params extends Array<any>, Value>(
+  cache: Cache<Params, Value>
+): MutationApi<Params, Value> {
   const {
     __backupRecordMap: backupRecordMap,
     __createRecordMap: createRecordMap,
     __getKey: getKey,
-    __mutationStatusMap: mutationStatusMap,
+    __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
   } = cache as InternalCache<Params, Value>;
 
-  const pendingEffectsRef = useRef<EffectCallback[]>([]);
-
   const [isPending, startTransition] = useTransition();
-
-  useLayoutEffect(() => {
-    const pendingEffects = pendingEffectsRef.current;
-    if (pendingEffects.length > 0) {
-      try {
-        pendingEffects.forEach((effect) => effect());
-      } finally {
-        pendingEffects.splice(0);
-      }
-    }
-  });
 
   const refresh = useCacheRefresh();
 
@@ -78,18 +68,19 @@ export function useCacheMutation<Params extends Array<any>, Value>(
   );
 
   const mutateAsync = useCallback<MutateAsync<Params, Value>>(
-    (params: Params, callback: MutationCallback<Value>) => {
+    async (params: Params, callback: MutationCallback<Value>) => {
       const cacheKey = getKey(...params);
+
+      const abortController = new AbortController();
+      const deferred = createDeferred<Value>();
 
       let record: Record<Value> = {
         status: STATUS_PENDING,
         value: {
-          abortController: new AbortController(),
-          deferred: createDeferred<Value>(),
+          abortController,
+          deferred,
         },
       };
-
-      const deferred = record.value.deferred;
 
       // Don't mutate the module-level cache yet;
       // this might cause other components to suspend (and fallback)
@@ -97,49 +88,65 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const recordMap = createRecordMap();
       recordMap.set(cacheKey, record);
 
-      mutationStatusMap.set(cacheKey, STATUS_PENDING);
-
-      const promise = callback();
-      promise.then(
-        (newValue: Value) => {
-          record.status = STATUS_RESOLVED;
-          record.value = newValue;
-
-          deferred.resolve(newValue);
-
-          mutationStatusMap.delete(cacheKey);
-          backupRecordMap.set(cacheKey, record);
-          recordMap.set(cacheKey, record);
-
-          startTransition(() => {
-            notifySubscribers(...params);
-
-            refresh(createRecordMap, recordMap);
-          });
-        },
-        (error: any) => {
-          record.status = STATUS_REJECTED;
-          record.value = error;
-
-          deferred.reject(error);
-
-          mutationStatusMap.delete(cacheKey);
-          backupRecordMap.set(cacheKey, record);
-          recordMap.set(cacheKey, record);
-
-          startTransition(() => {
-            notifySubscribers(...params);
-
-            refresh(createRecordMap, recordMap);
-          });
-        }
-      );
+      mutationAbortControllerMap.set(cacheKey, abortController);
 
       startTransition(() => {
         notifySubscribers(...params);
-
         refresh(createRecordMap, recordMap);
       });
+
+      try {
+        let didAbort = false;
+
+        const newValue = await Promise.race([
+          callback(),
+
+          new Promise<void>((resolve) => {
+            abortController.signal.onabort = () => {
+              didAbort = true;
+
+              resolve();
+            };
+          }),
+        ]);
+
+        if (didAbort) {
+          const backupRecord = backupRecordMap.get(cacheKey);
+          if (backupRecord) {
+            recordMap.set(cacheKey, backupRecord);
+          } else {
+            recordMap.delete(cacheKey);
+          }
+        } else {
+          (record as Record<Value>).status = STATUS_RESOLVED;
+          (record as Record<Value>).value = newValue;
+
+          deferred.resolve(newValue as Value);
+
+          backupRecordMap.set(cacheKey, record);
+        }
+
+        mutationAbortControllerMap.delete(cacheKey);
+
+        startTransition(() => {
+          notifySubscribers(...params);
+
+          refresh(createRecordMap, recordMap);
+        });
+      } catch (error) {
+        (record as Record<Value>).status = STATUS_REJECTED;
+        (record as Record<Value>).value = error;
+
+        deferred.reject(error);
+
+        mutationAbortControllerMap.delete(cacheKey);
+        backupRecordMap.set(cacheKey, record);
+
+        startTransition(() => {
+          notifySubscribers(...params);
+          refresh(createRecordMap, recordMap);
+        });
+      }
     },
     [refresh, startTransition]
   );

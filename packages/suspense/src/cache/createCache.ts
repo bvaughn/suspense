@@ -27,7 +27,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
   __backupRecordMap: Map<string, Record<Value>>;
   __createRecordMap: () => Map<string, Record<Value>>;
   __getKey: (...params: Params) => string;
-  __mutationStatusMap: Map<string, Status>;
+  __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (...params: Params) => void;
 };
 
@@ -76,7 +76,7 @@ export function createCache<Params extends Array<any>, Value>(
   // If no entry is present here, the Record map will be used instead
   // Storing this information separately enables status to be updated during mutation
   // without modifying the actual record (which may trigger an unintentional update/fallback)
-  const mutationStatusMap = new Map<string, Status>();
+  const mutationAbortControllerMap = new Map<string, AbortController>();
 
   // Stores a set of callbacks (by key) for status subscribers.
   const subscriberMap = new Map<string, Set<StatusCallback>>();
@@ -84,23 +84,37 @@ export function createCache<Params extends Array<any>, Value>(
   function abort(...params: Params): boolean {
     const cacheKey = getKey(...params);
     const recordMap = getCacheForType(createRecordMap);
-    const record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
-    if (record && isPendingRecord(record)) {
+
+    // TODO In-progress mutations aren't in the recordMap.
+    // We should probably use the mutationAbortControllerMap for this instead.
+    const abortController = mutationAbortControllerMap.get(cacheKey);
+    if (abortController) {
       debugLogInDev("abort()", params);
 
-      recordMap.delete(cacheKey);
-
-      // Only delete the backup cache if it's the same record/request
-      // Aborting a mutation should not affect the backup cache
-      if (backupRecordMap.get(cacheKey) === record) {
-        backupRecordMap.delete(cacheKey);
-      }
-
-      record.value.abortController.abort();
+      abortController.abort();
 
       notifySubscribers(...params);
 
       return true;
+    } else {
+      const record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
+      if (record && isPendingRecord(record)) {
+        debugLogInDev("abort()", params);
+
+        recordMap.delete(cacheKey);
+
+        // Only delete the backup cache if it's the same record/request
+        // Aborting a mutation should not affect the backup cache
+        if (backupRecordMap.get(cacheKey) === record) {
+          backupRecordMap.delete(cacheKey);
+        }
+
+        record.value.abortController.abort();
+
+        notifySubscribers(...params);
+
+        return true;
+      }
     }
 
     return false;
@@ -186,9 +200,8 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
 
     // Check for pending mutations first
-    const mutationStatus = mutationStatusMap.get(cacheKey);
-    if (mutationStatus != null) {
-      return mutationStatus;
+    if (mutationAbortControllerMap.has(cacheKey)) {
+      return STATUS_PENDING;
     }
 
     // Else fall back to Record status
@@ -343,7 +356,7 @@ export function createCache<Params extends Array<any>, Value>(
     __backupRecordMap: backupRecordMap,
     __createRecordMap: createRecordMap,
     __getKey: getKey,
-    __mutationStatusMap: mutationStatusMap,
+    __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
 
     // Public API
