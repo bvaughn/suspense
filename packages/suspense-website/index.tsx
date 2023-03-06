@@ -13,6 +13,7 @@ import {
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
   IS_THENNABLE,
+  USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
 } from "./src/routes/config";
@@ -25,6 +26,7 @@ import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
 import IsThenableRoute from "./src/routes/api/isThenable";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
+import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
@@ -79,6 +81,7 @@ root.render(
           element={<CreatingStreamingCacheRoute />}
         />
         <Route path={IS_THENNABLE} element={<IsThenableRoute />} />
+        <Route path={USE_CACHE_MUTATION} element={<UseCacheMutationRoute />} />
         <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
         <Route
           path={USE_STREAMING_CACHE}

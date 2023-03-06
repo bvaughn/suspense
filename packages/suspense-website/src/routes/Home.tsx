@@ -17,6 +17,7 @@ import {
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
   IS_THENNABLE,
+  USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
 } from "./config";
@@ -73,6 +74,11 @@ export default function Route() {
           <LinkListItem
             children="createStreamingCache"
             to={CREATE_STREAMING_CACHE}
+            type="code"
+          />
+          <LinkListItem
+            children="useCacheMutation"
+            to={USE_CACHE_MUTATION}
             type="code"
           />
           <LinkListItem

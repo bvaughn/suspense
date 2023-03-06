@@ -184,6 +184,18 @@ const isThenable = {
   ),
 };
 
+const useCacheMutation = {
+  async: processExample(
+    readFileSync(join(__dirname, "useCacheMutation", "async.tsx"), "utf8")
+  ),
+  hook: processExample(
+    readFileSync(join(__dirname, "useCacheMutation", "hook.tsx"), "utf8")
+  ),
+  sync: processExample(
+    readFileSync(join(__dirname, "useCacheMutation", "sync.tsx"), "utf8")
+  ),
+};
+
 export {
   createCache,
   createDeferred,
@@ -192,4 +204,5 @@ export {
   createStreamingCache,
   demos,
   isThenable,
+  useCacheMutation,
 };

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Block from "../../components/Block";
 import Code from "../../components/Code";
 import Container from "../../components/Container";
@@ -5,6 +6,7 @@ import Header from "../../components/Header";
 import SubHeading from "../../components/SubHeading";
 import { demos } from "../../examples";
 import Demo from "../../examples/demos/mutating-cache-values";
+import { USE_CACHE_MUTATION } from "../config";
 
 export default function Route() {
   return (
@@ -14,7 +16,10 @@ export default function Route() {
       </Block>
       <Block>
         <p>
-          Cache values can be mutated using the <code>useCacheMutation</code>{" "}
+          Cache values can be mutated using the{" "}
+          <code>
+            <Link to={USE_CACHE_MUTATION}>useCacheMutation</Link>
+          </code>{" "}
           hook. It supports two types of mutations:
         </p>
         <ul>

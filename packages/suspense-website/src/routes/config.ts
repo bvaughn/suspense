@@ -5,6 +5,7 @@ export const CREATE_INTERVAL_CACHE = "/createIntervalCache";
 export const CREATE_SINGLE_ENTRY_CACHE = "/createSingleEntryCache";
 export const CREATE_STREAMING_CACHE = "/createStreamingCache";
 export const IS_THENNABLE = "/isThenable";
+export const USE_CACHE_MUTATION = "/useCacheMutation";
 export const USE_CACHE_STATUS = "/useCacheStatus";
 export const USE_STREAMING_CACHE = "/useStreamingValues";
 
