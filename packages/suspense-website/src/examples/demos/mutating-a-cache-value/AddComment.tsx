@@ -74,7 +74,6 @@ function AddComment({ apiClient }: { apiClient: ApiClient }) {
       mutateAsync([apiClient], async () => {
         const newComments = await apiClient.addComment(input.value);
 
-        // TODO Re-think this aspect of the API; is it safe?
         inputRef.current!.value = "";
 
         return newComments;
