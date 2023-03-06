@@ -65,7 +65,7 @@ import { useCacheMutation } from "suspense";
 function AddItem({ apiClient }: { apiClient: ApiClient }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Pass the cache we want to mutate
+  // Pass the cache we want to mutate to the mutation hook
   const { isPending, mutateAsync } = useCacheMutation(itemsCache);
 
   const addItem = async () => {
@@ -81,6 +81,7 @@ function AddItem({ apiClient }: { apiClient: ApiClient }) {
         // Clear the input field once the new item has been added
         inputRef.current!.value = "";
 
+        // Pre-seed the cache with the updated list of items
         return newItems;
       });
     }

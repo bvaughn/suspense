@@ -35,10 +35,6 @@ export default function Route() {
       </Block>
       <Block>
         <SubHeading title="Adding an item" />
-        <p>
-          In this example, the cache loads a list of items. So adding a new item
-          can be done with a mutation:
-        </p>
         <Code code={demos.mutatingCacheValue.addItem} />
       </Block>
     </Container>
