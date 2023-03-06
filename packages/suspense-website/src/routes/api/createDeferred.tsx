@@ -12,8 +12,10 @@ export default function Route() {
         <Header title="createDeferred" />
       </Block>
       <Note type="warn">
-        Although this package exports the <code>createDeferred</code> API, you
-        probably won't need to use it directly in most cases.
+        <p>
+          Although this package exports the <code>createDeferred</code> API, you
+          probably won't need to use it directly in most cases.
+        </p>
       </Note>
       <Block>
         <p>

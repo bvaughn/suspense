@@ -79,8 +79,10 @@ export default function Route() {
           handlers, effect cleanup functions).
         </Note>
         <Note>
-          A cache must use the <code>AbortSignal</code> parameter to support
-          cancellation.
+          <p>
+            A cache must use the <code>AbortSignal</code> parameter to support
+            cancellation.
+          </p>
         </Note>
       </Block>
     </Container>

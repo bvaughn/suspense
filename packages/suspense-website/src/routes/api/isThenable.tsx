@@ -27,9 +27,11 @@ export default function Route() {
           :
         </p>
         <Note title="Thenables" type="quote">
-          A thenable implements the <code>.then()</code> method, which is called
-          with two callbacks: one for when the promise is fulfilled, one for
-          when it's rejected. Promises are thenables as well.
+          <p>
+            A thenable implements the <code>.then()</code> method, which is
+            called with two callbacks: one for when the promise is fulfilled,
+            one for when it's rejected. Promises are thenables as well.
+          </p>
         </Note>
         <p>
           <code>isThenable</code> can be used to determine if a value is a

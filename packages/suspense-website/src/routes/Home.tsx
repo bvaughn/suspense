@@ -47,8 +47,10 @@ export default function Route() {
         </p>
       </Block>
       <Note type="warn">
-        Suspense is an <strong>experimental pre-release feature</strong>; these
-        APIs may change.
+        <p>
+          Suspense is an <strong>experimental pre-release feature</strong>;
+          these APIs may change.
+        </p>
       </Note>
       <Block>
         <SubHeading title="Installation" />

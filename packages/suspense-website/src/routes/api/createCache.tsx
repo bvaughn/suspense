@@ -53,9 +53,11 @@ export default function Route() {
         </p>
         <Code code={createCache.cacheWithSignal} />
         <Note>
-          Caches use <code>WeakRef</code> and <code>FinalizationRegistry</code>{" "}
-          by default,{" "}
-          <Link to={GUIDE_MEMORY_MANAGEMENT}>but this is configurable</Link>.
+          <p>
+            Caches use <code>WeakRef</code> and{" "}
+            <code>FinalizationRegistry</code> by default,{" "}
+            <Link to={GUIDE_MEMORY_MANAGEMENT}>but this is configurable</Link>.
+          </p>
         </Note>
       </Block>
       <Block>
@@ -67,12 +69,14 @@ export default function Route() {
         </p>
         <Code code={createCache.suspense} />
         <Note>
-          Caches currently suspend by throwing{" "}
-          <Link to={IS_THENNABLE}>"thenables"</Link>. This may change as the{" "}
-          <ExternalLink to="https://github.com/reactjs/rfcs/pull/229">
-            React API
-          </ExternalLink>{" "}
-          changes.
+          <p>
+            Caches currently suspend by throwing{" "}
+            <Link to={IS_THENNABLE}>"thenables"</Link>. This may change as the{" "}
+            <ExternalLink to="https://github.com/reactjs/rfcs/pull/229">
+              React API
+            </ExternalLink>{" "}
+            changes.
+          </p>
         </Note>
       </Block>
       <Block>
@@ -118,8 +122,10 @@ export default function Route() {
           handlers, effect cleanup functions).
         </Note>
         <Note>
-          A cache must use the <code>AbortSignal</code> parameter to support
-          cancellation.
+          <p>
+            A cache must use the <code>AbortSignal</code> parameter to support
+            cancellation.
+          </p>
         </Note>
       </Block>
       <Block>
