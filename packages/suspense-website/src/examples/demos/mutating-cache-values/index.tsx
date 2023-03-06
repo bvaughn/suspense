@@ -4,67 +4,69 @@ import Icon from "../../../components/Icon";
 import styles from "./style.module.css";
 
 // Fake API data
-import { comments as staticComments } from "../comments.json";
 import { createSingleEntryCache, useCacheMutation } from "suspense";
 import Loader from "../../../components/Loader";
-import { AddComment } from "./AddComment";
-import { SaveButton } from "./SaveButton";
+import { AddItem } from "./AddItem";
 
-type Comment = (typeof staticComments)[0];
+type Item = { body: string; complete: boolean; id: number };
+
+const initialItems: Item[] = [
+  { complete: true, id: 1, body: "Read the documentation" },
+  { complete: false, id: 2, body: "Write a test app" },
+];
 
 export type ApiClient = {
-  addComment: (body: string) => Promise<Comment[]>;
-  deleteComment: (commentId: number) => Promise<Comment[]>;
-  editComment: (id: number, body: string) => Promise<Comment[]>;
-  fetchComments: () => Promise<Comment[]>;
+  addItem: (partialItem: Partial<Item>) => Promise<Item[]>;
+  deleteItem: (itemId: number) => Promise<Item[]>;
+  editItem: (id: number, partialItem: Partial<Item>) => Promise<Item[]>;
+  fetchItems: () => Promise<Item[]>;
 };
 
-export const commentsCache = createSingleEntryCache<[ApiClient], Comment[]>({
-  debugLabel: "Comments",
-  load: async (client: ApiClient) => client.fetchComments(),
+export const itemsCache = createSingleEntryCache<[ApiClient], Item[]>({
+  debugLabel: "Items",
+  load: async (client: ApiClient) => client.fetchItems(),
 });
 
 function createDummyApiClient(): ApiClient {
   // Simulate remote state
-  const additions: Comment[] = [];
+  const additions: Item[] = [];
   const deletions: Set<number> = new Set();
-  const edits: Map<number, string> = new Map();
+  const edits: Map<number, Partial<Item>> = new Map();
 
-  let id = staticComments.reduce(
-    (max, comment) => Math.max(max, comment.id),
-    0
-  );
+  let id = initialItems.reduce((max, item) => Math.max(max, item.id), 0);
 
   const apiClient: ApiClient = {
-    addComment: async (body: string) => {
+    addItem: async (partialItem: Partial<Item>) => {
       id++;
       additions.push({
+        body: "",
+        complete: false,
+        ...partialItem,
         id,
-        body,
       });
 
-      return await apiClient.fetchComments();
+      return await apiClient.fetchItems();
     },
-    deleteComment: async (commentId: number) => {
-      deletions.add(commentId);
+    deleteItem: async (itemId: number) => {
+      deletions.add(itemId);
 
-      return await apiClient.fetchComments();
+      return await apiClient.fetchItems();
     },
-    editComment: async (id: number, body: string) => {
-      edits.set(id, body);
+    editItem: async (id: number, partialItem: Partial<Item>) => {
+      edits.set(id, partialItem);
 
-      return await apiClient.fetchComments();
+      return await apiClient.fetchItems();
     },
-    fetchComments: async () => {
+    fetchItems: async () => {
       // Simulate network latency
       await new Promise((resolve) => setTimeout(resolve, 1_000));
 
-      return staticComments
+      return initialItems
         .concat(...additions)
-        .filter((comment) => !deletions.has(comment.id))
-        .map((comment) => {
-          const editedBody = edits.get(comment.id);
-          return editedBody ? { ...comment, body: editedBody } : comment;
+        .filter((item) => !deletions.has(item.id))
+        .map((item) => {
+          const editedItem = edits.get(item.id) ?? {};
+          return { ...item, ...editedItem };
         });
     },
   };
@@ -76,75 +78,64 @@ export default function Demo() {
   const apiClient = useMemo<ApiClient>(createDummyApiClient, []);
 
   return (
-    <>
-      <p>Manage comments</p>
-      <Suspense fallback={<Loader />}>
-        <CommentsSuspends apiClient={apiClient} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Loader />}>
+      <ItemsSuspends apiClient={apiClient} />
+    </Suspense>
   );
 }
 
-function CommentsSuspends({ apiClient }: { apiClient: ApiClient }) {
-  const comments = commentsCache.fetchSuspense(apiClient);
+function ItemsSuspends({ apiClient }: { apiClient: ApiClient }) {
+  const items = itemsCache.fetchSuspense(apiClient);
 
   return (
-    <div className={styles.Comments}>
-      {comments.map((comment) => (
-        <Comment apiClient={apiClient} comment={comment} key={comment.id} />
+    <div className={styles.Items}>
+      <>
+        <div />
+        <AddItem apiClient={apiClient} />
+        <div />
+      </>
+      {items.map((item) => (
+        <Item apiClient={apiClient} item={item} key={item.id} />
       ))}
-
-      <div />
-      <AddComment apiClient={apiClient} />
     </div>
   );
 }
 
-function Comment({
-  apiClient,
-  comment,
-}: {
-  apiClient: ApiClient;
-  comment: Comment;
-}) {
+function Item({ apiClient, item }: { apiClient: ApiClient; item: Item }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { isPending, mutateAsync } = useCacheMutation(commentsCache);
+  const { isPending, mutateAsync } = useCacheMutation(itemsCache);
 
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
-
-  const onChange = () => {
-    const value = inputRef.current!.value;
-
-    setHasPendingChanges(value !== comment.body);
-  };
-
-  const editComment = () => {
+  const editItem = () => {
     const body = inputRef.current!.value;
     if (!body) {
       return;
     }
 
-    mutateAsync([apiClient], () => apiClient.editComment(comment.id, body));
+    mutateAsync([apiClient], () =>
+      apiClient.editItem(item.id, { ...item, body })
+    );
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case "Enter":
-        editComment();
+        editItem();
         break;
       case "Escape":
-        inputRef.current!.value = comment.body;
+        inputRef.current!.value = item.body;
         break;
     }
   };
 
-  const deleteComment = () => {
-    mutateAsync([apiClient], () => apiClient.deleteComment(comment.id));
+  const toggleComplete = () => {
+    mutateAsync([apiClient], () =>
+      apiClient.editItem(item.id, { ...item, complete: !item.complete })
+    );
   };
 
-  const saveComment = () => {
-    editComment();
+  const deleteItem = () => {
+    mutateAsync([apiClient], () => apiClient.deleteItem(item.id));
   };
 
   const setFocus = () => {
@@ -156,27 +147,28 @@ function Comment({
       <button
         className={styles.Button}
         disabled={isPending}
-        onClick={deleteComment}
+        onClick={toggleComplete}
       >
-        <Icon type="delete" />
+        <Icon type={item.complete ? "complete" : "incomplete"} />
       </button>
       <div className={styles.InputRow} onClick={setFocus}>
         <Icon type="edit" />
         <input
           className={styles.Input}
-          defaultValue={comment.body}
+          defaultValue={item.body}
           disabled={isPending}
-          onChange={onChange}
           onKeyDown={onKeyDown}
-          placeholder="New comment"
+          placeholder="What needs to be done?"
           ref={inputRef}
         />
       </div>
-      <SaveButton
-        hasPendingChanges={hasPendingChanges}
-        isPending={isPending}
-        onClick={saveComment}
-      />
+      <button
+        className={styles.Button}
+        disabled={isPending}
+        onClick={deleteItem}
+      >
+        <Icon type="delete" />
+      </button>
     </>
   );
 }

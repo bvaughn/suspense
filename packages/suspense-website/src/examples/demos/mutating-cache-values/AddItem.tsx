@@ -7,9 +7,8 @@ import {
 } from "react";
 
 import Icon from "../../../components/Icon";
-import { ApiClient, commentsCache } from "./index";
+import { ApiClient, itemsCache } from "./index";
 import styles from "./style.module.css";
-import { SaveButton } from "./SaveButton";
 
 function InputInner({
   disabled,
@@ -43,7 +42,7 @@ function InputInner({
         className={styles.Input}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        placeholder="New comment"
+        placeholder="What needs to be done?"
         ref={forwardedRef}
       />
     </div>
@@ -63,41 +62,41 @@ const Input = forwardRef(
 
 import { useCacheMutation } from "suspense";
 
-function AddComment({ apiClient }: { apiClient: ApiClient }) {
+function AddItem({ apiClient }: { apiClient: ApiClient }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Pass the cache we want to mutate
-  const { isPending, mutateAsync } = useCacheMutation(commentsCache);
+  const { isPending, mutateAsync } = useCacheMutation(itemsCache);
 
-  const addComment = async () => {
+  const addItem = async () => {
     const input = inputRef.current;
     if (input.value) {
       mutateAsync([apiClient], async () => {
-        // Post the new comment to the remote server (async)
-        const newComments = await apiClient.addComment(input.value);
+        // Add the new item to the remote list (async)
+        const newItems = await apiClient.addItem({
+          body: input.value,
+          complete: false,
+        });
 
-        // Clear the input field once the new comment has been created
+        // Clear the input field once the new item has been added
         inputRef.current!.value = "";
 
-        return newComments;
+        return newItems;
       });
     }
   };
 
   // Disable form inputs while a mutation is pending
   return (
-    <>
-      <Input
-        disabled={isPending}
-        onEnter={addComment}
-        placeholder="New comment"
-        ref={inputRef}
-      />
-      <SaveButton isPending={isPending} onClick={addComment} />
-    </>
+    <Input
+      disabled={isPending}
+      onEnter={addItem}
+      placeholder="What needs to be done?"
+      ref={inputRef}
+    />
   );
 }
 
 // REMOVE_AFTER
 
-export { AddComment };
+export { AddItem };

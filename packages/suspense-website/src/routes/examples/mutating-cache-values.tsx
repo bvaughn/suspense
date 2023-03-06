@@ -2,6 +2,7 @@ import Block from "../../components/Block";
 import Code from "../../components/Code";
 import Container from "../../components/Container";
 import Header from "../../components/Header";
+import SubHeading from "../../components/SubHeading";
 import { demos } from "../../examples";
 import Demo from "../../examples/demos/mutating-cache-values";
 
@@ -25,16 +26,20 @@ export default function Route() {
           to update UI while a mutation is in progress.
         </p>
         <p>
-          Below is an example list of comments. Adding, editing, or deleting
-          items from this list uses <code>useCacheMutation</code> async
-          mutations.
+          Here's an example app that uses <code>useCacheMutation</code> to add,
+          edit, and delete entries from a TODO list.
         </p>
       </Block>
       <Block type="demo">
         <Demo />
       </Block>
       <Block>
-        <Code code={demos.mutatingCacheValue.addComment} />
+        <SubHeading title="Adding an item" />
+        <p>
+          In this example, the cache loads a list of items. So adding a new item
+          can be done with a mutation:
+        </p>
+        <Code code={demos.mutatingCacheValue.addItem} />
       </Block>
     </Container>
   );

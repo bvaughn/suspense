@@ -26,14 +26,14 @@
   background-color: var(--color-demo-button-background-hover);
 }
 
-.Comments {
+.Items {
   display: grid;
   grid-template-columns: min-content auto min-content;
   grid-template-rows: auto;
   gap: 0.5rem;
 }
 
-.Comment {
+.Item {
   display: flex;
   flex-direction: row;
   align-items: center;
