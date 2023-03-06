@@ -2,7 +2,6 @@
  * @jest-environment jsdom
  */
 
-import { flushSync, render } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
@@ -18,6 +17,7 @@ type Rendered = { status: Status; value: string };
 
 describe("useCacheMutation", () => {
   let cache: Cache<[string], string>;
+  let container: HTMLDivElement | null = null;
   let Component: (props: Props) => any;
   let load: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let mostRecentRenders: { [cacheKey: string]: Rendered } = {};
@@ -28,6 +28,8 @@ describe("useCacheMutation", () => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
     jest.useFakeTimers();
+
+    container = null;
 
     load = jest.fn();
     load.mockImplementation(async (cacheKey: string) =>
@@ -57,233 +59,363 @@ describe("useCacheMutation", () => {
     };
   });
 
-  describe("mutateAsync", () => {
-    it("should support editing a value in a cache", async () => {
-      const container = document.createElement("div");
-      const root = createRoot(container);
-      await act(async () => {
-        root.render(
-          <>
+  async function mount() {
+    container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <>
+          <ErrorBoundary>
             <Component cacheKey="one" />
+          </ErrorBoundary>
+          <ErrorBoundary>
             <Component cacheKey="two" />
-          </>
-        );
-      });
+          </ErrorBoundary>
+        </>
+      );
+    });
+  }
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "two",
-          },
-        }
-      `);
+  describe("mutateAsync", () => {
+    it("should support mutating a value in a cache", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
 
       let pendingDeferred: Deferred<string> | null = null;
 
       await act(async () => {
-        // Don't wait for the mutation API to resolve
-        // We want to test the in-between state too
+        // Don't wait for the mutation API to resolve; we want to test the in-between state too
         mutationApi.two.mutateAsync(["two"], async () => {
           pendingDeferred = createDeferred<string>();
           return pendingDeferred;
         });
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "pending",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
 
       await act(async () => {
         pendingDeferred.resolve("mutated-two");
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "mutated-two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
     });
 
-    it("should handle errors that occur while editing a value in a cache", async () => {
-      const container = document.createElement("div");
-      const root = createRoot(container);
-      await act(async () => {
-        root.render(
-          <ErrorBoundary>
-            <Component cacheKey="one" />
-            <Component cacheKey="two" />
-          </ErrorBoundary>
-        );
-      });
+    it("should handle errors that occur while mutating a value in a cache", async () => {
+      await mount();
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
 
       // Suppress uncaught error warning
       console.error = () => {};
 
       await act(async () => {
         mutationApi.two.mutateAsync(["two"], async () => {
-          throw "Expected error";
+          throw "errored-two";
         });
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "rejected",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"rejected","value":"two"}}"`
+      );
 
-      expect(container.textContent).toBe("Expected error");
+      expect(container.textContent).toBe("one" + "errored-two");
     });
 
     it("should support aborting an in-progress mutation", async () => {
-      const container = document.createElement("div");
-      const root = createRoot(container);
-      await act(async () => {
-        root.render(
-          <>
-            <Component cacheKey="one" />
-            <Component cacheKey="two" />
-          </>
-        );
-      });
+      await mount();
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
 
+      let pendingDeferred = createDeferred<string>();
       await act(async () => {
-        // Don't wait for the mutation API to resolve
-        // We want to test the in-between state too
+        // Don't wait for the mutation API to resolve; we want to test the in-between state too
         mutationApi.two.mutateAsync(["two"], async () => {
-          return createDeferred<string>();
+          return pendingDeferred;
         });
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "pending",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
 
       await act(async () => {
         cache.abort("two");
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
 
-      expect(container.textContent).toBe("onetwo");
+      // Even if the deferred value resolves, it should be ignored
+      await act(async () => {
+        pendingDeferred.resolve("unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      expect(container.textContent).toBe("one" + "two");
+    });
+
+    it("should support concurrent mutations", async () => {
+      await mount();
+
+      let pendingDeferredOne: Deferred<string> | null = null;
+      let pendingDeferredTwo: Deferred<string> | null = null;
+
+      await act(async () => {
+        mutationApi.two.mutateAsync(["two"], async () => {
+          pendingDeferredTwo = createDeferred<string>();
+          return pendingDeferredTwo;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => {
+        mutationApi.one.mutateAsync(["one"], async () => {
+          pendingDeferredOne = createDeferred<string>();
+          return pendingDeferredOne;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => pendingDeferredTwo.resolve("mutated-two"));
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+
+      await act(async () => pendingDeferredOne.resolve("mutated-one"));
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"mutated-one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+    });
+
+    it("should support concurrent mutations when one fails", async () => {
+      await mount();
+
+      let pendingDeferredOne: Deferred<string> | null = null;
+      let pendingDeferredTwo: Deferred<string> | null = null;
+
+      await act(async () => {
+        mutationApi.two.mutateAsync(["two"], async () => {
+          pendingDeferredTwo = createDeferred<string>();
+          return pendingDeferredTwo;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => {
+        mutationApi.one.mutateAsync(["one"], async () => {
+          pendingDeferredOne = createDeferred<string>();
+          return pendingDeferredOne;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      // Suppress uncaught error warning
+      console.error = () => {};
+
+      await act(async () => pendingDeferredTwo.reject("errored-two"));
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"rejected","value":"two"}}"`
+      );
+
+      await act(async () => pendingDeferredOne.resolve("mutated-one"));
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"mutated-one"},"two":{"status":"rejected","value":"two"}}"`
+      );
+
+      expect(container.textContent).toBe("mutated-one" + "errored-two");
+    });
+
+    it("should support concurrent mutations on the same cache value", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      // Start a few concurrent mutations
+      let pendingDeferredA = createDeferred<string>();
+      let pendingDeferredB = createDeferred<string>();
+      let pendingDeferredC = createDeferred<string>();
+      await act(async () => {
+        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredA);
+      });
+      await act(async () => {
+        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredB);
+      });
+      await act(async () => {
+        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredC);
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      // The first mutation should have been aborted; resolving it should do nothing
+      await act(async () => {
+        pendingDeferredA.resolve("one-unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"pending","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      // The last mutation should be the only one still subscribed to
+      await act(async () => {
+        pendingDeferredC.resolve("one-mutated");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one-mutated"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      // The second mutation should have been aborted; resolving it should do nothing
+      await act(async () => {
+        pendingDeferredB.resolve("one-unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one-mutated"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      expect(container.textContent).toBe("one-mutated" + "two");
+    });
+
+    it("should ignore errors after an aborted mutation", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      let pendingDeferred = createDeferred<string>();
+      await act(async () => {
+        mutationApi.two.mutateAsync(["two"], async () => {
+          return pendingDeferred;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => {
+        cache.abort("two");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      // Even if the deferred value rejects, it should be ignored
+      await act(async () => {
+        pendingDeferred.reject("unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      expect(container.textContent).toBe("one" + "two");
     });
   });
 
   describe("mutateSync", () => {
-    it("should support editing a value in a cache", async () => {
-      const container = document.createElement("div");
-      const root = createRoot(container);
-      await act(async () => {
-        root.render(
-          <>
-            <Component cacheKey="one" />
-            <Component cacheKey="two" />
-          </>
-        );
-      });
+    it("should support mutating a value in a cache", async () => {
+      await mount();
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
 
       act(() => {
         mutationApi.two.mutateSync(["two"], "mutated-two");
       });
 
-      expect(mostRecentRenders).toMatchInlineSnapshot(`
-        {
-          "one": {
-            "status": "resolved",
-            "value": "one",
-          },
-          "two": {
-            "status": "resolved",
-            "value": "mutated-two",
-          },
-        }
-      `);
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+    });
+
+    it("should support mutating multiple values in a cache", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      act(() => {
+        mutationApi.one.mutateSync(["one"], "mutated-one");
+        mutationApi.two.mutateSync(["two"], "mutated-two");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"mutated-one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+    });
+
+    it("should abort an in-progress async mutation when a sync one is scheduled", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      const pendingDeferred = createDeferred<string>();
+      await act(async () => {
+        mutationApi.two.mutateAsync(["two"], async () => pendingDeferred);
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => {
+        mutationApi.two.mutateSync(["two"], "mutated-two");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+
+      // Any response/rejection to the initial async mutation should be ignored now
+      await act(async () => {
+        pendingDeferred.reject("unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
     });
   });
 });

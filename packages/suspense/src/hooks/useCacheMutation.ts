@@ -50,6 +50,13 @@ export function useCacheMutation<Params extends Array<any>, Value>(
     (params: Params, newValue: Value) => {
       const cacheKey = getKey(...params);
 
+      if (mutationAbortControllerMap.has(cacheKey)) {
+        const abortController = mutationAbortControllerMap.get(cacheKey);
+        abortController.abort();
+
+        mutationAbortControllerMap.delete(cacheKey);
+      }
+
       const record: Record<Value> = {
         status: STATUS_RESOLVED,
         value: newValue as any,
@@ -70,6 +77,13 @@ export function useCacheMutation<Params extends Array<any>, Value>(
   const mutateAsync = useCallback<MutateAsync<Params, Value>>(
     async (params: Params, callback: MutationCallback<Value>) => {
       const cacheKey = getKey(...params);
+
+      if (mutationAbortControllerMap.has(cacheKey)) {
+        const abortController = mutationAbortControllerMap.get(cacheKey);
+        abortController.abort();
+
+        mutationAbortControllerMap.delete(cacheKey);
+      }
 
       const abortController = new AbortController();
       const deferred = createDeferred<Value>();
@@ -96,21 +110,18 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       });
 
       try {
-        let didAbort = false;
-
+        // Wait until the mutation finishes or is aborted
         const newValue = await Promise.race([
           callback(),
 
           new Promise<void>((resolve) => {
-            abortController.signal.onabort = () => {
-              didAbort = true;
-
-              resolve();
-            };
+            abortController.signal.onabort = () => resolve();
           }),
         ]);
 
-        if (didAbort) {
+        if (abortController.signal.aborted) {
+          // The mutation was aborted;
+          // if we can restore the previous record, do it
           const backupRecord = backupRecordMap.get(cacheKey);
           if (backupRecord) {
             recordMap.set(cacheKey, backupRecord);
@@ -126,11 +137,8 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           backupRecordMap.set(cacheKey, record);
         }
 
-        mutationAbortControllerMap.delete(cacheKey);
-
         startTransition(() => {
           notifySubscribers(...params);
-
           refresh(createRecordMap, recordMap);
         });
       } catch (error) {
@@ -139,13 +147,19 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
         deferred.reject(error);
 
-        mutationAbortControllerMap.delete(cacheKey);
         backupRecordMap.set(cacheKey, record);
 
         startTransition(() => {
           notifySubscribers(...params);
           refresh(createRecordMap, recordMap);
         });
+      } finally {
+        // Cleanup after mutation by deleting the abort controller
+        // If this mutation has already been aborted by a concurrent mutation
+        // don't delete the newer controller
+        if (abortController === mutationAbortControllerMap.get(cacheKey)) {
+          mutationAbortControllerMap.delete(cacheKey);
+        }
       }
     },
     [refresh, startTransition]
