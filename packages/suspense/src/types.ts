@@ -19,17 +19,17 @@ export type Status =
   | StatusRejected
   | StatusResolved;
 
-export type PendingRecord<T> = {
+export type PendingRecord<Type> = {
   status: StatusPending;
   value: {
     abortController: AbortController;
-    deferred: Deferred<T>;
+    deferred: Deferred<Type>;
   };
 };
 
-export type ResolvedRecord<T> = {
+export type ResolvedRecord<Type> = {
   status: StatusResolved;
-  value: T;
+  value: Type extends Object ? Type | WeakRef<Type> : Type;
 };
 
 export type RejectedRecord = {
@@ -37,7 +37,10 @@ export type RejectedRecord = {
   value: any;
 };
 
-export type Record<T> = PendingRecord<T> | ResolvedRecord<T> | RejectedRecord;
+export type Record<Type> =
+  | PendingRecord<Type>
+  | ResolvedRecord<Type>
+  | RejectedRecord;
 
 export type StreamingSubscribeCallback = () => void;
 export type StatusCallback = (status: Status) => void;
@@ -47,18 +50,18 @@ export type UnsubscribeCallback = () => void;
 // You can use a Promise for this, but Promises have a downside (the microtask queue).
 // You can also create your own "thenable" if you want to support synchronous resolution/rejection.
 // Note that if a thenable is rejected, its onFulfill callback will be called with undefined.
-export interface Thenable<T> {
+export interface Thenable<Type> {
   then(
-    onFulfill: (value?: T) => any,
+    onFulfill: (value?: Type) => any,
     onReject?: (err: any) => any
-  ): void | Thenable<T>;
+  ): void | Thenable<Type>;
 }
 
 // Convenience type used by Suspense caches.
 // Adds the ability to resolve or reject a pending Thenable.
-export interface Deferred<T> extends Thenable<T> {
+export interface Deferred<Type> extends Thenable<Type> {
   reject(error: any): void;
-  resolve(value?: T): void;
+  resolve(value?: Type): void;
 }
 
 // Cache types
@@ -102,7 +105,7 @@ export type IntervalCacheLoadOptions = {
   signal: AbortSignal;
 };
 
-export type ComparisonFunction<T> = (a: T, b: T) => number;
+export type ComparisonFunction<Type> = (a: Type, b: Type) => number;
 
 export type GetPointForValue<Point, Value> = (value: Value) => Point;
 

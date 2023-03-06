@@ -25,8 +25,10 @@ describe("createCache", () => {
       load: fetch,
     });
 
+    const retainedObject = createObject();
+
     cache.cache(createObject(), "one");
-    cache.cache(createObject(), "two");
+    cache.cache(retainedObject, "two");
     cache.cache(createObject(), "three");
 
     expect(cache.getValueIfCached("one")).not.toBeUndefined();
@@ -37,7 +39,7 @@ describe("createCache", () => {
     await waitForGC();
 
     expect(cache.getValueIfCached("one")).toBeUndefined();
-    expect(cache.getValueIfCached("two")).toBeUndefined();
+    expect(cache.getValueIfCached("two")).not.toBeUndefined();
     expect(cache.getValueIfCached("three")).toBeUndefined();
   });
 

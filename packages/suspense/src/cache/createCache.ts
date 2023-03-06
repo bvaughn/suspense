@@ -1,3 +1,4 @@
+import { unstable_getCacheForType as getCacheForType } from "react";
 import {
   STATUS_NOT_STARTED,
   STATUS_PENDING,
@@ -17,8 +18,18 @@ import {
 import { assertPendingRecord } from "../utils/assertPendingRecord";
 import { isThenable } from "../utils/isThenable";
 import { isPendingRecord } from "../utils/isPendingRecord";
-import { WeakRefMap } from "../utils/WeakRefMap";
 import { defaultGetKey } from "../utils/defaultGetKey";
+
+export type InternalCache<Params extends Array<any>, Value> = Cache<
+  Params,
+  Value
+> & {
+  __backupRecordMap: Map<string, Record<Value>>;
+  __createRecordMap: () => Map<string, Record<Value>>;
+  __getKey: (...params: Params) => string;
+  __mutationAbortControllerMap: Map<string, AbortController>;
+  __notifySubscribers: (...params: Params) => void;
+};
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
@@ -31,8 +42,6 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
-
-const WearRefMapSymbol = Symbol.for("WearRefMap");
 
 export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
@@ -57,27 +66,55 @@ export function createCache<Params extends Array<any>, Value>(
 
   debugLogInDev("Creating cache ...");
 
-  const recordMap = new Map<string, Record<Value>>();
+  // This map enables selective mutations to be scheduled with React
+  // (one record can be invalidated without affecting others)
+  // Reads will query the map created by createRecordMap first,
+  // and fall back to this map if no match is found
+  const backupRecordMap = new Map<string, Record<Value>>();
+
+  // Stores status of in-progress mutation
+  // If no entry is present here, the Record map will be used instead
+  // Storing this information separately enables status to be updated during mutation
+  // without modifying the actual record (which may trigger an unintentional update/fallback)
+  const mutationAbortControllerMap = new Map<string, AbortController>();
+
+  // Stores a set of callbacks (by key) for status subscribers.
   const subscriberMap = new Map<string, Set<StatusCallback>>();
-  const weakRefMap = new WeakRefMap<string, Value>((cacheKey: string) => {
-    recordMap.delete(cacheKey);
-    subscriberMap.delete(cacheKey);
-  });
 
   function abort(...params: Params): boolean {
     const cacheKey = getKey(...params);
-    const record = recordMap.get(cacheKey);
-    if (record && isPendingRecord(record)) {
+    const recordMap = getCacheForType(createRecordMap);
+
+    // TODO In-progress mutations aren't in the recordMap.
+    // We should probably use the mutationAbortControllerMap for this instead.
+    const abortController = mutationAbortControllerMap.get(cacheKey);
+    if (abortController) {
       debugLogInDev("abort()", params);
 
-      recordMap.delete(cacheKey);
-      weakRefMap.delete(cacheKey);
-
-      record.value.abortController.abort();
+      abortController.abort();
 
       notifySubscribers(...params);
 
       return true;
+    } else {
+      const record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
+      if (record && isPendingRecord(record)) {
+        debugLogInDev("abort()", params);
+
+        recordMap.delete(cacheKey);
+
+        // Only delete the backup cache if it's the same record/request
+        // Aborting a mutation should not affect the backup cache
+        if (backupRecordMap.get(cacheKey) === record) {
+          backupRecordMap.delete(cacheKey);
+        }
+
+        record.value.abortController.abort();
+
+        notifySubscribers(...params);
+
+        return true;
+      }
     }
 
     return false;
@@ -85,33 +122,45 @@ export function createCache<Params extends Array<any>, Value>(
 
   function cache(value: Value, ...params: Params): void {
     const cacheKey = getKey(...params);
+    const recordMap = getCacheForType(createRecordMap);
+
     const record: Record<Value> = {
       status: STATUS_RESOLVED,
       value: null,
     };
 
-    writeRecordValue(record, value, ...params);
+    writeRecordValue(record, value);
 
     debugLogInDev("cache()", params, value);
 
+    backupRecordMap.set(cacheKey, record);
     recordMap.set(cacheKey, record);
+  }
+
+  function createRecordMap(): Map<string, Record<Value>> {
+    return new Map();
   }
 
   function evict(...params: Params): boolean {
     const cacheKey = getKey(...params);
+    const recordMap = getCacheForType(createRecordMap);
 
     debugLogInDev(`evict()`, params);
 
-    weakRefMap.delete(cacheKey);
+    const didDelete = backupRecordMap.delete(cacheKey);
+    recordMap.delete(cacheKey);
 
-    return recordMap.delete(cacheKey);
+    return didDelete;
   }
 
   function evictAll(): boolean {
+    const recordMap = getCacheForType(createRecordMap);
+
     debugLogInDev(`evictAll()`, undefined, `${recordMap.size} records`);
 
-    const hadRecords = recordMap.size > 0;
+    const hadRecords = recordMap.size > 0 || backupRecordMap.size > 0;
 
+    backupRecordMap.clear();
     recordMap.clear();
 
     return hadRecords;
@@ -119,8 +168,9 @@ export function createCache<Params extends Array<any>, Value>(
 
   function getOrCreateRecord(...params: Params): Record<Value> {
     const cacheKey = getKey(...params);
+    const recordMap = getCacheForType(createRecordMap);
 
-    let record = recordMap.get(cacheKey);
+    let record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
     if (record == null) {
       const abortController = new AbortController();
       const deferred = createDeferred<Value>(
@@ -135,6 +185,7 @@ export function createCache<Params extends Array<any>, Value>(
         },
       } as Record<Value>;
 
+      backupRecordMap.set(cacheKey, record);
       recordMap.set(cacheKey, record);
 
       notifySubscribers(...params);
@@ -147,30 +198,36 @@ export function createCache<Params extends Array<any>, Value>(
 
   function getStatus(...params: Params): Status {
     const cacheKey = getKey(...params);
-    const record = recordMap.get(cacheKey);
 
+    // Check for pending mutations first
+    if (mutationAbortControllerMap.has(cacheKey)) {
+      return STATUS_PENDING;
+    }
+
+    // Else fall back to Record status
+    const record = backupRecordMap.get(cacheKey);
     return record?.status ?? STATUS_NOT_STARTED;
   }
 
   function getValue(...params: Params): Value {
     const cacheKey = getKey(...params);
-    const record = recordMap.get(cacheKey);
+    const record = backupRecordMap.get(cacheKey);
 
     if (record == null) {
       throw Error("No record found");
     } else if (record.status !== STATUS_RESOLVED) {
       throw Error(`Record found with status "${record.status}"`);
     } else {
-      return readRecordValue(record, ...params);
+      return readRecordValue(record);
     }
   }
 
   function getValueIfCached(...params: Params): Value | undefined {
     const cacheKey = getKey(...params);
-    const record = recordMap.get(cacheKey);
+    const record = backupRecordMap.get(cacheKey);
 
     if (record?.status === STATUS_RESOLVED) {
-      return readRecordValue(record, ...params);
+      return readRecordValue(record);
     }
   }
 
@@ -186,7 +243,7 @@ export function createCache<Params extends Array<any>, Value>(
       case STATUS_PENDING:
         return record.value.deferred;
       case STATUS_RESOLVED:
-        return readRecordValue(record, ...params);
+        return readRecordValue(record);
       case STATUS_REJECTED:
         throw record.value;
     }
@@ -195,7 +252,7 @@ export function createCache<Params extends Array<any>, Value>(
   function fetchSuspense(...params: Params): Value {
     const record = getOrCreateRecord(...params);
     if (record.status === STATUS_RESOLVED) {
-      return readRecordValue(record, ...params);
+      return readRecordValue(record);
     } else if (isPendingRecord(record)) {
       throw record.value.deferred;
     } else {
@@ -232,7 +289,7 @@ export function createCache<Params extends Array<any>, Value>(
       if (!abortSignal.aborted) {
         record.status = STATUS_RESOLVED;
 
-        writeRecordValue(record, value, ...params);
+        writeRecordValue(record, value);
 
         deferred.resolve(value);
       }
@@ -250,11 +307,10 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: Record<Value>, ...params: Params): Value {
+  function readRecordValue(record: Record<Value>): Value | undefined {
     const value = record.value;
-    if (value === WearRefMapSymbol) {
-      const cacheKey = getKey(...params);
-      return weakRefMap.get(cacheKey);
+    if (value instanceof WeakRef) {
+      return value.deref();
     } else {
       return value;
     }
@@ -287,22 +343,23 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function writeRecordValue(
-    record: Record<Value>,
-    value: Value,
-    ...params: Params
-  ): void {
+  function writeRecordValue(record: Record<Value>, value: Value): void {
     if (useWeakRef && value != null && typeof value === "object") {
-      record.value = WearRefMapSymbol;
-
-      const cacheKey = getKey(...params);
-      weakRefMap.set(cacheKey, value);
+      record.value = new WeakRef(value);
     } else {
       record.value = value;
     }
   }
 
-  return {
+  const value: InternalCache<Params, Value> = {
+    // Internal API (used by useCacheMutation)
+    __backupRecordMap: backupRecordMap,
+    __createRecordMap: createRecordMap,
+    __getKey: getKey,
+    __mutationAbortControllerMap: mutationAbortControllerMap,
+    __notifySubscribers: notifySubscribers,
+
+    // Public API
     abort,
     cache,
     evict,
@@ -315,4 +372,6 @@ export function createCache<Params extends Array<any>, Value>(
     prefetch,
     subscribeToStatus,
   };
+
+  return value;
 }

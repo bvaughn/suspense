@@ -14,6 +14,7 @@ import {
   GUIDE_ABORT_A_REQUEST,
   GUIDE_FETCH_WITH_STATUS,
   GUIDE_MEMORY_MANAGEMENT,
+  GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
   IS_THENNABLE,
   USE_CACHE_STATUS,
@@ -108,6 +109,11 @@ export default function Route() {
           <LinkListItem
             children="Aborting a request"
             to={GUIDE_ABORT_A_REQUEST}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Mutating cache values"
+            to={GUIDE_MUTATING_A_CACHE_VALUE}
             type="plaintext"
           />
           <LinkListItem

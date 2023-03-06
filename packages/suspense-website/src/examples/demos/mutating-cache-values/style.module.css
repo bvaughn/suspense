@@ -1,0 +1,75 @@
+.ButtonRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1ch;
+}
+
+.Button {
+  font-size: 1rem;
+  outline: none;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  transition: opacity 0.25s ease-in-out;
+  cursor: pointer;
+  background-color: var(--color-demo-button-background);
+  color: var(--color-demo-button);
+  text-align: center;
+}
+.Button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.Button:not(.Button:disabled):hover,
+.Button:not(.Button:disabled):focus {
+  background-color: var(--color-demo-button-background-hover);
+}
+
+.Items {
+  display: grid;
+  grid-template-columns: min-content auto min-content;
+  grid-template-rows: auto;
+  gap: 0.5rem;
+}
+
+.Item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.InputRow {
+  width: 100%;
+  background-color: var(--color-input-background);
+  color: var(--color-input);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.InputRow:focus-within {
+  background-color: var(--color-input-background-focused);
+}
+.InputRow[data-disabled] {
+  opacity: 0.5;
+}
+
+.Input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-input);
+  font-size: 1rem;
+}
+.Input:focus-within {
+  outline: none;
+}
+.Input:disabled {
+  opacity: 0.5;
+}

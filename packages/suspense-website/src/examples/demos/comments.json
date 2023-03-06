@@ -1,0 +1,15 @@
+{
+  "comments": [
+    {
+      "id": 1,
+      "body": "This is an example comment."
+    },
+    {
+      "id": 2,
+      "body": "This is another example comment."
+    }
+  ],
+  "total": 2,
+  "skip": 0,
+  "limit": 30
+}

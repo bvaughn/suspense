@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.13
+* Add `useCacheMutation` hook with support for sync and async cache mutations.
+
 ## 0.0.12
 * Fixed external dependency version.
 

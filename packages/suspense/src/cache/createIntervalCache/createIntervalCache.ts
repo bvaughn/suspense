@@ -158,7 +158,7 @@ export function createIntervalCache<
       case STATUS_PENDING:
         return record.value.deferred;
       case STATUS_RESOLVED:
-        return record.value;
+        return record.value as Value[];
       case STATUS_REJECTED:
         throw record.value;
     }
@@ -169,7 +169,7 @@ export function createIntervalCache<
 
     const record = getOrCreateRecord(start, end, ...params);
     if (record.status === STATUS_RESOLVED) {
-      return record.value;
+      return record.value as Value[];
     } else if (isPendingRecord(record)) {
       throw record.value.deferred;
     } else {

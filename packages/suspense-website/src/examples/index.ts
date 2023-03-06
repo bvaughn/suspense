@@ -148,7 +148,12 @@ const demos = {
     ),
   },
   mutatingCacheValue: {
-    // TODO
+    addItem: processExample(
+      readFileSync(
+        join(__dirname, "demos", "mutating-cache-values", "AddItem.tsx"),
+        "utf8"
+      )
+    ),
   },
   renderingCacheStatus: {
     UserStatusBadge: processExample(

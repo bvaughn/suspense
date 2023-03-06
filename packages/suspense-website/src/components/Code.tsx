@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react";
+import { memo, Suspense, useMemo } from "react";
 
 import {
   Language,
@@ -54,7 +54,7 @@ function Parser({
   );
 }
 
-function TokenRenderer({
+const TokenRenderer = memo(function TokenRenderer({
   className,
   showLineNumbers,
   tokens,
@@ -91,4 +91,4 @@ function TokenRenderer({
       }}
     />
   );
-}
+});

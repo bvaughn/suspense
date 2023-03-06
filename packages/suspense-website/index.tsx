@@ -29,7 +29,7 @@ import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";
-import MutatingCacheValueRoute from "./src/routes/examples/mutating-a-cache-value";
+import MutatingCacheValueRoute from "./src/routes/examples/mutating-cache-values";
 import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-status-while-fetching";
 import CreatingStreamingCacheRoute from "./src/routes/examples/streaming-cache";
 import ScrollToTop from "./src/components/ScrollToTop";

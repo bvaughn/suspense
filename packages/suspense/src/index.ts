@@ -3,6 +3,7 @@ export * from "./cache/createCache";
 export * from "./cache/createIntervalCache";
 export * from "./cache/createSingleEntryCache";
 export * from "./cache/createStreamingCache";
+export * from "./hooks/useCacheMutation";
 export * from "./hooks/useCacheStatus";
 export * from "./hooks/useStreamingValues";
 export * from "./utils/createDeferred";
