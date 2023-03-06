@@ -2,6 +2,8 @@
 
 ## 0.0.13
 * Add `useCacheMutation` hook with support for sync and async cache mutations.
+* Add `evictAll` API to all cache types.
+* Added dependency on React `experimental` release channel (required for mutation/invalidation support).
 
 ## 0.0.12
 * Fixed external dependency version.

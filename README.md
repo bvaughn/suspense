@@ -8,7 +8,7 @@ APIs to simplify data loading and caching. Primarily intended for use with [Reac
 ### ⚠️ Considerations
 
 1. Suspense is an experimental, pre-release feature; **these APIs will change** along with React.
-1. This library has been optimized for applications like [Replay.io](https://replay.io) that lazy load **read-only data** during a session. Functionality like _mutation_ ([issues 7](https://github.com/bvaughn/suspense/issues/7)) and memory management ([issues 9](https://github.com/bvaughn/suspense/issues/7)) are still being considered.
+1. This package depends on `react@experimental` and `react-dom@experimental` versions.
 
 ---
 
