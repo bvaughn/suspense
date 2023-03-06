@@ -74,7 +74,7 @@ function DemoSuspends() {
       case "ready":
         setState("running");
         await Promise.all(
-          filteredUsers.map(({ id }) => userProfileCache.fetchAsync(id))
+          filteredUsers.map(({ id }) => userProfileCache.readAsync(id))
         );
         setState("complete");
         break;
@@ -135,7 +135,7 @@ function Placeholder({ title }: { title: string }) {
 
 function UserProfile({ id }: { id: number }) {
   const deferredId = useDeferredValue(id);
-  const userProfile = userProfileCache.fetchSuspense(deferredId);
+  const userProfile = userProfileCache.read(deferredId);
 
   return (
     <>

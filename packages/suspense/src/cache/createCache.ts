@@ -234,10 +234,10 @@ export function createCache<Params extends Array<any>, Value>(
   function prefetch(...params: Params): void {
     debugLogInDev(`prefetch()`, params);
 
-    fetchAsync(...params);
+    readAsync(...params);
   }
 
-  function fetchAsync(...params: Params): Thenable<Value> | Value {
+  function readAsync(...params: Params): Thenable<Value> | Value {
     const record = getOrCreateRecord(...params);
     switch (record.status) {
       case STATUS_PENDING:
@@ -249,7 +249,7 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function fetchSuspense(...params: Params): Value {
+  function read(...params: Params): Value {
     const record = getOrCreateRecord(...params);
     if (record.status === STATUS_RESOLVED) {
       return readRecordValue(record);
@@ -367,8 +367,8 @@ export function createCache<Params extends Array<any>, Value>(
     getStatus,
     getValue,
     getValueIfCached,
-    fetchAsync,
-    fetchSuspense,
+    readAsync,
+    read,
     prefetch,
     subscribeToStatus,
   };

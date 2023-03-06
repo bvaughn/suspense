@@ -65,7 +65,7 @@ describe("useCacheStatus", () => {
   });
 
   it("should transition from pending to resolved", async () => {
-    const promise = cache.fetchAsync("async");
+    const promise = cache.readAsync("async");
 
     const container = document.createElement("div");
     const root = createRoot(container);
@@ -80,7 +80,7 @@ describe("useCacheStatus", () => {
   });
 
   it("should transition from pending to rejected", async () => {
-    const promise = cache.fetchAsync("error");
+    const promise = cache.readAsync("error");
 
     const container = document.createElement("div");
     const root = createRoot(container);
@@ -99,7 +99,7 @@ describe("useCacheStatus", () => {
   });
 
   it("should return resolved for keys that have already been loaded", async () => {
-    const promise = cache.fetchAsync("sync");
+    const promise = cache.readAsync("sync");
     await promise;
 
     const container = document.createElement("div");
@@ -112,7 +112,7 @@ describe("useCacheStatus", () => {
 
   it("should return rejected for keys that have already failed", async () => {
     try {
-      await cache.fetchAsync("error");
+      await cache.readAsync("error");
     } catch (error) {}
 
     const container = document.createElement("div");
@@ -132,7 +132,7 @@ describe("useCacheStatus", () => {
       return deferred;
     });
 
-    cache.fetchAsync("async");
+    cache.readAsync("async");
     expect(cache.getStatus("async")).toBe(STATUS_PENDING);
 
     const container = document.createElement("div");

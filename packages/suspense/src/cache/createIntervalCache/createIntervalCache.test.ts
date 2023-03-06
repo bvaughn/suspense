@@ -64,8 +64,8 @@ describe("createIntervalCache", () => {
     });
 
     it("should abort all in-flight requests", async () => {
-      cache.fetchAsync(1, 5, "test");
-      cache.fetchAsync(6, 10, "test");
+      cache.readAsync(1, 5, "test");
+      cache.readAsync(6, 10, "test");
 
       abortSignals.forEach((signal) => {
         expect(signal.aborted).toBe(false);
@@ -83,8 +83,8 @@ describe("createIntervalCache", () => {
     });
 
     it("should only abort in-flight requests for the requested parameters", async () => {
-      cache.fetchAsync(1, 5, "one");
-      cache.fetchAsync(6, 10, "two");
+      cache.readAsync(1, 5, "one");
+      cache.readAsync(6, 10, "two");
 
       abortSignals.forEach((signal) => {
         expect(signal.aborted).toBe(false);
@@ -110,7 +110,7 @@ describe("createIntervalCache", () => {
         load,
       });
 
-      await bigIntCache.fetchAsync(BigInt("2"), BigInt("4"), "test");
+      await bigIntCache.readAsync(BigInt("2"), BigInt("4"), "test");
 
       expect(comparePoints).toHaveBeenCalled();
 
@@ -122,7 +122,7 @@ describe("createIntervalCache", () => {
         expect.any(Object)
       );
 
-      await bigIntCache.fetchAsync(BigInt("3"), BigInt("7"), "test");
+      await bigIntCache.readAsync(BigInt("3"), BigInt("7"), "test");
       expect(load).toHaveBeenCalledTimes(2);
       expect(load).toHaveBeenCalledWith(
         BigInt("4"),
@@ -148,14 +148,14 @@ describe("createIntervalCache", () => {
         load,
       });
 
-      await bigIntCache.fetchAsync("f", "l", "test");
+      await bigIntCache.readAsync("f", "l", "test");
 
       expect(comparePoints).toHaveBeenCalled();
 
       expect(load).toHaveBeenCalledTimes(1);
       expect(load).toHaveBeenCalledWith("f", "l", "test", expect.any(Object));
 
-      await bigIntCache.fetchAsync("a", "g", "test");
+      await bigIntCache.readAsync("a", "g", "test");
       expect(load).toHaveBeenCalledTimes(2);
       expect(load).toHaveBeenCalledWith("a", "f", "test", expect.any(Object));
     });
@@ -163,101 +163,101 @@ describe("createIntervalCache", () => {
 
   describe("evict", () => {
     it("should evict all values for the requested parameters", async () => {
-      await cache.fetchAsync(1, 5, "one");
-      await cache.fetchAsync(6, 10, "one");
+      await cache.readAsync(1, 5, "one");
+      await cache.readAsync(6, 10, "one");
 
       const numCalls = load.mock.calls.length;
 
       // Verify values have been cached
-      await cache.fetchAsync(1, 5, "one");
-      await cache.fetchAsync(6, 10, "one");
+      await cache.readAsync(1, 5, "one");
+      await cache.readAsync(6, 10, "one");
       expect(load).toHaveBeenCalledTimes(numCalls);
 
       cache.evict("one");
 
       // Verify values in cache "one" have been evicted
-      await cache.fetchAsync(1, 10, "one");
+      await cache.readAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(numCalls + 1);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([1, 10, "one"]);
     });
 
     it("should only evict values for the requested parameters", async () => {
-      await cache.fetchAsync(1, 10, "one");
-      await cache.fetchAsync(2, 4, "two");
+      await cache.readAsync(1, 10, "one");
+      await cache.readAsync(2, 4, "two");
 
       const numCalls = load.mock.calls.length;
 
       // Verify values have been cached
-      await cache.fetchAsync(1, 1, "one");
-      await cache.fetchAsync(3, 3, "two");
+      await cache.readAsync(1, 1, "one");
+      await cache.readAsync(3, 3, "two");
       expect(load).toHaveBeenCalledTimes(numCalls);
 
       cache.evict("one");
 
       // Verify values in cache "one" have been evicted
-      await cache.fetchAsync(1, 1, "one");
+      await cache.readAsync(1, 1, "one");
       expect(load).toHaveBeenCalledTimes(numCalls + 1);
 
       // Verify values in cache "two" are still cached
-      await cache.fetchAsync(2, 2, "two");
+      await cache.readAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 1);
     });
   });
 
   describe("evictAll", () => {
     it("should evict all values", async () => {
-      await cache.fetchAsync(1, 10, "one");
-      await cache.fetchAsync(2, 4, "two");
+      await cache.readAsync(1, 10, "one");
+      await cache.readAsync(2, 4, "two");
 
       const numCalls = load.mock.calls.length;
 
       // Verify values have been cached
-      await cache.fetchAsync(1, 1, "one");
-      await cache.fetchAsync(2, 2, "two");
+      await cache.readAsync(1, 1, "one");
+      await cache.readAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls);
 
       cache.evictAll();
 
       // Verify values are re-requested after being evicted
-      await cache.fetchAsync(1, 1, "one");
-      await cache.fetchAsync(2, 2, "two");
+      await cache.readAsync(1, 1, "one");
+      await cache.readAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 2);
     });
   });
 
-  describe("fetchAsync", () => {
+  describe("readAsync", () => {
     it("should progressively fetch and fill-in values for missing intervals", async () => {
-      let values = await cache.fetchAsync(2, 4, "test");
+      let values = await cache.readAsync(2, 4, "test");
       expect(values).toEqual(createContiguousArray(2, 4));
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([2, 4, "test"]);
 
-      values = await cache.fetchAsync(7, 8, "test");
+      values = await cache.readAsync(7, 8, "test");
       expect(values).toEqual(createContiguousArray(7, 8));
       expect(load).toHaveBeenCalledTimes(2);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([7, 8, "test"]);
 
-      values = await cache.fetchAsync(3, 8, "test");
+      values = await cache.readAsync(3, 8, "test");
       expect(values).toEqual(createContiguousArray(3, 8));
       expect(load).toHaveBeenCalledTimes(3);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([4, 7, "test"]);
     });
 
     it("should cache intervals separately based on parameters", async () => {
-      await cache.fetchAsync(1, 10, "one");
+      await cache.readAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([1, 10, "one"]);
 
       // These intervals have already been loaded for key "one",
-      await cache.fetchAsync(2, 4, "one");
-      await cache.fetchAsync(6, 9, "one");
+      await cache.readAsync(2, 4, "one");
+      await cache.readAsync(6, 9, "one");
       expect(load).toHaveBeenCalledTimes(1);
 
       // But key "two" needs to load them for the first time
-      await cache.fetchAsync(2, 4, "two");
+      await cache.readAsync(2, 4, "two");
       expect(load).toHaveBeenCalledTimes(2);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([2, 4, "two"]);
-      await cache.fetchAsync(6, 9, "two");
+      await cache.readAsync(6, 9, "two");
       expect(load).toHaveBeenCalledTimes(3);
       expect(load.mock.lastCall.slice(0, 3)).toEqual([6, 9, "two"]);
     });
@@ -275,8 +275,8 @@ describe("createIntervalCache", () => {
       });
 
       it("should wait for pending requests rather than load the same interval twice", async () => {
-        const promiseA = cache.fetchAsync(1, 5, "test");
-        const promiseB = cache.fetchAsync(1, 5, "test");
+        const promiseA = cache.readAsync(1, 5, "test");
+        const promiseB = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
@@ -286,16 +286,16 @@ describe("createIntervalCache", () => {
       });
 
       it("should request new intervals when pending requests only cover part of the requested interval", async () => {
-        const promiseA = cache.fetchAsync(1, 4, "test");
+        const promiseA = cache.readAsync(1, 4, "test");
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(1, 4, "test", expect.any(Object));
 
-        const promiseB = cache.fetchAsync(2, 5, "test");
+        const promiseB = cache.readAsync(2, 5, "test");
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(4, 5, "test", expect.any(Object));
 
         // Given the above requests, this interval is already pending
-        const promiseC = cache.fetchAsync(3, 5, "test");
+        const promiseC = cache.readAsync(3, 5, "test");
         expect(load).toHaveBeenCalledTimes(2);
 
         // All of the above requests should resolve to the correct values
@@ -304,8 +304,8 @@ describe("createIntervalCache", () => {
         await expect(promiseC).resolves.toEqual(createContiguousArray(3, 5));
 
         // The above requests would have returned some duplicate values (e.g. 1,2,3,4 + 4,5)
-        // These should have been filtered (e.g. 1,2,3,4,5)const promiseC = cache.fetchAsync(3, 5, "test");
-        const promiseD = cache.fetchAsync(1, 5, "test");
+        // These should have been filtered (e.g. 1,2,3,4,5)const promiseC = cache.readAsync(3, 5, "test");
+        const promiseD = cache.readAsync(1, 5, "test");
         expect(load).toHaveBeenCalledTimes(2);
         await expect(promiseD).resolves.toEqual(createContiguousArray(1, 5));
       });
@@ -313,7 +313,7 @@ describe("createIntervalCache", () => {
 
     describe("aborted requests", () => {
       it("should properly cleanup after an aborted request", async () => {
-        cache.fetchAsync(1, 5, "test");
+        cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
@@ -323,7 +323,7 @@ describe("createIntervalCache", () => {
         // Finalize the abort
         await Promise.resolve();
 
-        const promise = cache.fetchAsync(1, 5, "test");
+        const promise = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
@@ -332,14 +332,14 @@ describe("createIntervalCache", () => {
       });
 
       it("should properly cleanup after a pending abort", async () => {
-        cache.fetchAsync(1, 5, "test");
+        cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
 
         cache.abort("test");
 
-        const promise = cache.fetchAsync(1, 5, "test");
+        const promise = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
@@ -359,7 +359,7 @@ describe("createIntervalCache", () => {
         const deferred = createDeferred<number[]>();
         load.mockReturnValueOnce(deferred);
 
-        const promise = cache.fetchAsync(2, 4, "test");
+        const promise = cache.readAsync(2, 4, "test");
         expect(load).toHaveBeenCalledTimes(1);
         deferred.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
@@ -367,7 +367,7 @@ describe("createIntervalCache", () => {
         // Wait for promise rejection to finish
         await Promise.resolve();
 
-        expect(() => cache.fetchAsync(1, 5, "test")).toThrow(
+        expect(() => cache.readAsync(1, 5, "test")).toThrow(
           "Cannot load interval"
         );
       });
@@ -376,7 +376,7 @@ describe("createIntervalCache", () => {
         const deferred = createDeferred<number[]>();
         load.mockReturnValueOnce(deferred);
 
-        const promise = cache.fetchAsync(1, 5, "test");
+        const promise = cache.readAsync(1, 5, "test");
         expect(load).toHaveBeenCalledTimes(1);
         deferred.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
@@ -384,7 +384,7 @@ describe("createIntervalCache", () => {
         // Wait for promise rejection to finish
         await Promise.resolve();
 
-        const result = await cache.fetchAsync(2, 4, "test");
+        const result = await cache.readAsync(2, 4, "test");
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(2, 4, "test", expect.any(Object));
         expect(result).toEqual(createContiguousArray(2, 4));
@@ -394,7 +394,7 @@ describe("createIntervalCache", () => {
         const deferred = createDeferred<number[]>();
         load.mockReturnValueOnce(deferred);
 
-        const promise = cache.fetchAsync(4, 8, "test");
+        const promise = cache.readAsync(4, 8, "test");
         expect(load).toHaveBeenCalledTimes(1);
         deferred.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
@@ -402,7 +402,7 @@ describe("createIntervalCache", () => {
         // Wait for promise rejection to finish
         await Promise.resolve();
 
-        const result = await cache.fetchAsync(2, 6, "test");
+        const result = await cache.readAsync(2, 6, "test");
         expect(load).toHaveBeenCalledTimes(2);
         expect(load).toHaveBeenCalledWith(2, 6, "test", expect.any(Object));
         expect(result).toEqual(createContiguousArray(2, 6));
@@ -410,8 +410,8 @@ describe("createIntervalCache", () => {
 
       it("should retry an interval if the record has been evicted", async () => {
         // Prime the cache
-        cache.fetchAsync(1, 4, "test");
-        cache.fetchAsync(6, 8, "test");
+        cache.readAsync(1, 4, "test");
+        cache.readAsync(6, 8, "test");
 
         // Request an interval that will result in two requests: 5,6 and 8,9
         const deferredResolves = createDeferred<number[]>();
@@ -423,18 +423,14 @@ describe("createIntervalCache", () => {
             return deferredRejects;
           }
         });
-        let promise = cache.fetchAsync(5, 9, "test");
+        let promise = cache.readAsync(5, 9, "test");
         deferredResolves.resolve([5, 6]);
         deferredRejects.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
 
         // The failed interval will fail future requests that contain it
-        await expect(cache.fetchAsync(5, 9, "test")).rejects.toThrow(
-          "Expected"
-        );
-        await expect(cache.fetchAsync(9, 9, "test")).rejects.toThrow(
-          "Expected"
-        );
+        await expect(cache.readAsync(5, 9, "test")).rejects.toThrow("Expected");
+        await expect(cache.readAsync(9, 9, "test")).rejects.toThrow("Expected");
 
         // Evicting the failed interval will allow it to be requested again
         cache.evictAll();
@@ -444,21 +440,21 @@ describe("createIntervalCache", () => {
           createContiguousArray(start, end)
         );
 
-        let values = await cache.fetchAsync(7, 8, "test");
+        let values = await cache.readAsync(7, 8, "test");
         await expect(values).toEqual(createContiguousArray(7, 8));
 
-        values = await cache.fetchAsync(5, 9, "test");
+        values = await cache.readAsync(5, 9, "test");
         await expect(values).toEqual(createContiguousArray(5, 9));
       });
     });
   });
 
-  // Most tests are written for fetchAsync
-  // Since they use the same code paths, we just lightly test fetchSuspense
-  describe("fetchSuspense", () => {
+  // Most tests are written for readAsync
+  // Since they use the same code paths, we just lightly test read
+  describe("read", () => {
     it("should suspend and resolve", async () => {
       try {
-        cache.fetchSuspense(1, 3, "test");
+        cache.read(1, 3, "test");
 
         throw new Error("should have suspended");
       } catch (thenable) {
@@ -466,9 +462,7 @@ describe("createIntervalCache", () => {
 
         await thenable;
 
-        expect(cache.fetchSuspense(1, 3, "test")).toEqual(
-          createContiguousArray(1, 3)
-        );
+        expect(cache.read(1, 3, "test")).toEqual(createContiguousArray(1, 3));
       }
     });
   });

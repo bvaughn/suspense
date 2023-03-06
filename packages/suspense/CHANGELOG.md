@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.14
+* Renamed `fetchSuspense` to `read` and `fetchAsync` to `readAsync`
+
 ## 0.0.13
 * Add `useCacheMutation` hook with support for sync and async cache mutations.
 * Add `evictAll` API to all cache types.

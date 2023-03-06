@@ -85,7 +85,7 @@ export default function Demo() {
 }
 
 function ItemsSuspends({ apiClient }: { apiClient: ApiClient }) {
-  const items = itemsCache.fetchSuspense(apiClient);
+  const items = itemsCache.read(apiClient);
 
   return (
     <div className={styles.Items}>

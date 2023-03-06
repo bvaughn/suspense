@@ -49,9 +49,9 @@ describe("createSingleEntryCache", () => {
     });
   });
 
-  describe("fetchAsync", () => {
+  describe("readAsync", () => {
     it("should return async values", async () => {
-      const thenable = cache.fetchAsync();
+      const thenable = cache.readAsync();
 
       expect(isThenable(thenable)).toBe(true);
 
@@ -61,14 +61,14 @@ describe("createSingleEntryCache", () => {
     it("should return sync values", () => {
       load.mockReturnValue("sync");
 
-      expect(cache.fetchAsync()).toBe("sync");
+      expect(cache.readAsync()).toBe("sync");
     });
 
     it("should only load the value once", () => {
       load.mockReturnValue("sync");
 
-      expect(cache.fetchAsync()).toBe("sync");
-      expect(cache.fetchAsync()).toBe("sync");
+      expect(cache.readAsync()).toBe("sync");
+      expect(cache.readAsync()).toBe("sync");
 
       expect(load).toHaveBeenCalledTimes(1);
     });

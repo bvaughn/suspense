@@ -32,8 +32,8 @@ export const DEFAULT_MAX_CHARACTERS = 500_000;
 export const DEFAULT_MAX_TIME = 5_000;
 
 export const {
-  fetchAsync: highlightSyntaxAsync,
-  fetchSuspense: highlightSyntaxSuspense,
+  readAsync: highlightSyntaxAsync,
+  read: highlightSyntaxSuspense,
 } = createCache<[code: string, language: Language], ParsedTokens[]>({
   debugLabel: "SyntaxParsingCache",
   getKey: (code: string, language: Language) => `${code.length}-${language}`,

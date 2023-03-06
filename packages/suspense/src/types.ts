@@ -74,8 +74,8 @@ export interface Cache<Params extends Array<any>, Value> {
   getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
-  fetchAsync(...params: Params): Thenable<Value> | Value;
-  fetchSuspense(...params: Params): Value;
+  readAsync(...params: Params): Thenable<Value> | Value;
+  read(...params: Params): Value;
   prefetch(...params: Params): void;
   subscribeToStatus(
     callback: StatusCallback,
@@ -93,12 +93,12 @@ export type IntervalCache<Point, Params extends Array<any>, Value> = {
   abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   evictAll(): boolean;
-  fetchAsync(
+  readAsync(
     start: Point,
     end: Point,
     ...params: Params
   ): Thenable<Value[]> | Value[];
-  fetchSuspense(start: Point, end: Point, ...params: Params): Value[];
+  read(start: Point, end: Point, ...params: Params): Value[];
 };
 
 export type IntervalCacheLoadOptions = {

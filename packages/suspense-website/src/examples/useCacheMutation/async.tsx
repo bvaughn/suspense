@@ -15,7 +15,7 @@ const userId = "1";
 const { isPending, mutateAsync } = useCacheMutation(userCache);
 
 const onClick = () => {
-  // The mutate method requires the same params as the fetchSuspense method
+  // The mutate method requires the same params as the read method
   // so that it can identify which record is being mutated
   // In this example, that means the user id
   mutateAsync([userId], async () => {

@@ -146,12 +146,12 @@ export function createIntervalCache<
     return hadValues;
   }
 
-  function fetchAsync(
+  function readAsync(
     start: Point,
     end: Point,
     ...params: Params
   ): Thenable<Value[]> | Value[] {
-    debugLogInDev(`fetchAsync(${start}, ${end})`, params);
+    debugLogInDev(`readAsync(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.status) {
@@ -164,8 +164,8 @@ export function createIntervalCache<
     }
   }
 
-  function fetchSuspense(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`fetchSuspense(${start}, ${end})`, params);
+  function read(start: Point, end: Point, ...params: Params): Value[] {
+    debugLogInDev(`read(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     if (record.status === STATUS_RESOLVED) {
@@ -429,8 +429,8 @@ export function createIntervalCache<
     abort,
     evict,
     evictAll,
-    fetchAsync,
-    fetchSuspense,
+    readAsync,
+    read,
   };
 }
 

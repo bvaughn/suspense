@@ -48,7 +48,7 @@ describe("useCacheMutation", () => {
       mutationApi[cacheKey] = useCacheMutation(cache);
 
       const status = useCacheStatus(cache, cacheKey);
-      const value = cache.fetchSuspense(cacheKey);
+      const value = cache.read(cacheKey);
 
       mostRecentRenders[cacheKey] = {
         status,
