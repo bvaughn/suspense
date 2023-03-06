@@ -12,7 +12,7 @@ import {
   GUIDE_MEMORY_MANAGEMENT,
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
-  IS_THENNABLE,
+  IS_PROMISE_LIKE,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -24,7 +24,7 @@ import CreateIntervalCacheRoute from "./src/routes/api/createIntervalCache";
 import CreateSingleEntryCacheRoute from "./src/routes/api/createSingleEntryCache";
 import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
-import IsThenableRoute from "./src/routes/api/isThenable";
+import IsPromiseLikeRoute from "./src/routes/api/isPromiseLike";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
@@ -80,7 +80,7 @@ root.render(
           path={GUIDE_STREAMING_CACHE}
           element={<CreatingStreamingCacheRoute />}
         />
-        <Route path={IS_THENNABLE} element={<IsThenableRoute />} />
+        <Route path={IS_PROMISE_LIKE} element={<IsPromiseLikeRoute />} />
         <Route path={USE_CACHE_MUTATION} element={<UseCacheMutationRoute />} />
         <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
         <Route

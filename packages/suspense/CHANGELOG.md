@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.15
+* Removed `Thenable` in favor of built-in `PromiseLike` since it works better with async/await types
+* Replaced `isThenable` with `isPromiseLike`
+
 ## 0.0.14
 * Renamed `fetchSuspense` to `read` and `fetchAsync` to `readAsync`
 

@@ -16,7 +16,6 @@ import {
   PendingRecord,
   IntervalCache,
   Record,
-  Thenable,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertPendingRecord";
 import { createDeferred } from "../../utils/createDeferred";
@@ -24,7 +23,7 @@ import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPendingRecord } from "../../utils/isPendingRecord";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
-import { isThenable } from "../../utils/isThenable";
+import { isPromiseLike } from "../../utils/isPromiseLike";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -34,7 +33,7 @@ type SerializableToString = { toString(): string };
 type PendingMetadata<Point, Value> = {
   interval: Interval<Point>;
   record: Record<Value[]>;
-  value: Thenable<Value[]> | Value[];
+  value: PromiseLike<Value[]> | Value[];
 };
 
 type Metadata<Point, Value> = {
@@ -58,7 +57,7 @@ export function createIntervalCache<
     start: Point,
     end: Point,
     ...params: [...Params, IntervalCacheLoadOptions]
-  ) => Thenable<Value[]> | Value[];
+  ) => PromiseLike<Value[]> | Value[];
 }): IntervalCache<Point, Params, Value> {
   const {
     comparePoints = defaultComparePoints,
@@ -150,7 +149,7 @@ export function createIntervalCache<
     start: Point,
     end: Point,
     ...params: Params
-  ): Thenable<Value[]> | Value[] {
+  ): PromiseLike<Value[]> | Value[] {
     debugLogInDev(`readAsync(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
@@ -247,7 +246,7 @@ export function createIntervalCache<
 
     let values;
     try {
-      values = isThenable(value) ? await value : value;
+      values = isPromiseLike(value) ? await value : value;
 
       if (abortController.signal.aborted) {
         // Ignore results if the request was aborted
@@ -355,11 +354,11 @@ export function createIntervalCache<
       return;
     }
 
-    const missingThenables: Array<Value[] | Thenable<Value[]>> = [];
+    const missingPromiseLikes: Array<Value[] | PromiseLike<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
       const thenable = load(start, end, ...params, abortController);
 
-      missingThenables.push(thenable);
+      missingPromiseLikes.push(thenable);
 
       const pendingMetadata: PendingMetadata<Point, Value> = {
         interval: [start, end],
@@ -376,19 +375,19 @@ export function createIntervalCache<
     // Can we make this more efficient than a nested loop?
     // It's tricky since requests initiated separately (e.g. [1,2] and [2,4])
     // may end up reported as single/merged blocker (e.g. [1,3])
-    const pendingThenables: Array<Value[] | Thenable<Value[]>> = [];
+    const pendingPromiseLikes: Array<Value[] | PromiseLike<Value[]>> = [];
     foundIntervals.pending.forEach(([start, end]) => {
       metadata.pendingMetadata.forEach(({ interval, value }) => {
         if (intervalUtils.contains(interval, [start, end])) {
-          pendingThenables.push(value);
+          pendingPromiseLikes.push(value);
         }
       });
     });
 
     try {
       const values = await Promise.all([
-        ...missingThenables,
-        ...pendingThenables,
+        ...missingPromiseLikes,
+        ...pendingPromiseLikes,
       ]);
 
       debugLogInDev(

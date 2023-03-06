@@ -1,6 +1,6 @@
 import { createSingleEntryCache } from "./createSingleEntryCache";
 import { Cache, CacheLoadOptions } from "../types";
-import { isThenable } from "../utils/isThenable";
+import { isPromiseLike } from "../utils/isPromiseLike";
 
 // Minimal testing of this cache is okay since it's just a wrapper around createCache.
 describe("createSingleEntryCache", () => {
@@ -53,7 +53,7 @@ describe("createSingleEntryCache", () => {
     it("should return async values", async () => {
       const thenable = cache.readAsync();
 
-      expect(isThenable(thenable)).toBe(true);
+      expect(isPromiseLike(thenable)).toBe(true);
 
       await expect(await thenable).toBe("value");
     });

@@ -1,4 +1,4 @@
-import { isThenable } from "./isThenable";
+import { isPromiseLike } from "./isPromiseLike";
 
 export function createInfallibleCache<TParams extends Array<any>, TValue>(
   suspenseCache: (...params: TParams) => TValue
@@ -6,9 +6,9 @@ export function createInfallibleCache<TParams extends Array<any>, TValue>(
   return function createInfallibleSuspenseCache(...params) {
     try {
       return suspenseCache(...params);
-    } catch (errorOrThenable) {
-      if (isThenable(errorOrThenable)) {
-        throw errorOrThenable;
+    } catch (errorOrPromiseLike) {
+      if (isPromiseLike(errorOrPromiseLike)) {
+        throw errorOrPromiseLike;
       } else {
         return undefined;
       }

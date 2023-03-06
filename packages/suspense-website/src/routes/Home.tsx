@@ -16,7 +16,7 @@ import {
   GUIDE_MEMORY_MANAGEMENT,
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
-  IS_THENNABLE,
+  IS_PROMISE_LIKE,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_STREAMING_CACHE,
@@ -102,7 +102,11 @@ export default function Route() {
             to={CREATE_DEFERRED}
             type="code"
           />
-          <LinkListItem children="isThenable" to={IS_THENNABLE} type="code" />
+          <LinkListItem
+            children="isPromiseLike"
+            to={IS_PROMISE_LIKE}
+            type="code"
+          />
           {/*<LinkListItem children="parallelize" to={PARALLELIZE} type="code" />*/}
         </ul>
       </Block>

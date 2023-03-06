@@ -1,13 +1,8 @@
 import { compare as compareBigInt } from "extra-bigint";
 
-import {
-  IntervalCacheLoadOptions,
-  Deferred,
-  IntervalCache,
-  Thenable,
-} from "../../types";
+import { IntervalCacheLoadOptions, Deferred, IntervalCache } from "../../types";
 import { createDeferred } from "../../utils/createDeferred";
-import { isThenable } from "../../utils/isThenable";
+import { isPromiseLike } from "../../utils/isPromiseLike";
 import { createIntervalCache } from "./createIntervalCache";
 
 function createContiguousArray(start: number, end: number) {
@@ -21,7 +16,7 @@ function getPointForValue(value: number) {
 describe("createIntervalCache", () => {
   let cache: IntervalCache<number, [id: string], number>;
   let load: jest.Mock<
-    Thenable<number[]>,
+    PromiseLike<number[]>,
     [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
   >;
 
@@ -458,7 +453,7 @@ describe("createIntervalCache", () => {
 
         throw new Error("should have suspended");
       } catch (thenable) {
-        expect(isThenable(thenable)).toBe(true);
+        expect(isPromiseLike(thenable)).toBe(true);
 
         await thenable;
 

@@ -12,11 +12,10 @@ import {
   Record,
   Status,
   StatusCallback,
-  Thenable,
   UnsubscribeCallback,
 } from "../types";
 import { assertPendingRecord } from "../utils/assertPendingRecord";
-import { isThenable } from "../utils/isThenable";
+import { isPromiseLike } from "../utils/isPromiseLike";
 import { isPendingRecord } from "../utils/isPendingRecord";
 import { defaultGetKey } from "../utils/defaultGetKey";
 
@@ -37,7 +36,9 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
   };
   debugLabel?: string;
   getKey?: (...params: Params) => string;
-  load: (...params: [...Params, CacheLoadOptions]) => Thenable<Value> | Value;
+  load: (
+    ...params: [...Params, CacheLoadOptions]
+  ) => PromiseLike<Value> | Value;
 };
 
 // Enable to help with debugging in dev
@@ -237,7 +238,7 @@ export function createCache<Params extends Array<any>, Value>(
     readAsync(...params);
   }
 
-  function readAsync(...params: Params): Thenable<Value> | Value {
+  function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
     switch (record.status) {
       case STATUS_PENDING:
@@ -281,10 +282,10 @@ export function createCache<Params extends Array<any>, Value>(
     const { abortController, deferred } = record.value;
 
     try {
-      const valueOrThenable = load(...params, abortController);
-      const value = isThenable(valueOrThenable)
-        ? await valueOrThenable
-        : valueOrThenable;
+      const valueOrPromiseLike = load(...params, abortController);
+      const value = isPromiseLike(valueOrPromiseLike)
+        ? await valueOrPromiseLike
+        : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
         record.status = STATUS_RESOLVED;

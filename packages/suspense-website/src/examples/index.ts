@@ -178,9 +178,9 @@ const demos = {
   },
 };
 
-const isThenable = {
+const isPromiseLike = {
   util: processExample(
-    readFileSync(join(__dirname, "isThenable", "util.ts"), "utf8")
+    readFileSync(join(__dirname, "isPromiseLike", "util.ts"), "utf8")
   ),
 };
 
@@ -203,6 +203,6 @@ export {
   createSingleEntryCache,
   createStreamingCache,
   demos,
-  isThenable,
+  isPromiseLike,
   useCacheMutation,
 };

@@ -7,7 +7,7 @@ import SubHeading from "../../components/SubHeading";
 import { Link } from "react-router-dom";
 import {
   GUIDE_MEMORY_MANAGEMENT,
-  IS_THENNABLE,
+  IS_PROMISE_LIKE,
   USE_CACHE_STATUS,
 } from "../config";
 import Note from "../../components/Note";
@@ -71,7 +71,8 @@ export default function Route() {
         <Note>
           <p>
             Caches currently suspend by throwing{" "}
-            <Link to={IS_THENNABLE}>"thenables"</Link>. This may change as the{" "}
+            <Link to={IS_PROMISE_LIKE}>"thenables"</Link>. This may change as
+            the{" "}
             <ExternalLink to="https://github.com/reactjs/rfcs/pull/229">
               React API
             </ExternalLink>{" "}

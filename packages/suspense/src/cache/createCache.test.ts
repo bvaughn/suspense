@@ -6,7 +6,7 @@ import {
 } from "../constants";
 import { createCache } from "./createCache";
 import { Cache, Deferred, CacheLoadOptions } from "../types";
-import { isThenable } from "../utils/isThenable";
+import { isPromiseLike } from "../utils/isPromiseLike";
 import { createDeferred } from "../utils/createDeferred";
 
 describe("createCache", () => {
@@ -223,7 +223,7 @@ describe("createCache", () => {
     it("should return async values", async () => {
       const thenable = cache.readAsync("async");
 
-      expect(isThenable(thenable)).toBe(true);
+      expect(isPromiseLike(thenable)).toBe(true);
 
       await expect(await thenable).toBe("async");
     });
@@ -247,7 +247,7 @@ describe("createCache", () => {
 
         throw new Error("should have suspended");
       } catch (thenable) {
-        expect(isThenable(thenable)).toBe(true);
+        expect(isPromiseLike(thenable)).toBe(true);
 
         await thenable;
 

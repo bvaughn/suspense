@@ -7,12 +7,12 @@ let MAX_LOOP_COUNT = 1_000;
 // An advantage to creating a custom thenable is synchronous resolution (or rejection).
 //
 // A "deferred" is a "thenable" that has convenience resolve/reject methods.
-export function createDeferred<T>(debugLabel?: string): Deferred<T> {
-  const resolveCallbacks: Set<(value?: T) => void> = new Set();
+export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
+  const resolveCallbacks: Set<(value?: Type) => void> = new Set();
   const rejectCallbacks: Set<(error: Error) => void> = new Set();
 
   let status: "unresolved" | "resolved" | "rejected" = "unresolved";
-  let data: T | Error | null = null;
+  let data: Type | Error | null = null;
 
   let callbacksRegisteredAfterResolutionCount = 0;
 
@@ -20,7 +20,7 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
   // That cause would result in an infinite loop.
   // Note that our guard counter should be somewhat high to avoid false positives.
   // It is a legitimate use-case to register handlers after a deferred has been resolved or rejected.
-  const checkCircularThenableChain = () => {
+  const checkCircularPromiseLikeChain = () => {
     if (++callbacksRegisteredAfterResolutionCount > MAX_LOOP_COUNT) {
       throw Error(
         `Circular thenable chain detected (infinite loop) for resource: ${debugLabel}`
@@ -28,10 +28,16 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
     }
   };
 
-  const deferred: Deferred<T> = {
-    then(
-      resolveCallback: (value?: T) => void,
-      rejectCallback: (error: Error) => void
+  const deferred: Deferred<Type> = {
+    then<ThenResult = Type, ErrorResult = never>(
+      resolveCallback?:
+        | ((value?: Type) => ThenResult | PromiseLike<ThenResult>)
+        | undefined
+        | null,
+      rejectCallback?:
+        | ((error: Error) => PromiseLike<ErrorResult>)
+        | undefined
+        | null
     ) {
       switch (status) {
         case "unresolved":
@@ -39,14 +45,16 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
           rejectCallbacks.add(rejectCallback);
           break;
         case "rejected":
-          checkCircularThenableChain();
+          checkCircularPromiseLikeChain();
           rejectCallback(data as Error);
           break;
         case "resolved":
-          checkCircularThenableChain();
-          resolveCallback(data as T);
+          checkCircularPromiseLikeChain();
+          resolveCallback(data as Type);
           break;
       }
+
+      return null;
     },
     reject(error: Error) {
       if (status !== "unresolved") {
@@ -73,7 +81,7 @@ export function createDeferred<T>(debugLabel?: string): Deferred<T> {
       rejectCallbacks.clear();
       resolveCallbacks.clear();
     },
-    resolve(value?: T) {
+    resolve(value?: Type) {
       if (status !== "unresolved") {
         throw Error(`Deferred has already been ${status}`);
       }

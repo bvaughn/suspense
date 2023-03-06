@@ -46,20 +46,9 @@ export type StreamingSubscribeCallback = () => void;
 export type StatusCallback = (status: Status) => void;
 export type UnsubscribeCallback = () => void;
 
-// This type defines the subset of the Promise API that React uses (the .then method to add success/error callbacks).
-// You can use a Promise for this, but Promises have a downside (the microtask queue).
-// You can also create your own "thenable" if you want to support synchronous resolution/rejection.
-// Note that if a thenable is rejected, its onFulfill callback will be called with undefined.
-export interface Thenable<Type> {
-  then(
-    onFulfill: (value?: Type) => any,
-    onReject?: (err: any) => any
-  ): void | Thenable<Type>;
-}
-
 // Convenience type used by Suspense caches.
-// Adds the ability to resolve or reject a pending Thenable.
-export interface Deferred<Type> extends Thenable<Type> {
+// Adds the ability to resolve or reject a pending PromiseLike.
+export interface Deferred<Type> extends PromiseLike<Type> {
   reject(error: any): void;
   resolve(value?: Type): void;
 }
@@ -76,7 +65,7 @@ export interface Cache<Params extends Array<any>, Value> {
   getValueIfCached(...params: Params): Value | undefined;
   prefetch(...params: Params): void;
   read(...params: Params): Value;
-  readAsync(...params: Params): Thenable<Value> | Value;
+  readAsync(...params: Params): PromiseLike<Value> | Value;
   subscribeToStatus(
     callback: StatusCallback,
     ...params: Params
@@ -97,7 +86,7 @@ export type IntervalCache<Point, Params extends Array<any>, Value> = {
     start: Point,
     end: Point,
     ...params: Params
-  ): Thenable<Value[]> | Value[];
+  ): PromiseLike<Value[]> | Value[];
   read(start: Point, end: Point, ...params: Params): Value[];
 };
 
@@ -115,7 +104,7 @@ export interface StreamingValues<Value, AdditionalData = undefined> {
   complete: boolean;
   data: AdditionalData | undefined;
   progress: number | undefined;
-  resolver: Thenable<StreamingValues<Value, AdditionalData>>;
+  resolver: PromiseLike<StreamingValues<Value, AdditionalData>>;
   status: Status;
   subscribe(callback: StreamingSubscribeCallback): UnsubscribeCallback;
   values: Value[] | undefined;
