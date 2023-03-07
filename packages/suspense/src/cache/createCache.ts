@@ -94,8 +94,8 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const recordMap = getCacheForType(createRecordMap);
 
-    // TODO In-progress mutations aren't in the recordMap.
-    // We should probably use the mutationAbortControllerMap for this instead.
+    // In-progress mutations aren't guaranteed to be in the recordMap.
+    // So we check the mutationAbortControllerMap to infer this.
     const abortController = mutationAbortControllerMap.get(cacheKey);
     if (abortController) {
       debugLogInDev("abort()", params);
