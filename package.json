@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "clear": "npm run clear:parcel-cache & npm run clear:builds & npm run clear:node_modules",
-    "clear:builds": "rm -rf ./package/*/dist",
+    "clear:builds": "rm -rf ./packages/*/dist",
     "clear:parcel-cache": "rm -rf ./.parcel-cache",
     "clear:node_modules": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
     "docs": "cd packages/suspense-website && pnpm build",
