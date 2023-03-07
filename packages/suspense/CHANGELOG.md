@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.21
+* Fix bug where `createCache` subscribers were not notified after `evict` or `evictAll`.
+
 ## 0.0.20
 * Fixed type definition for `createStreamingCache` `StreamingCacheLoadOptions` param.
 

@@ -464,6 +464,50 @@ describe("createCache", () => {
       expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
       expect(callbackB).toHaveBeenCalledWith(STATUS_REJECTED);
     });
+
+    it("should notify subscribers after a value is evicted", async () => {
+      cache.readAsync("sync-1");
+      cache.readAsync("sync-2");
+
+      await Promise.resolve();
+
+      cache.subscribeToStatus(callbackA, "sync-1");
+      cache.subscribeToStatus(callbackB, "sync-2");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+
+      cache.evict("sync-1");
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+    });
+
+    it("should notify subscribers after all values are evicted", async () => {
+      cache.readAsync("sync-1");
+      cache.readAsync("sync-2");
+
+      await Promise.resolve();
+
+      cache.subscribeToStatus(callbackA, "sync-1");
+      cache.subscribeToStatus(callbackB, "sync-2");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+
+      cache.evictAll();
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackB).toHaveBeenCalledTimes(2);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+    });
   });
 
   describe("garbage collection", () => {

@@ -156,6 +156,8 @@ export function createCache<Params extends Array<any>, Value>(
     const didDelete = backupRecordMap.delete(cacheKey);
     recordMap.delete(cacheKey);
 
+    notifySubscribers(...params);
+
     return didDelete;
   }
 
@@ -168,6 +170,13 @@ export function createCache<Params extends Array<any>, Value>(
 
     backupRecordMap.clear();
     recordMap.clear();
+
+    subscriberMap.forEach((set, cacheKey) => {
+      set.forEach((callback) => {
+        callback(STATUS_NOT_STARTED);
+      });
+    });
+    subscriberMap.clear();
 
     return hadRecords;
   }
