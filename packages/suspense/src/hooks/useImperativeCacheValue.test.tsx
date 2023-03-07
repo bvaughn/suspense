@@ -13,9 +13,9 @@ import {
 } from "../constants";
 import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
-import { useCacheValue } from "./useCacheValue";
+import { useImperativeCacheValue } from "./useImperativeCacheValue";
 
-describe("useCacheValue", () => {
+describe("useImperativeCacheValue", () => {
   let cache: Cache<[string], string>;
   let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [string]>;
@@ -25,7 +25,7 @@ describe("useCacheValue", () => {
   let pendingDeferred: Deferred<string>[] = [];
 
   function Component({ string }: { string: string }): any {
-    const result = useCacheValue(cache, string);
+    const result = useImperativeCacheValue(cache, string);
 
     lastRenderedError = result.error;
     lastRenderedStatus = result.status;

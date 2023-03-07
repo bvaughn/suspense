@@ -7,7 +7,7 @@ export const CREATE_STREAMING_CACHE = "/createStreamingCache";
 export const IS_PROMISE_LIKE = "/isPromiseLike";
 export const USE_CACHE_MUTATION = "/useCacheMutation";
 export const USE_CACHE_STATUS = "/useCacheStatus";
-export const USE_CACHE_VALUE = "/useCacheValue";
+export const USE_CACHE_VALUE = "/useImperativeCacheValue";
 export const USE_STREAMING_CACHE = "/useStreamingValues";
 
 // Guides

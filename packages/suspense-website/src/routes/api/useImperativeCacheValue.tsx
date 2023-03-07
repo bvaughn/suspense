@@ -5,22 +5,22 @@ import Container from "../../components/Container";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
 import SubHeading from "../../components/SubHeading";
-import { useCacheValue } from "../../examples";
+import { useImperativeCacheValue } from "../../examples";
 
 export default function Route() {
   return (
     <Container>
       <Block>
-        <Header title="useCacheValue" />
+        <Header title="useImperativeCacheValue" />
       </Block>
       <Block>
         <SubHeading title="Loading data without Suspense" />
         <p>
           Data can be fetched without suspending using the{" "}
-          <code>useCacheValue</code> hook. (This hook uses the imperative{" "}
-          <code>readAsync</code> API, called from an effect.)
+          <code>useImperativeCacheValue</code> hook. (This hook uses the
+          imperative <code>readAsync</code> API, called from an effect.)
         </p>
-        <Code code={useCacheValue.hook} />
+        <Code code={useImperativeCacheValue.hook} />
       </Block>
       <Note type="warn">
         <p>

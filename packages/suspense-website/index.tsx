@@ -29,7 +29,7 @@ import IsPromiseLikeRoute from "./src/routes/api/isPromiseLike";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
-import UseCacheValueRoute from "./src/routes/api/useCacheValue";
+import UseCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";

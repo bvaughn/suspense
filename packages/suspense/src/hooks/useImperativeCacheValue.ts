@@ -20,7 +20,7 @@ export type ResolvedResponse<Value> = {
   value: Value;
 };
 
-export function useCacheValue<Params extends any[], Value>(
+export function useImperativeCacheValue<Params extends any[], Value>(
   cache: Cache<Params, Value>,
   ...params: Params
 ): ErrorResponse | PendingResponse | ResolvedResponse<Value> {

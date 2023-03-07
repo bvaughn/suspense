@@ -196,9 +196,9 @@ const useCacheMutation = {
   ),
 };
 
-const useCacheValue = {
+const useImperativeCacheValue = {
   hook: processExample(
-    readFileSync(join(__dirname, "useCacheValue", "hook.ts"), "utf8")
+    readFileSync(join(__dirname, "useImperativeCacheValue", "hook.ts"), "utf8")
   ),
 };
 
@@ -211,5 +211,5 @@ export {
   demos,
   isPromiseLike,
   useCacheMutation,
-  useCacheValue,
+  useImperativeCacheValue,
 };

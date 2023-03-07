@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.17
+* Renamed `useCacheValue` to `useImperativeCacheValue` to make it clearer that the hook is an escape hatch.
+
 ## 0.0.16
 * Add `useCacheValue` hook for loading values using the imperative cache API rather than Suspense.
 

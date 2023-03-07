@@ -88,7 +88,7 @@ export default function Route() {
             type="code"
           />
           <LinkListItem
-            children="useCacheValue"
+            children="useImperativeCacheValue"
             to={USE_CACHE_VALUE}
             type="code"
           />

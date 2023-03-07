@@ -5,7 +5,7 @@ export * from "./cache/createSingleEntryCache";
 export * from "./cache/createStreamingCache";
 export * from "./hooks/useCacheMutation";
 export * from "./hooks/useCacheStatus";
-export * from "./hooks/useCacheValue";
+export * from "./hooks/useImperativeCacheValue";
 export * from "./hooks/useStreamingValues";
 export * from "./utils/createDeferred";
 export * from "./utils/createInfallibleCache";
