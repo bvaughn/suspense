@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.18
+* Fixed some edge case garbage collection bugs when `WeakRef`s are used to store values.
+
 ## 0.0.17
 * Renamed `useCacheValue` to `useImperativeCacheValue` to make it clearer that the hook is an escape hatch.
 
