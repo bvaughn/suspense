@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -54,14 +54,14 @@ describe("useCacheStatus", () => {
     lastRenderedStatus = undefined;
   });
 
-  it("should return not-started for keys that have not been loaded", () => {
+  it("should return not-found for keys that have not been loaded", () => {
     const container = document.createElement("div");
     const root = createRoot(container);
     act(() => {
       root.render(<Component string="test" />);
     });
 
-    expect(lastRenderedStatus).toBe(STATUS_NOT_STARTED);
+    expect(lastRenderedStatus).toBe(STATUS_NOT_FOUND);
   });
 
   it("should transition from pending to resolved", async () => {
@@ -150,6 +150,6 @@ describe("useCacheStatus", () => {
 
     await Promise.resolve();
 
-    expect(lastRenderedStatus).toBe(STATUS_NOT_STARTED);
+    expect(lastRenderedStatus).toBe(STATUS_NOT_FOUND);
   });
 });

@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createCache } from "../cache/createCache";
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -77,7 +77,7 @@ describe("useImperativeCacheValue", () => {
   });
 
   it("should fetch values that have not yet been fetched", async () => {
-    expect(cache.getStatus("test")).toBe(STATUS_NOT_STARTED);
+    expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
     const container = document.createElement("div");
     const root = createRoot(container);
@@ -96,7 +96,7 @@ describe("useImperativeCacheValue", () => {
   });
 
   it("should handle values that are rejected", async () => {
-    expect(cache.getStatus("test")).toBe(STATUS_NOT_STARTED);
+    expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
     const container = document.createElement("div");
     const root = createRoot(container);

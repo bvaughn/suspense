@@ -1,5 +1,5 @@
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -74,12 +74,12 @@ describe("createCache", () => {
       expect(cache.getStatus("async")).toBe(STATUS_PENDING);
 
       expect(cache.abort("async")).toBe(true);
-      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
 
       expect(abortSignal.aborted).toBe(true);
 
       deferred!.resolve("async");
-      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
     });
 
     it("should restart an aborted request on next fetch", async () => {
@@ -95,7 +95,7 @@ describe("createCache", () => {
       const initialDeferred = deferred;
 
       expect(cache.abort("async")).toBe(true);
-      expect(cache.getStatus("async")).toBe(STATUS_NOT_STARTED);
+      expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
 
       const fetchTwo = cache.readAsync("async");
       expect(cache.getStatus("async")).toBe(STATUS_PENDING);
@@ -191,8 +191,8 @@ describe("createCache", () => {
   });
 
   describe("getStatus", () => {
-    it("should return not-started for keys that have not been loaded", () => {
-      expect(cache.getStatus("nope")).toBe(STATUS_NOT_STARTED);
+    it("should return not-found for keys that have not been loaded", () => {
+      expect(cache.getStatus("nope")).toBe(STATUS_NOT_FOUND);
     });
 
     it("should transition from pending to resolved", async () => {
@@ -352,7 +352,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       await Promise.resolve();
 
@@ -363,7 +363,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       cache.readAsync("sync");
 
@@ -376,7 +376,7 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "async");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       const thenable = cache.readAsync("async");
 
@@ -394,10 +394,10 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackB, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       expect(callbackB).toHaveBeenCalledTimes(1);
-      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       cache.readAsync("sync");
 
@@ -414,7 +414,7 @@ describe("createCache", () => {
       const unsubscribe = cache.subscribeToStatus(callbackA, "sync");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
 
       unsubscribe();
 
@@ -482,7 +482,7 @@ describe("createCache", () => {
       cache.evict("sync-1");
 
       expect(callbackA).toHaveBeenCalledTimes(2);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
       expect(callbackB).toHaveBeenCalledTimes(1);
       expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
     });
@@ -504,9 +504,9 @@ describe("createCache", () => {
       cache.evictAll();
 
       expect(callbackA).toHaveBeenCalledTimes(2);
-      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
       expect(callbackB).toHaveBeenCalledTimes(2);
-      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_STARTED);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_FOUND);
     });
   });
 
@@ -535,14 +535,14 @@ describe("createCache", () => {
       gcCache = createCache<[string], Object>({ load: loadObject });
     });
 
-    it("getStatus: should return not-started status if value has been collected", async () => {
+    it("getStatus: should return not-found status if value has been collected", async () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
       expect(weakRefArray.length).toBe(1);
       weakRefArray[0].collect();
 
-      expect(gcCache.getStatus("test")).toBe(STATUS_NOT_STARTED);
+      expect(gcCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
     });
 
     it("getValue: should throw if previously loaded value has been collected", async () => {

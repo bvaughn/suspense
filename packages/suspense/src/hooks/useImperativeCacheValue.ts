@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -30,7 +30,7 @@ export function useImperativeCacheValue<Params extends any[], Value>(
 
   useEffect(() => {
     switch (status) {
-      case STATUS_NOT_STARTED:
+      case STATUS_NOT_FOUND:
         cache.prefetch(...params);
     }
   }, [cache, status, ...params]);

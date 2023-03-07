@@ -1,12 +1,12 @@
 import {
   STATUS_ABORTED,
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "./constants";
 
-export type StatusNotStarted = typeof STATUS_NOT_STARTED;
+export type StatusNotStarted = typeof STATUS_NOT_FOUND;
 export type StatusPending = typeof STATUS_PENDING;
 export type StatusAborted = typeof STATUS_ABORTED;
 export type StatusRejected = typeof STATUS_REJECTED;

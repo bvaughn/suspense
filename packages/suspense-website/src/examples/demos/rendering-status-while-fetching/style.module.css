@@ -56,8 +56,8 @@
 .UserButton:not(.UserButton[data-current]):hover {
   background-color: var(--color-demo-button-background-hover);
 }
-.UserButton[data-status="not-started"] svg {
-  color: var(--color-status-not-started);
+.UserButton[data-status="not-found"] svg {
+  color: var(--color-status-not-found);
 }
 .UserButton[data-status="pending"] svg {
   color: var(--color-status-pending);

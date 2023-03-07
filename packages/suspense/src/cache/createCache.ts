@@ -1,6 +1,6 @@
 import { unstable_getCacheForType as getCacheForType } from "react";
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -173,7 +173,7 @@ export function createCache<Params extends Array<any>, Value>(
 
     subscriberMap.forEach((set, cacheKey) => {
       set.forEach((callback) => {
-        callback(STATUS_NOT_STARTED);
+        callback(STATUS_NOT_FOUND);
       });
     });
     subscriberMap.clear();
@@ -227,14 +227,14 @@ export function createCache<Params extends Array<any>, Value>(
     const record = backupRecordMap.get(cacheKey);
 
     if (!record) {
-      return STATUS_NOT_STARTED;
+      return STATUS_NOT_FOUND;
     } else if (isResolvedRecord(record)) {
       try {
         readRecordValueThrowsIfGC(record);
       } catch (error) {
         evict(...params);
 
-        return STATUS_NOT_STARTED;
+        return STATUS_NOT_FOUND;
       }
     }
 

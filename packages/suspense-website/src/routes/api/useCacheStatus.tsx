@@ -17,7 +17,7 @@ export default function Route() {
         <SubHeading title="Observing status" />
         <p>
           Subscribe to the <em>status</em> of a{" "}
-          <Link to={CREATE_CACHE}>cache</Link> ("not-started", "pending",
+          <Link to={CREATE_CACHE}>cache</Link> ("not-found", "pending",
           "resolved", or "rejected") using the <code>useCacheStatus</code> hook:
         </p>
         <Code code={createCache.hook} />

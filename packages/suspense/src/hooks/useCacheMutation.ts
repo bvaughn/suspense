@@ -5,7 +5,7 @@ import {
 } from "react";
 import { InternalCache } from "../cache/createCache";
 import {
-  STATUS_NOT_STARTED,
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,

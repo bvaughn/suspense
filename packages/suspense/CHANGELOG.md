@@ -2,6 +2,7 @@
 
 ## 0.0.21
 * Fix bug where `createCache` subscribers were not notified after `evict` or `evictAll`.
+* Renamed `STATUS_NOT_STARTED` ("not-started") status to `STATUS_NOT_FOUND` ("not-found") for better semantics.
 
 ## 0.0.20
 * Fixed type definition for `createStreamingCache` `StreamingCacheLoadOptions` param.

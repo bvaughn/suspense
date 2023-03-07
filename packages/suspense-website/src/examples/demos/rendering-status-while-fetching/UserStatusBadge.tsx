@@ -10,8 +10,8 @@ function UserStatusBadge({ id }: { id: number }) {
 
   let type: IconType;
   switch (status) {
-    case "not-started":
-      type = "status-not-started";
+    case "not-found":
+      type = "status-not-found";
       break;
     case "pending":
       type = "status-pending";

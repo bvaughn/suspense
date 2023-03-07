@@ -1,4 +1,4 @@
-export const STATUS_NOT_STARTED = "not-started";
+export const STATUS_NOT_FOUND = "not-found";
 export const STATUS_PENDING = "pending";
 export const STATUS_ABORTED = "aborted";
 export const STATUS_REJECTED = "rejected";
