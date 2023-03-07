@@ -216,20 +216,32 @@ export function createCache<Params extends Array<any>, Value>(
 
     // Else fall back to Record status
     const record = backupRecordMap.get(cacheKey);
-    return record?.data?.status ?? STATUS_NOT_STARTED;
+
+    if (!record) {
+      return STATUS_NOT_STARTED;
+    } else if (isResolvedRecord(record)) {
+      try {
+        readRecordValueThrowsIfGC(record);
+      } catch (error) {
+        evict(...params);
+
+        return STATUS_NOT_STARTED;
+      }
+    }
+
+    return record.data.status;
   }
 
   function getValue(...params: Params): Value {
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
 
-    // TODO [GC] Add test for this case
     if (record == null) {
       throw Error("No record found");
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      return readRecordValueThrowsIfGC(record);
     } else {
       throw Error(`Record found with status "${record.data.status}"`);
     }
@@ -238,9 +250,12 @@ export function createCache<Params extends Array<any>, Value>(
   function getValueIfCached(...params: Params): Value | undefined {
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
-
     if (record && isResolvedRecord(record)) {
-      return readRecordValue(record);
+      try {
+        return readRecordValueThrowsIfGC(record);
+      } catch (error) {
+        // Ignore
+      }
     }
   }
 
@@ -255,19 +270,14 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       return record.data.deferred;
     } else if (isResolvedRecord(record)) {
-      const { weakRef, value } = record.data;
-      if (weakRef) {
-        const retainedValue = weakRef.deref();
-        if (retainedValue == null) {
-          // If the value is null, it has been garbage collected since we last read it.
-          // In that case, we should delete the record and try again.
-          evict(...params);
-          return readAsync(...params);
-        } else {
-          return retainedValue;
-        }
+      try {
+        return readRecordValueThrowsIfGC(record);
+      } catch (error) {
+        // If the value has been garbage collected since we last read it,
+        // Delete the record and try again.
+        evict(...params);
+        return readAsync(...params);
       }
-      return value;
     } else {
       throw record.data.error;
     }
@@ -278,19 +288,14 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       throw record.data.deferred;
     } else if (isResolvedRecord(record)) {
-      const { weakRef, value } = record.data;
-      if (weakRef) {
-        const retainedValue = weakRef.deref();
-        if (retainedValue == null) {
-          // If the value is null, it has been garbage collected since we last read it.
-          // In that case, we should delete the record and try again.
-          evict(...params);
-          return read(...params);
-        } else {
-          return retainedValue;
-        }
+      try {
+        return readRecordValueThrowsIfGC(record);
+      } catch (error) {
+        // If the value has been garbage collected since we last read it,
+        // Delete the record and try again.
+        evict(...params);
+        return read(...params);
       }
-      return value;
     } else {
       throw record.data.error;
     }
@@ -343,10 +348,17 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: ResolvedRecord<Value>): Value | undefined {
+  function readRecordValueThrowsIfGC(
+    record: ResolvedRecord<Value>
+  ): Value | undefined {
     const { weakRef, value } = record.data;
     if (weakRef !== null) {
-      return weakRef.deref();
+      const retainedValue = weakRef.deref();
+      if (retainedValue == null) {
+        throw Error("Value was garbage collected");
+      } else {
+        return retainedValue;
+      }
     } else {
       return value;
     }

@@ -24,6 +24,8 @@ export function useImperativeCacheValue<Params extends any[], Value>(
   cache: Cache<Params, Value>,
   ...params: Params
 ): ErrorResponse | PendingResponse | ResolvedResponse<Value> {
+  // useCacheStatus() triggers a re-fetch if the value has been garbage collected
+  // So we don't have to handle that cause
   const status = useCacheStatus(cache, ...params);
 
   useEffect(() => {
@@ -43,7 +45,6 @@ export function useImperativeCacheValue<Params extends any[], Value>(
       }
       return { error: caught, status: STATUS_REJECTED, value: undefined };
     case STATUS_RESOLVED:
-      // TODO [GC] Add test for this case
       return {
         error: undefined,
         status: STATUS_RESOLVED,

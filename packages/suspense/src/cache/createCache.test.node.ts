@@ -79,8 +79,6 @@ describe("createCache", () => {
     let value = await cache.readAsync("one");
     expect(value).toEqual({ label: "one" });
   });
-
-  // TODO [gc] Test read() re-tries after GC too
 });
 
 function createObject(label: string = "object"): Object {

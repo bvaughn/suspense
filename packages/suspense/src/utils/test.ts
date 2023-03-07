@@ -1,10 +1,45 @@
+export type WeakRefArray<Value> = MockWeakRefInterface<Value>[];
+export interface MockWeakRefInterface<Value> {
+  collect(): void;
+  deref(): Value | undefined;
+  value: Value | undefined;
+}
+
+export function mockWeakRef(): WeakRefArray<any> {
+  const weakRefArray: WeakRefArray<any> = [];
+
+  class MockWeakRef<Value> {
+    [Symbol.toStringTag]: "WeakRef";
+
+    value: Value | undefined = undefined;
+
+    constructor(value: Value) {
+      this.value = value;
+
+      weakRefArray.push(this);
+    }
+
+    collect() {
+      this.value = undefined;
+    }
+
+    deref(): Value | undefined {
+      return this.value;
+    }
+  }
+
+  globalThis.WeakRef = MockWeakRef;
+
+  return weakRefArray;
+}
+
 export async function requestGC() {
   // Wait before requesting GS
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef#notes_on_weakrefs
   await wait(100);
 
   // Node --expose-gc flag
-  global.gc();
+  globalThis.gc();
 
   await wait(100);
 }
