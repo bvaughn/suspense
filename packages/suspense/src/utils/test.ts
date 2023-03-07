@@ -1,4 +1,6 @@
 export async function requestGC() {
+  // Wait before requesting GS
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef#notes_on_weakrefs
   await wait(100);
 
   // Node --expose-gc flag

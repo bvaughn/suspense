@@ -14,9 +14,9 @@ import {
   StatusCallback,
   UnsubscribeCallback,
 } from "../types";
-import { assertPendingRecord } from "../utils/assertPendingRecord";
+import { assertPendingRecord } from "../utils/assertRecordStatus";
 import { isPromiseLike } from "../utils/isPromiseLike";
-import { isPendingRecord } from "../utils/isPendingRecord";
+import { isPendingRecord } from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<

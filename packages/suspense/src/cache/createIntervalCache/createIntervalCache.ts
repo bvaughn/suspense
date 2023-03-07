@@ -17,10 +17,10 @@ import {
   IntervalCache,
   Record,
 } from "../../types";
-import { assertPendingRecord } from "../../utils/assertPendingRecord";
+import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
-import { isPendingRecord } from "../../utils/isPendingRecord";
+import { isPendingRecord } from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
 import { isPromiseLike } from "../../utils/isPromiseLike";
