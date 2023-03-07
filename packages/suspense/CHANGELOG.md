@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.20
+* Fixed type definition for `createStreamingCache` `StreamingCacheLoadOptions` param.
+
 ## 0.0.19
 * Updated `createStreamingCache` to support non-array types (e.g. string) as well.
 * Renamed `useStreamingValues` to `useStreamingValue`.

@@ -24,7 +24,10 @@ export function createStreamingCache<
 >(options: {
   debugLabel?: string;
   getKey?: (...params: Params) => string;
-  load: (options: StreamingCacheLoadOptions<Value>, ...params: Params) => void;
+  load: (
+    options: StreamingCacheLoadOptions<Value, AdditionalData>,
+    ...params: Params
+  ) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
   const { debugLabel, getKey = defaultGetKey, load } = options;
 
