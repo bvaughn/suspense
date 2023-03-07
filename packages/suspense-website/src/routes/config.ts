@@ -8,7 +8,7 @@ export const IS_PROMISE_LIKE = "/isPromiseLike";
 export const USE_CACHE_MUTATION = "/useCacheMutation";
 export const USE_CACHE_STATUS = "/useCacheStatus";
 export const USE_CACHE_VALUE = "/useImperativeCacheValue";
-export const USE_STREAMING_CACHE = "/useStreamingValues";
+export const USE_STREAMING_CACHE = "/useStreamingValue";
 
 // Guides
 export const GUIDE_ABORT_A_REQUEST = "/guide/abort-a-request";

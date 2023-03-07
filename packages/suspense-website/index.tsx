@@ -30,7 +30,7 @@ import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
-import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
+import UseStreamingValueRoute from "./src/routes/api/useStreamingValue";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";
 import MutatingCacheValueRoute from "./src/routes/examples/mutating-cache-values";
@@ -88,7 +88,7 @@ root.render(
         <Route path={USE_CACHE_VALUE} element={<UseCacheValueRoute />} />
         <Route
           path={USE_STREAMING_CACHE}
-          element={<UseStreamingValuesRoute />}
+          element={<UseStreamingValueRoute />}
         />
       </Routes>
     </BrowserRouter>

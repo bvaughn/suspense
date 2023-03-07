@@ -50,7 +50,7 @@ export default function Route() {
         <p>
           The easiest way to use a streaming cache is with the{" "}
           <code>
-            <Link to={USE_STREAMING_CACHE}>useStreamingValues</Link>
+            <Link to={USE_STREAMING_CACHE}>useStreamingValue</Link>
           </code>{" "}
           hook.
         </p>

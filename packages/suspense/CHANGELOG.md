@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.19
+* Updated `createStreamingCache` to support non-array types (e.g. string) as well.
+* Renamed `useStreamingValues` to `useStreamingValue`.
+
 ## 0.0.18
 * Fixed some edge case garbage collection bugs when `WeakRef`s are used to store values.
 
@@ -36,7 +40,7 @@
 * Add `createSingleEntryCache` convenience method.
 
 ## 0.0.8
-* `useStreamingValues` waits until commit boundaries before throttling, to avoid overwhelming the scheduler if there are slow renders.
+* `useStreamingValue` waits until commit boundaries before throttling, to avoid overwhelming the scheduler if there are slow renders.
 
 ## 0.0.7
 * `createCache` and `createStreamingCache` add support for cancellation via [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
@@ -46,7 +50,7 @@
 
 ## 0.0.5
 * `cache.getStatus` and `useCacheStatus` now return an explicit `"not-started"` string rather than `undefined` for keys that have not been fetched.
-* Add `status` attribute to the return value for `useStreamingValues` hook.
+* Add `status` attribute to the return value for `useStreamingValue` hook.
 
 ## 0.0.4
 * Renamed "thennable" to "thenable" to more closely align with [pre-existing terminology](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#thenables).
@@ -61,7 +65,7 @@ The initial release includes the following APIs:
 * [`createStreamingCache`](https://suspense-npm.vercel.app/createStreamingCache)
 #### React hooks
 * [`useCacheStatus`](https://suspense-npm.vercel.app/useCacheStatus)
-* [`useStreamingValues`](https://suspense-npm.vercel.app/useStreamingValues)
+* [`useStreamingValue`](https://suspense-npm.vercel.app/useStreamingValue)
 #### Utilities
 * [`createDeferred`](https://suspense-npm.vercel.app/createDeferred)
 * [`isThenable`](https://suspense-npm.vercel.app/isThenable)

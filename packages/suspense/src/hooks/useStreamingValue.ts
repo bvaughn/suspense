@@ -1,30 +1,30 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { STATUS_PENDING } from "../constants";
 
-import { StreamingValues } from "../types";
+import { StreamingValue } from "../types";
 
-export type StreamingValuesPartial<Value, AdditionalData> = Pick<
-  StreamingValues<Value, AdditionalData>,
-  "complete" | "data" | "progress" | "status" | "values"
+export type StreamingValuePartial<Value, AdditionalData> = Pick<
+  StreamingValue<Value, AdditionalData>,
+  "complete" | "data" | "progress" | "status" | "value"
 >;
 
 type Noop = () => void;
 type CallbackWrapper = Noop & { hold: Noop; release: Noop };
 
-export function useStreamingValues<Value, AdditionalData = undefined>(
-  streamingValues: StreamingValues<Value, AdditionalData>,
+export function useStreamingValue<Value, AdditionalData = undefined>(
+  streamingValues: StreamingValue<Value, AdditionalData>,
   options: { throttleUpdatesBy?: number } = {}
-): StreamingValuesPartial<Value, AdditionalData> {
+): StreamingValuePartial<Value, AdditionalData> {
   const { throttleUpdatesBy = 100 } = options;
 
   const callbackWrapperRef = useRef<CallbackWrapper | null>(null);
 
-  const ref = useRef<StreamingValuesPartial<Value, AdditionalData>>({
+  const ref = useRef<StreamingValuePartial<Value, AdditionalData>>({
     complete: false,
     data: undefined,
     progress: 0,
     status: STATUS_PENDING,
-    values: undefined,
+    value: undefined,
   });
 
   const getValue = () => {
@@ -34,14 +34,14 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
       value.data !== streamingValues.data ||
       value.progress !== streamingValues.progress ||
       value.status !== streamingValues.status ||
-      value.values !== streamingValues.values
+      value.value !== streamingValues.value
     ) {
       ref.current = {
         complete: streamingValues.complete,
         data: streamingValues.data,
         progress: streamingValues.progress,
         status: streamingValues.status,
-        values: streamingValues.values,
+        value: streamingValues.value,
       };
     }
 
@@ -69,7 +69,7 @@ export function useStreamingValues<Value, AdditionalData = undefined>(
     }
   });
 
-  return useSyncExternalStore<StreamingValuesPartial<Value, AdditionalData>>(
+  return useSyncExternalStore<StreamingValuePartial<Value, AdditionalData>>(
     throttledSubscribe,
     getValue,
     getValue

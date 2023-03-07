@@ -8,13 +8,16 @@ const socket = new WebSocket("...");
 
 export const userCommentsCache = createStreamingCache<
   [userId: string],
-  Comment
+  Comment[]
 >({
   // Stream data for params
-  load: async (options: StreamingCacheLoadOptions<Comment>, userId: string) => {
+  load: async (
+    options: StreamingCacheLoadOptions<Comment[]>,
+    userId: string
+  ) => {
     const { reject, update, resolve } = options;
 
-    let countLoaded = 0;
+    let comments: Comment[] = [];
     let countTotal = 0;
 
     socket.onerror = (error) => {
@@ -31,7 +34,9 @@ export const userCommentsCache = createStreamingCache<
             countTotal = data.count as number;
             break;
           case "update":
-            countLoaded += data.comments.length;
+            comments.splice(comments.length, 0, ...data.comments);
+
+            const countLoaded = comments.length;
 
             // When new data streams in, notify the cache
             update(data.comments, countLoaded / countTotal);

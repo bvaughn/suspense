@@ -2,8 +2,7 @@ import { Suspense, useMemo, useState } from "react";
 import {
   createStreamingCache,
   StreamingCacheLoadOptions,
-  StreamingValues,
-  useStreamingValues,
+  StreamingValue,
 } from "suspense";
 import Loader from "../../../components/Loader";
 
@@ -21,9 +20,9 @@ export type Metadata = {
   postCount: number;
 };
 
-const streamingCache = createStreamingCache<[Post[]], Post, Metadata>({
+const streamingCache = createStreamingCache<[Post[]], Post[], Metadata>({
   load: async (
-    options: StreamingCacheLoadOptions<Post, Metadata>,
+    options: StreamingCacheLoadOptions<Post[], Metadata>,
     posts: Post[]
   ) => {
     const { signal } = options;
@@ -56,7 +55,7 @@ export default function Demo() {
 
 function DemoSuspends() {
   const [state, setState] = useState<"ready" | "running" | "complete">("ready");
-  const [stream, setStream] = useState<StreamingValues<Post, Metadata> | null>(
+  const [stream, setStream] = useState<StreamingValue<Post[], Metadata> | null>(
     null
   );
 

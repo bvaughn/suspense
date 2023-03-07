@@ -11,13 +11,13 @@ export default function Route() {
   return (
     <Container>
       <Block>
-        <Header title="useStreamingValues" />
+        <Header title="useStreamingValue" />
       </Block>
       <Block>
         <p>
           The easiest way to use a{" "}
           <Link to={CREATE_STREAMING_CACHE}>streaming cache</Link> is with the{" "}
-          <code>useStreamingValues</code> hook.
+          <code>useStreamingValue</code> hook.
         </p>
         <Code code={createStreamingCache.hook} />
       </Block>

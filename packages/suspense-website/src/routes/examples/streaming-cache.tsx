@@ -30,7 +30,7 @@ export default function Route() {
         <p>
           The demo above uses the{" "}
           <code>
-            <Link to={USE_STREAMING_CACHE}>useStreamingValues</Link>
+            <Link to={USE_STREAMING_CACHE}>useStreamingValue</Link>
           </code>{" "}
           hook to incrementally render posts as they stream in. At a high level
           that usage looks like this:

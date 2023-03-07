@@ -9,7 +9,7 @@ import {
   StreamingCache,
   StreamingCacheLoadOptions,
   StreamingSubscribeCallback,
-  StreamingValues,
+  StreamingValue,
 } from "../types";
 import { warnInDev } from "../utils/warnInDev";
 import { defaultGetKey } from "../utils/defaultGetKey";
@@ -48,7 +48,7 @@ export function createStreamingCache<
   const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
     string,
-    StreamingValues<Value, AdditionalData>
+    StreamingValue<Value, AdditionalData>
   >();
 
   function abort(...params: Params): boolean {
@@ -86,20 +86,20 @@ export function createStreamingCache<
     return hadValues;
   }
 
-  function getOrCreateStreamingValues(
+  function getOrCreateStreamingValue(
     ...params: Params
-  ): StreamingValues<Value, AdditionalData> {
+  ): StreamingValue<Value, AdditionalData> {
     const cacheKey = getKey(...params);
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
-      const resolver = createDeferred<StreamingValues<Value, AdditionalData>>(
+      const resolver = createDeferred<StreamingValue<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
       );
 
       const subscribers: Set<StreamingSubscribeCallback> = new Set();
 
-      const streamingValues: StreamingValues<Value, AdditionalData> = {
+      const streamingValues: StreamingValue<Value, AdditionalData> = {
         complete: false,
         data: undefined,
         progress: undefined,
@@ -111,7 +111,7 @@ export function createStreamingCache<
             subscribers.delete(callback);
           };
         },
-        values: undefined,
+        value: undefined,
       };
 
       const notifySubscribers = () => {
@@ -148,16 +148,12 @@ export function createStreamingCache<
       abortControllerMap.set(cacheKey, abortController);
 
       const options: StreamingCacheLoadOptions<Value, AdditionalData> = {
-        update: (values: Value[], progress?: number, data?: AdditionalData) => {
+        update: (value: Value, progress?: number, data?: AdditionalData) => {
           assertPending();
 
-          streamingValues.data = data;
-
-          if (streamingValues.values == null) {
-            streamingValues.values = [...values];
-          } else {
-            streamingValues.values = streamingValues.values.concat(...values);
-          }
+          streamingValues.data =
+            data == undefined ? streamingValues.data : data;
+          streamingValues.value = value;
 
           if (progress != null) {
             warnInDev(
@@ -207,16 +203,16 @@ export function createStreamingCache<
   function prefetch(...params: Params): void {
     debugLogInDev(`prefetch()`, params);
 
-    getOrCreateStreamingValues(...params);
+    getOrCreateStreamingValue(...params);
   }
 
   function stream(...params: Params) {
-    return getOrCreateStreamingValues(...params);
+    return getOrCreateStreamingValue(...params);
   }
 
   async function loadAndCatchErrors(
     cacheKey: string,
-    streamingValues: StreamingValues<Value, AdditionalData>,
+    streamingValues: StreamingValue<Value, AdditionalData>,
     options: StreamingCacheLoadOptions<Value, AdditionalData>,
     ...params: Params
   ) {

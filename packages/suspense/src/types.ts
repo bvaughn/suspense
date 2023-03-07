@@ -112,18 +112,18 @@ export type GetPointForValue<Point, Value> = (value: Value) => Point;
 
 // Streaming cache types
 
-export interface StreamingValues<Value, AdditionalData = undefined> {
+export interface StreamingValue<Value, AdditionalData = undefined> {
   complete: boolean;
   data: AdditionalData | undefined;
   progress: number | undefined;
-  resolver: PromiseLike<StreamingValues<Value, AdditionalData>>;
+  resolver: PromiseLike<StreamingValue<Value, AdditionalData>>;
   status: Status;
   subscribe(callback: StreamingSubscribeCallback): UnsubscribeCallback;
-  values: Value[] | undefined;
+  value: Value | undefined;
 }
 
 export interface StreamingCacheLoadOptions<Value, AdditionalData = undefined> {
-  update: (values: Value[], progress?: number, data?: AdditionalData) => void;
+  update: (value: Value, progress?: number, data?: AdditionalData) => void;
   resolve: () => void;
   reject: (error: any) => void;
   signal: AbortSignal;
@@ -138,5 +138,5 @@ export interface StreamingCache<
   evict(...params: Params): boolean;
   evictAll(): boolean;
   prefetch(...params: Params): void;
-  stream(...params: Params): StreamingValues<Value, AdditionalData>;
+  stream(...params: Params): StreamingValue<Value, AdditionalData>;
 }

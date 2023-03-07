@@ -93,7 +93,7 @@ export default function Route() {
             type="code"
           />
           <LinkListItem
-            children="useStreamingValues"
+            children="useStreamingValue"
             to={USE_STREAMING_CACHE}
             type="code"
           />

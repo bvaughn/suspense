@@ -6,7 +6,7 @@ export * from "./cache/createStreamingCache";
 export * from "./hooks/useCacheMutation";
 export * from "./hooks/useCacheStatus";
 export * from "./hooks/useImperativeCacheValue";
-export * from "./hooks/useStreamingValues";
+export * from "./hooks/useStreamingValue";
 export * from "./utils/createDeferred";
 export * from "./utils/createInfallibleCache";
 export * from "./utils/isPromiseLike";
