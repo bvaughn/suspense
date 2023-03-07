@@ -9,14 +9,21 @@ import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
   CacheLoadOptions,
+  PendingRecord,
   Record,
+  ResolvedRecord,
+  ResolvedRecordData,
   Status,
   StatusCallback,
   UnsubscribeCallback,
 } from "../types";
 import { assertPendingRecord } from "../utils/assertRecordStatus";
 import { isPromiseLike } from "../utils/isPromiseLike";
-import { isPendingRecord } from "../utils/isRecordStatus";
+import {
+  isPendingRecord,
+  isRejectedRecord,
+  isResolvedRecord,
+} from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<
@@ -28,6 +35,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
   __getKey: (...params: Params) => string;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (...params: Params) => void;
+  __writeResolvedRecordData: (value: Value) => ResolvedRecordData<Value>;
 };
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
@@ -110,7 +118,7 @@ export function createCache<Params extends Array<any>, Value>(
           backupRecordMap.delete(cacheKey);
         }
 
-        record.value.abortController.abort();
+        record.data.abortController.abort();
 
         notifySubscribers(...params);
 
@@ -125,12 +133,9 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const recordMap = getCacheForType(createRecordMap);
 
-    const record: Record<Value> = {
-      status: STATUS_RESOLVED,
-      value: null,
+    const record: ResolvedRecord<Value> = {
+      data: writeResolvedRecordData<Value>(value),
     };
-
-    writeRecordValue(record, value);
 
     debugLogInDev("cache()", params, value);
 
@@ -179,10 +184,10 @@ export function createCache<Params extends Array<any>, Value>(
       );
 
       record = {
-        status: STATUS_PENDING,
-        value: {
+        data: {
           abortController,
           deferred,
+          status: STATUS_PENDING,
         },
       } as Record<Value>;
 
@@ -191,7 +196,11 @@ export function createCache<Params extends Array<any>, Value>(
 
       notifySubscribers(...params);
 
-      processPendingRecord(abortController.signal, record, ...params);
+      processPendingRecord(
+        abortController.signal,
+        record as PendingRecord<Value>,
+        ...params
+      );
     }
 
     return record;
@@ -207,7 +216,7 @@ export function createCache<Params extends Array<any>, Value>(
 
     // Else fall back to Record status
     const record = backupRecordMap.get(cacheKey);
-    return record?.status ?? STATUS_NOT_STARTED;
+    return record?.data?.status ?? STATUS_NOT_STARTED;
   }
 
   function getValue(...params: Params): Value {
@@ -216,12 +225,12 @@ export function createCache<Params extends Array<any>, Value>(
 
     if (record == null) {
       throw Error("No record found");
-    } else if (record.status === STATUS_REJECTED) {
-      throw record.value;
-    } else if (record.status !== STATUS_RESOLVED) {
-      throw Error(`Record found with status "${record.status}"`);
-    } else {
+    } else if (isRejectedRecord(record)) {
+      throw record.data.error;
+    } else if (isResolvedRecord(record)) {
       return readRecordValue(record);
+    } else {
+      throw Error(`Record found with status "${record.data.status}"`);
     }
   }
 
@@ -229,7 +238,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
 
-    if (record?.status === STATUS_RESOLVED) {
+    if (record && isResolvedRecord(record)) {
       return readRecordValue(record);
     }
   }
@@ -242,24 +251,23 @@ export function createCache<Params extends Array<any>, Value>(
 
   function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
-    switch (record.status) {
-      case STATUS_PENDING:
-        return record.value.deferred;
-      case STATUS_RESOLVED:
-        return readRecordValue(record);
-      case STATUS_REJECTED:
-        throw record.value;
+    if (isPendingRecord(record)) {
+      return record.data.deferred;
+    } else if (isResolvedRecord(record)) {
+      return readRecordValue(record);
+    } else {
+      throw record.data.error;
     }
   }
 
   function read(...params: Params): Value {
     const record = getOrCreateRecord(...params);
-    if (record.status === STATUS_RESOLVED) {
+    if (isPendingRecord(record)) {
+      throw record.data.deferred;
+    } else if (isResolvedRecord(record)) {
       return readRecordValue(record);
-    } else if (isPendingRecord(record)) {
-      throw record.value.deferred;
     } else {
-      throw record.value;
+      throw record.data.error;
     }
   }
 
@@ -276,12 +284,12 @@ export function createCache<Params extends Array<any>, Value>(
 
   async function processPendingRecord(
     abortSignal: AbortSignal,
-    record: Record<Value>,
+    record: PendingRecord<Value>,
     ...params: Params
   ) {
     assertPendingRecord(record);
 
-    const { abortController, deferred } = record.value;
+    const { abortController, deferred } = record.data;
 
     try {
       const valueOrPromiseLike = load(...params, abortController);
@@ -290,16 +298,16 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
-        record.status = STATUS_RESOLVED;
-
-        writeRecordValue(record, value);
+        (record as Record<Value>).data = writeResolvedRecordData<Value>(value);
 
         deferred.resolve(value);
       }
     } catch (error) {
       if (!abortSignal.aborted) {
-        record.status = STATUS_REJECTED;
-        record.value = error;
+        (record as Record<Value>).data = {
+          error,
+          status: STATUS_REJECTED,
+        };
 
         deferred.reject(error);
       }
@@ -310,10 +318,10 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: Record<Value>): Value | undefined {
-    const value = record.value;
-    if (value instanceof WeakRef) {
-      return value.deref();
+  function readRecordValue(record: ResolvedRecord<Value>): Value | undefined {
+    const { weakRef, value } = record.data;
+    if (weakRef !== null) {
+      return weakRef.deref();
     } else {
       return value;
     }
@@ -346,11 +354,21 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function writeRecordValue(record: Record<Value>, value: Value): void {
+  function writeResolvedRecordData<Value>(
+    value: Value
+  ): ResolvedRecordData<Value> {
     if (useWeakRef && value != null && typeof value === "object") {
-      record.value = new WeakRef(value);
+      return {
+        status: STATUS_RESOLVED,
+        value: null,
+        weakRef: new WeakRef(value) as any,
+      };
     } else {
-      record.value = value;
+      return {
+        status: STATUS_RESOLVED,
+        value,
+        weakRef: null,
+      };
     }
   }
 
@@ -361,6 +379,7 @@ export function createCache<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
+    __writeResolvedRecordData: writeResolvedRecordData,
 
     // Public API
     abort,

@@ -10,7 +10,7 @@ import {
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "../constants";
-import { Cache, Record } from "../types";
+import { Cache, Record, RejectedRecord } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 
 type MutationCallback<Value> = () => Promise<Value>;
@@ -40,6 +40,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
+    __writeResolvedRecordData: writeResolvedRecordData,
   } = cache as InternalCache<Params, Value>;
 
   const [isPending, startTransition] = useTransition();
@@ -58,8 +59,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       }
 
       const record: Record<Value> = {
-        status: STATUS_RESOLVED,
-        value: newValue as any,
+        data: writeResolvedRecordData(newValue),
       };
 
       backupRecordMap.set(cacheKey, record);
@@ -89,10 +89,10 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const deferred = createDeferred<Value>();
 
       let record: Record<Value> = {
-        status: STATUS_PENDING,
-        value: {
+        data: {
           abortController,
           deferred,
+          status: STATUS_PENDING,
         },
       };
 
@@ -129,8 +129,9 @@ export function useCacheMutation<Params extends Array<any>, Value>(
             recordMap.delete(cacheKey);
           }
         } else {
-          (record as Record<Value>).status = STATUS_RESOLVED;
-          (record as Record<Value>).value = newValue;
+          (record as Record<Value>).data = writeResolvedRecordData(
+            newValue as Value
+          );
 
           deferred.resolve(newValue as Value);
 
@@ -142,8 +143,10 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           refresh(createRecordMap, recordMap);
         });
       } catch (error) {
-        (record as Record<Value>).status = STATUS_REJECTED;
-        (record as Record<Value>).value = error;
+        (record as Record<Value>).data = {
+          error,
+          status: STATUS_REJECTED,
+        };
 
         deferred.reject(error);
 
@@ -155,7 +158,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         });
       } finally {
         // Cleanup after mutation by deleting the abort controller
-        // If this mutation has already been aborted by a concurrent mutation
+        // If this mutation has already been aborted by a condata mutation
         // don't delete the newer controller
         if (abortController === mutationAbortControllerMap.get(cacheKey)) {
           mutationAbortControllerMap.delete(cacheKey);
