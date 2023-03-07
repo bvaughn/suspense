@@ -13,16 +13,20 @@ import {
 } from "../constants";
 import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
+import { mockWeakRef, WeakRefArray } from "../utils/test";
 import { useImperativeCacheValue } from "./useImperativeCacheValue";
 
+type Value = { key: string };
+
 describe("useImperativeCacheValue", () => {
-  let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
-  let getCacheKey: jest.Mock<string, [string]>;
+  let cache: Cache<[string], Value>;
+  let fetch: jest.Mock<Promise<Value> | Value, [string, CacheLoadOptions]>;
+
   let lastRenderedError: any = undefined;
   let lastRenderedStatus: Status | undefined = undefined;
   let lastRenderedValue: string | undefined = undefined;
-  let pendingDeferred: Deferred<string>[] = [];
+
+  let pendingDeferred: Deferred<Value>[] = [];
 
   function Component({ string }: { string: string }): any {
     const result = useImperativeCacheValue(cache, string);
@@ -40,30 +44,26 @@ describe("useImperativeCacheValue", () => {
 
     fetch = jest.fn();
     fetch.mockImplementation(async (key: string) => {
-      const deferred = createDeferred<string>();
+      const deferred = createDeferred<Value>();
 
       pendingDeferred.push(deferred);
 
       return deferred;
     });
 
-    getCacheKey = jest.fn();
-    getCacheKey.mockImplementation((key) => key.toString());
-
-    cache = createCache<[string], string>({
-      debugLabel: "cache",
-      getKey: getCacheKey,
+    cache = createCache<[string], Value>({
       load: fetch,
     });
 
     lastRenderedStatus = undefined;
     lastRenderedStatus = undefined;
     lastRenderedValue = undefined;
+
     pendingDeferred = [];
   });
 
   it("should return values that have already been loaded", async () => {
-    cache.cache("cached", "test");
+    cache.cache({ key: "cached" }, "test");
 
     const container = document.createElement("div");
     const root = createRoot(container);
@@ -73,7 +73,7 @@ describe("useImperativeCacheValue", () => {
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toBe("cached");
+    expect(lastRenderedValue).toEqual({ key: "cached" });
   });
 
   it("should fetch values that have not yet been fetched", async () => {
@@ -88,11 +88,11 @@ describe("useImperativeCacheValue", () => {
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve("resolved"));
+    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toBe("resolved");
+    expect(lastRenderedValue).toEqual({ key: "resolved" });
   });
 
   it("should handle values that are rejected", async () => {
@@ -126,11 +126,11 @@ describe("useImperativeCacheValue", () => {
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve("resolved"));
+    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toBe("resolved");
+    expect(lastRenderedValue).toEqual({ key: "resolved" });
   });
 
   it("should wait for values that have already been loaded to be rejected", async () => {
@@ -150,5 +150,40 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
+  });
+
+  describe("garbage collection", () => {
+    let weakRefArray: WeakRefArray<Object>;
+
+    beforeEach(() => {
+      weakRefArray = mockWeakRef();
+    });
+
+    it("should re-fetch a value that has been garbage collected", async () => {
+      // Pre-cache value
+      cache.cache({ key: "test" }, "test");
+
+      // Then garbage collect it
+      expect(weakRefArray.length).toBe(1);
+      weakRefArray[0].collect();
+
+      // Rendering should trigger a re-fetch
+      const container = document.createElement("div");
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Component string="test" />);
+      });
+
+      expect(lastRenderedError).toBeUndefined();
+      expect(lastRenderedStatus).toBe(STATUS_PENDING);
+      expect(lastRenderedValue).toBeUndefined();
+
+      expect(pendingDeferred.length).toBe(1);
+      await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+
+      expect(lastRenderedError).toBeUndefined();
+      expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+      expect(lastRenderedValue).toEqual({ key: "resolved" });
+    });
   });
 });

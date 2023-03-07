@@ -19,28 +19,40 @@ export type Status =
   | StatusRejected
   | StatusResolved;
 
+export type PendingRecordData<Type> = {
+  readonly abortController: AbortController;
+  readonly deferred: Deferred<Type>;
+  readonly status: StatusPending;
+};
+export type ResolvedRecordData<Type> = {
+  readonly status: StatusResolved;
+  readonly weakRef: Type extends Object ? WeakRef<Type> : null;
+  readonly value: Type;
+};
+export type RejectedRecordData = {
+  readonly error: any;
+  readonly status: StatusRejected;
+};
+
 export type PendingRecord<Type> = {
-  status: StatusPending;
-  value: {
-    abortController: AbortController;
-    deferred: Deferred<Type>;
-  };
+  data: PendingRecordData<Type>;
 };
-
 export type ResolvedRecord<Type> = {
-  status: StatusResolved;
-  value: Type extends Object ? Type | WeakRef<Type> : Type;
+  data: ResolvedRecordData<Type>;
 };
-
 export type RejectedRecord = {
-  status: StatusRejected;
-  value: any;
+  data: RejectedRecordData;
 };
 
 export type Record<Type> =
   | PendingRecord<Type>
   | ResolvedRecord<Type>
   | RejectedRecord;
+
+export type RecordData<Type> =
+  | PendingRecordData<Type>
+  | ResolvedRecordData<Type>
+  | RejectedRecordData;
 
 export type StreamingSubscribeCallback = () => void;
 export type StatusCallback = (status: Status) => void;

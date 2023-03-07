@@ -10,11 +10,11 @@ describe("createCache", () => {
     fetch = jest.fn();
     fetch.mockImplementation((key: string) => {
       if (key.startsWith("async")) {
-        return Promise.resolve(key);
+        return Promise.resolve(createObject(key));
       } else if (key.startsWith("error")) {
         return Promise.reject(key);
       } else {
-        return key;
+        return createObject(key);
       }
     });
   });
@@ -61,8 +61,26 @@ describe("createCache", () => {
     expect(cache.getValueIfCached("one")).not.toBeUndefined();
     expect(cache.getValueIfCached("two")).not.toBeUndefined();
   });
+
+  it("should re-suspend if read after GK", async () => {
+    cache = createCache<[string], Object>({
+      config: { useWeakRef: true },
+      load: fetch,
+    });
+
+    cache.cache(createObject("one"), "one");
+    expect(cache.getValueIfCached("one")).toEqual({ label: "one" });
+
+    await requestGC();
+    await waitForGC();
+
+    expect(cache.getValueIfCached("one")).toBeUndefined();
+
+    let value = await cache.readAsync("one");
+    expect(value).toEqual({ label: "one" });
+  });
 });
 
-function createObject(): Object {
-  return {};
+function createObject(label: string = "object"): Object {
+  return { label };
 }

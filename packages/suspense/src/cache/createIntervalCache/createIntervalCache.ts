@@ -17,10 +17,10 @@ import {
   IntervalCache,
   Record,
 } from "../../types";
-import { assertPendingRecord } from "../../utils/assertPendingRecord";
+import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
-import { isPendingRecord } from "../../utils/isPendingRecord";
+import { isPendingRecord } from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
 import { isPromiseLike } from "../../utils/isPromiseLike";
@@ -32,7 +32,7 @@ type SerializableToString = { toString(): string };
 
 type PendingMetadata<Point, Value> = {
   interval: Interval<Point>;
-  record: Record<Value[]>;
+  record: PendingRecord<Value[]>;
   value: PromiseLike<Value[]> | Value[];
 };
 
@@ -109,7 +109,7 @@ export function createIntervalCache<
             const recordKey = `${start}–${end}`;
             metadata.recordMap.delete(recordKey);
 
-            record.value.abortController.abort();
+            record.data.abortController.abort();
           } catch (error) {
             caught = error;
           }
@@ -153,13 +153,13 @@ export function createIntervalCache<
     debugLogInDev(`readAsync(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
-    switch (record.status) {
+    switch (record.data.status) {
       case STATUS_PENDING:
-        return record.value.deferred;
+        return record.data.deferred;
       case STATUS_RESOLVED:
-        return record.value as Value[];
+        return record.data.value as Value[];
       case STATUS_REJECTED:
-        throw record.value;
+        throw record.data.error;
     }
   }
 
@@ -167,12 +167,12 @@ export function createIntervalCache<
     debugLogInDev(`read(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
-    if (record.status === STATUS_RESOLVED) {
-      return record.value as Value[];
+    if (record.data.status === STATUS_RESOLVED) {
+      return record.data.value as Value[];
     } else if (isPendingRecord(record)) {
-      throw record.value.deferred;
+      throw record.data.deferred;
     } else {
-      throw record.value;
+      throw record.data.error;
     }
   }
 
@@ -211,12 +211,12 @@ export function createIntervalCache<
       );
 
       record = {
-        status: STATUS_PENDING,
-        value: {
+        data: {
           abortController,
           deferred,
+          status: STATUS_PENDING,
         },
-      } as Record<Value[]>;
+      };
 
       metadata.recordMap.set(cacheKey, record);
 
@@ -242,7 +242,7 @@ export function createIntervalCache<
 
     assertPendingRecord(record);
 
-    const { abortController } = record.value;
+    const { abortController } = record.data;
 
     let values;
     try {
@@ -312,7 +312,8 @@ export function createIntervalCache<
   ) {
     assertPendingRecord(record);
 
-    const { abortController, deferred } = record.value;
+    const { abortController, deferred } = (record as PendingRecord<Value[]>)
+      .data;
     const { signal } = abortController;
 
     const foundIntervals = findIntervals<Point>(
@@ -346,8 +347,10 @@ export function createIntervalCache<
       const error = Error(
         `Cannot load interval that contains previously failed interval`
       );
-      record.status = STATUS_REJECTED;
-      record.value = error;
+      record.data = {
+        error,
+        status: STATUS_REJECTED,
+      };
 
       deferred.reject(error);
 
@@ -362,7 +365,7 @@ export function createIntervalCache<
 
       const pendingMetadata: PendingMetadata<Point, Value> = {
         interval: [start, end],
-        record,
+        record: record as PendingRecord<Value[]>,
         value: thenable,
       };
 
@@ -397,16 +400,19 @@ export function createIntervalCache<
       );
 
       if (!signal.aborted) {
-        record.status = STATUS_RESOLVED;
-        record.value = sliceValues<Point, Value>(
-          metadata.sortedValues,
-          start,
-          end,
-          getPointForValue,
-          pointUtils
-        );
+        record.data = {
+          status: STATUS_RESOLVED,
+          weakRef: null,
+          value: sliceValues<Point, Value>(
+            metadata.sortedValues,
+            start,
+            end,
+            getPointForValue,
+            pointUtils
+          ),
+        };
 
-        deferred.resolve(record.value);
+        deferred.resolve(record.data.value);
       }
     } catch (error) {
       debugLogInDev(
@@ -416,8 +422,10 @@ export function createIntervalCache<
       );
 
       if (!signal.aborted) {
-        record.status = STATUS_REJECTED;
-        record.value = error;
+        record.data = {
+          error,
+          status: STATUS_REJECTED,
+        };
 
         deferred.reject(error);
       }
