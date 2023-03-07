@@ -285,11 +285,9 @@ describe("createCache", () => {
     });
 
     it("it should throw if value was rejected", async () => {
-      cache.readAsync("error");
+      cache.readAsync("error-expected");
       await Promise.resolve();
-      expect(() => cache.getValue("error")).toThrow(
-        'Record found with status "rejected"'
-      );
+      expect(() => cache.getValue("error-expected")).toThrow("error-expected");
     });
   });
 

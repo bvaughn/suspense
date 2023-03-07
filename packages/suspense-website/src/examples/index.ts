@@ -196,6 +196,12 @@ const useCacheMutation = {
   ),
 };
 
+const useCacheValue = {
+  hook: processExample(
+    readFileSync(join(__dirname, "useCacheValue", "hook.ts"), "utf8")
+  ),
+};
+
 export {
   createCache,
   createDeferred,
@@ -205,4 +211,5 @@ export {
   demos,
   isPromiseLike,
   useCacheMutation,
+  useCacheValue,
 };

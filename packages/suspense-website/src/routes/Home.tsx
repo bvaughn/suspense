@@ -19,6 +19,7 @@ import {
   IS_PROMISE_LIKE,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
+  USE_CACHE_VALUE,
   USE_STREAMING_CACHE,
 } from "./config";
 
@@ -84,6 +85,11 @@ export default function Route() {
           <LinkListItem
             children="useCacheStatus"
             to={USE_CACHE_STATUS}
+            type="code"
+          />
+          <LinkListItem
+            children="useCacheValue"
+            to={USE_CACHE_VALUE}
             type="code"
           />
           <LinkListItem

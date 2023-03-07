@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.16
+* Add `useCacheValue` hook for loading values using the imperative cache API rather than Suspense.
+
 ## 0.0.15
 * Removed `Thenable` in favor of built-in `PromiseLike` since it works better with async/await types
 * Replaced `isThenable` with `isPromiseLike`

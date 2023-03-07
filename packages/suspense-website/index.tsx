@@ -15,6 +15,7 @@ import {
   IS_PROMISE_LIKE,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
+  USE_CACHE_VALUE,
   USE_STREAMING_CACHE,
 } from "./src/routes/config";
 
@@ -28,6 +29,7 @@ import IsPromiseLikeRoute from "./src/routes/api/isPromiseLike";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
+import UseCacheValueRoute from "./src/routes/api/useCacheValue";
 import UseStreamingValuesRoute from "./src/routes/api/useStreamingValues";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";
@@ -83,6 +85,7 @@ root.render(
         <Route path={IS_PROMISE_LIKE} element={<IsPromiseLikeRoute />} />
         <Route path={USE_CACHE_MUTATION} element={<UseCacheMutationRoute />} />
         <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
+        <Route path={USE_CACHE_VALUE} element={<UseCacheValueRoute />} />
         <Route
           path={USE_STREAMING_CACHE}
           element={<UseStreamingValuesRoute />}

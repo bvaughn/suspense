@@ -216,6 +216,8 @@ export function createCache<Params extends Array<any>, Value>(
 
     if (record == null) {
       throw Error("No record found");
+    } else if (record.status === STATUS_REJECTED) {
+      throw record.value;
     } else if (record.status !== STATUS_RESOLVED) {
       throw Error(`Record found with status "${record.status}"`);
     } else {
