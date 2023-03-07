@@ -223,6 +223,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
 
+    // TODO [GC] Add test for this case
     if (record == null) {
       throw Error("No record found");
     } else if (isRejectedRecord(record)) {
@@ -254,7 +255,19 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       return record.data.deferred;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      const { weakRef, value } = record.data;
+      if (weakRef) {
+        const retainedValue = weakRef.deref();
+        if (retainedValue == null) {
+          // If the value is null, it has been garbage collected since we last read it.
+          // In that case, we should delete the record and try again.
+          evict(...params);
+          return readAsync(...params);
+        } else {
+          return retainedValue;
+        }
+      }
+      return value;
     } else {
       throw record.data.error;
     }
@@ -265,7 +278,19 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       throw record.data.deferred;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      const { weakRef, value } = record.data;
+      if (weakRef) {
+        const retainedValue = weakRef.deref();
+        if (retainedValue == null) {
+          // If the value is null, it has been garbage collected since we last read it.
+          // In that case, we should delete the record and try again.
+          evict(...params);
+          return read(...params);
+        } else {
+          return retainedValue;
+        }
+      }
+      return value;
     } else {
       throw record.data.error;
     }

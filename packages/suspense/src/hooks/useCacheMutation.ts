@@ -129,6 +129,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
             recordMap.delete(cacheKey);
           }
         } else {
+          // This method determines whether to store the value in a WeakRef
           (record as Record<Value>).data = writeResolvedRecordData(
             newValue as Value
           );

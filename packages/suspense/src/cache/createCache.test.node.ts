@@ -80,7 +80,7 @@ describe("createCache", () => {
     expect(value).toEqual({ label: "one" });
   });
 
-  // Test Suspense re-try too
+  // TODO [gc] Test read() re-tries after GC too
 });
 
 function createObject(label: string = "object"): Object {

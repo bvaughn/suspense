@@ -43,6 +43,7 @@ export function useImperativeCacheValue<Params extends any[], Value>(
       }
       return { error: caught, status: STATUS_REJECTED, value: undefined };
     case STATUS_RESOLVED:
+      // TODO [GC] Add test for this case
       return {
         error: undefined,
         status: STATUS_RESOLVED,
