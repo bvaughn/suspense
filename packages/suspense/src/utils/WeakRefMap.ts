@@ -41,9 +41,10 @@ export class WeakRefMap<Key, Value extends Object> {
   }
 
   has(key: Key): boolean {
-    // Handle timing edge case in case value has been GC'ed
-    // but FinalizationRegistry callback has not yet run.
-    return this.map.has(key) && this.map.get(key).deref() != null;
+    // Don't just use map.has(key) in case value has been GC'ed
+    // and FinalizationRegistry callback has not yet run.
+    const weakRef = this.map.get(key);
+    return weakRef != null && weakRef.deref() != null;
   }
 
   set(key: Key, value: Value): void {

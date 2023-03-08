@@ -124,8 +124,8 @@ describe("useCacheStatus", () => {
   });
 
   it("should update in response to an aborted request", async () => {
-    let abortSignal: AbortSignal | null = null;
-    let deferred: Deferred<string> | null = null;
+    let abortSignal: AbortSignal | undefined;
+    let deferred: Deferred<string> | undefined;
     fetch.mockImplementation(async (...args) => {
       abortSignal = args[1].signal;
       deferred = createDeferred();
@@ -146,7 +146,7 @@ describe("useCacheStatus", () => {
     act(() => {
       expect(cache.abort("async")).toBe(true);
     });
-    expect(abortSignal.aborted).toBe(true);
+    expect(abortSignal?.aborted).toBe(true);
 
     await Promise.resolve();
 

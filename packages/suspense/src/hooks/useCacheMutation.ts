@@ -47,7 +47,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const cacheKey = getKey(...params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
-        const abortController = mutationAbortControllerMap.get(cacheKey);
+        const abortController = mutationAbortControllerMap.get(cacheKey)!;
         abortController.abort();
 
         mutationAbortControllerMap.delete(cacheKey);
@@ -74,7 +74,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const cacheKey = getKey(...params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
-        const abortController = mutationAbortControllerMap.get(cacheKey);
+        const abortController = mutationAbortControllerMap.get(cacheKey)!;
         abortController.abort();
 
         mutationAbortControllerMap.delete(cacheKey);

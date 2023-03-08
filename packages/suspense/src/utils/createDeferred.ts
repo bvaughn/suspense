@@ -8,11 +8,12 @@ let MAX_LOOP_COUNT = 1_000;
 //
 // A "deferred" is a "thenable" that has convenience resolve/reject methods.
 export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
-  const resolveCallbacks: Set<(value?: Type) => void> = new Set();
-  const rejectCallbacks: Set<(error: Error) => void> = new Set();
+  const resolveCallbacks: Set<(value: Type) => any> = new Set();
+  const rejectCallbacks: Set<(error: Error) => any> = new Set();
 
   let status: "unresolved" | "resolved" | "rejected" = "unresolved";
-  let data: Type | Error | null = null;
+  let rejectedValue: Error | null = null;
+  let resolvedValue: Type | undefined;
 
   let callbacksRegisteredAfterResolutionCount = 0;
 
@@ -31,29 +32,38 @@ export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
   const deferred: Deferred<Type> = {
     then<ThenResult = Type, ErrorResult = never>(
       resolveCallback?:
-        | ((value?: Type) => ThenResult | PromiseLike<ThenResult>)
+        | ((value: Type) => ThenResult | PromiseLike<ThenResult>)
         | undefined
         | null,
       rejectCallback?:
         | ((error: Error) => PromiseLike<ErrorResult>)
         | undefined
         | null
-    ) {
+    ): PromiseLike<ThenResult | ErrorResult> {
       switch (status) {
         case "unresolved":
-          resolveCallbacks.add(resolveCallback);
-          rejectCallbacks.add(rejectCallback);
+          if (resolveCallback) {
+            resolveCallbacks.add(resolveCallback);
+          }
+          if (rejectCallback) {
+            rejectCallbacks.add(rejectCallback);
+          }
           break;
         case "rejected":
           checkCircularPromiseLikeChain();
-          rejectCallback(data as Error);
+          if (rejectCallback) {
+            rejectCallback(rejectedValue!);
+          }
           break;
         case "resolved":
           checkCircularPromiseLikeChain();
-          resolveCallback(data as Type);
+          if (resolveCallback) {
+            resolveCallback(resolvedValue!);
+          }
           break;
       }
 
+      // @ts-ignore
       return null;
     },
     reject(error: Error) {
@@ -62,7 +72,7 @@ export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
       }
 
       status = "rejected";
-      data = error;
+      rejectedValue = error;
 
       rejectCallbacks.forEach((rejectCallback) => {
         let thrownValue = null;
@@ -81,13 +91,13 @@ export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
       rejectCallbacks.clear();
       resolveCallbacks.clear();
     },
-    resolve(value?: Type) {
+    resolve(value: Type) {
       if (status !== "unresolved") {
         throw Error(`Deferred has already been ${status}`);
       }
 
       status = "resolved";
-      data = value;
+      resolvedValue = value;
 
       resolveCallbacks.forEach((resolveCallback) => {
         let thrownValue = null;

@@ -10,7 +10,7 @@ export default function Note({
   title = "Note",
   type = "note",
 }: PropsWithChildren & { title?: string; type?: Type }) {
-  let iconType: IconType = null;
+  let iconType: IconType;
   switch (type) {
     case "note":
       iconType = "note";

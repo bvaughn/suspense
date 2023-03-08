@@ -181,7 +181,7 @@ export function ProgressBar({ progress }: { progress: number }) {
 }
 
 function PostRow({ post, user }: { post: Post | null; user: User | null }) {
-  if (post === null) {
+  if (post === null || user == null) {
     return <PlaceholderRow />;
   }
 

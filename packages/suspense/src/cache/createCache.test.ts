@@ -62,8 +62,8 @@ describe("createCache", () => {
 
   describe("abort", () => {
     it("should abort an active request", () => {
-      let abortSignal: AbortSignal | null = null;
-      let deferred: Deferred<string> | null = null;
+      let abortSignal: AbortSignal | undefined;
+      let deferred: Deferred<string> | undefined;
       load.mockImplementation(async (...args) => {
         abortSignal = args[1].signal;
         deferred = createDeferred();
@@ -76,7 +76,7 @@ describe("createCache", () => {
       expect(cache.abort("async")).toBe(true);
       expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
 
-      expect(abortSignal.aborted).toBe(true);
+      expect(abortSignal?.aborted).toBe(true);
 
       deferred!.resolve("async");
       expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
@@ -92,7 +92,7 @@ describe("createCache", () => {
       cache.readAsync("async");
       expect(cache.getStatus("async")).toBe(STATUS_PENDING);
 
-      const initialDeferred = deferred;
+      const initialDeferred = deferred!;
 
       expect(cache.abort("async")).toBe(true);
       expect(cache.getStatus("async")).toBe(STATUS_NOT_FOUND);
@@ -102,7 +102,7 @@ describe("createCache", () => {
       expect(load).toHaveBeenCalled();
 
       // At this point, even if the first request completes– it should be ignored.
-      initialDeferred!.resolve("async");
+      initialDeferred.resolve("async");
       expect(cache.getStatus("async")).toBe(STATUS_PENDING);
 
       // But the second request should be processed.
@@ -335,7 +335,7 @@ describe("createCache", () => {
       // Verify other values fetch independently
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall[0]).toEqual("sync-2");
+      expect(load.mock.lastCall?.[0]).toEqual("sync-2");
     });
   });
 

@@ -1,6 +1,6 @@
 import {
+  ForwardedRef,
   forwardRef,
-  InputHTMLAttributes,
   KeyboardEvent,
   MutableRefObject,
   useRef,
@@ -10,51 +10,47 @@ import Icon from "../../../components/Icon";
 import { ApiClient, itemsCache } from "./index";
 import styles from "./style.module.css";
 
-function InputInner({
-  disabled,
-  forwardedRef,
-  onEnter,
-  ...rest
-}: {
-  forwardedRef: MutableRefObject<HTMLInputElement>;
-} & InputHTMLAttributes<HTMLInputElement> & { onEnter: () => void }) {
-  const onClick = () => {
-    forwardedRef.current?.focus();
-  };
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    switch (event.key) {
-      case "Enter":
-        onEnter();
-        break;
-    }
-  };
-
-  return (
-    <div
-      className={styles.InputRow}
-      data-disabled={disabled || undefined}
-      onClick={onClick}
-    >
-      <Icon type="edit" />
-      <input
-        {...rest}
-        className={styles.Input}
-        disabled={disabled}
-        onKeyDown={onKeyDown}
-        placeholder="What needs to be done?"
-        ref={forwardedRef}
-      />
-    </div>
-  );
-}
-
 const Input = forwardRef(
   (
-    props: InputHTMLAttributes<HTMLInputElement> & { onEnter: () => void },
-    ref: MutableRefObject<HTMLInputElement>
+    {
+      disabled,
+      onEnter,
+      placeholder,
+    }: {
+      disabled: boolean;
+      onEnter: () => void;
+      placeholder: string;
+    },
+    ref: ForwardedRef<HTMLInputElement>
   ) => {
-    return <InputInner forwardedRef={ref} {...props} />;
+    const onClick = () => {
+      (ref as MutableRefObject<HTMLInputElement>).current.focus();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "Enter":
+          onEnter();
+          break;
+      }
+    };
+
+    return (
+      <div
+        className={styles.InputRow}
+        data-disabled={disabled || undefined}
+        onClick={onClick}
+      >
+        <Icon type="edit" />
+        <input
+          className={styles.Input}
+          disabled={disabled}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          ref={ref}
+        />
+      </div>
+    );
   }
 );
 
@@ -69,7 +65,7 @@ function AddItem({ apiClient }: { apiClient: ApiClient }) {
   const { isPending, mutateAsync } = useCacheMutation(itemsCache);
 
   const addItem = async () => {
-    const input = inputRef.current;
+    const input = inputRef.current!;
     if (input.value) {
       mutateAsync([apiClient], async () => {
         // Add the new item to the remote list (async)

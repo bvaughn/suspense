@@ -402,7 +402,6 @@ export function createIntervalCache<
       if (!signal.aborted) {
         record.data = {
           status: STATUS_RESOLVED,
-          weakRef: null,
           value: sliceValues<Point, Value>(
             metadata.sortedValues,
             start,
@@ -415,10 +414,17 @@ export function createIntervalCache<
         deferred.resolve(record.data.value);
       }
     } catch (error) {
+      let errorMessage = "Unknown Error";
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       debugLogInDev(
         `processPendingRecord(${start}, ${end}): failed`,
         params,
-        error?.message || error
+        errorMessage
       );
 
       if (!signal.aborted) {

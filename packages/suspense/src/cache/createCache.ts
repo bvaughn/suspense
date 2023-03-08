@@ -357,11 +357,9 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValueThrowsIfGC(
-    record: ResolvedRecord<Value>
-  ): Value | undefined {
+  function readRecordValueThrowsIfGC(record: ResolvedRecord<Value>): Value {
     const { weakRef, value } = record.data;
-    if (weakRef !== null) {
+    if (weakRef != null) {
       const retainedValue = weakRef.deref();
       if (retainedValue == null) {
         throw Error("Value was garbage collected");
@@ -369,7 +367,7 @@ export function createCache<Params extends Array<any>, Value>(
         return retainedValue;
       }
     } else {
-      return value;
+      return value!;
     }
   }
 
@@ -406,14 +404,12 @@ export function createCache<Params extends Array<any>, Value>(
     if (useWeakRef && value != null && typeof value === "object") {
       return {
         status: STATUS_RESOLVED,
-        value: null,
         weakRef: new WeakRef(value) as any,
       };
     } else {
       return {
         status: STATUS_RESOLVED,
         value,
-        weakRef: null,
       };
     }
   }
