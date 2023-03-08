@@ -26,7 +26,7 @@ export type PendingRecordData<Type> = {
 };
 export type ResolvedRecordData<Type> = {
   readonly status: StatusResolved;
-  readonly weakRef: Type extends Object ? WeakRef<Type> : null;
+  readonly weakRef: Type extends Object ? WeakRef<Type> | null : null;
   readonly value: Type;
 };
 export type RejectedRecordData = {

@@ -4,13 +4,8 @@ import {
   useTransition,
 } from "react";
 import { InternalCache } from "../cache/createCache";
-import {
-  STATUS_NOT_FOUND,
-  STATUS_PENDING,
-  STATUS_REJECTED,
-  STATUS_RESOLVED,
-} from "../constants";
-import { Cache, Record, RejectedRecord } from "../types";
+import { STATUS_PENDING, STATUS_REJECTED } from "../constants";
+import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 
 type MutationCallback<Value> = () => Promise<Value>;
