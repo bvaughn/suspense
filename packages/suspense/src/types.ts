@@ -67,7 +67,7 @@ export interface Deferred<Type> extends PromiseLike<Type> {
 
 // Cache types
 
-export interface Cache<Params extends Array<any>, Value> {
+export interface Cache<Params extends any[], Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
   evict(...params: Params): boolean;
@@ -90,7 +90,7 @@ export type CacheLoadOptions = {
 
 // Interval cache types
 
-export type IntervalCache<Point, Params extends Array<any>, Value> = {
+export type IntervalCache<Point, Params extends any[], Value> = {
   abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   evictAll(): boolean;
@@ -130,7 +130,7 @@ export interface StreamingCacheLoadOptions<Value, AdditionalData = undefined> {
 }
 
 export interface StreamingCache<
-  Params extends Array<any>,
+  Params extends any[],
   Value,
   AdditionalData = undefined
 > {
