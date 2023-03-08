@@ -288,8 +288,9 @@ describe("createCache", () => {
     });
 
     it("it should throw if value was rejected", async () => {
-      cache.readAsync("error-expected");
-      await Promise.resolve();
+      try {
+        await cache.readAsync("error-expected");
+      } catch (error) {}
       expect(() => cache.getValue("error-expected")).toThrow("error-expected");
     });
   });
@@ -315,9 +316,10 @@ describe("createCache", () => {
     });
 
     it("should return undefined for values that have rejected", async () => {
-      cache.readAsync("error");
-      await Promise.resolve();
-      expect(cache.getValueIfCached("async")).toBeUndefined();
+      try {
+        await cache.readAsync("error-expected");
+      } catch (error) {}
+      expect(cache.getValueIfCached("error-expected")).toBeUndefined();
     });
   });
 
@@ -454,7 +456,9 @@ describe("createCache", () => {
 
     it("should return the correct value for keys that have already been resolved or rejected", async () => {
       cache.readAsync("async");
-      cache.readAsync("error");
+      try {
+        await cache.readAsync("error");
+      } catch (error) {}
 
       await Promise.resolve();
 

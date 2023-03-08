@@ -359,9 +359,6 @@ describe("createIntervalCache", () => {
         deferred.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
 
-        // Wait for promise rejection to finish
-        await Promise.resolve();
-
         expect(() => cache.readAsync(1, 5, "test")).toThrow(
           "Cannot load interval"
         );
@@ -418,14 +415,18 @@ describe("createIntervalCache", () => {
             return deferredRejects;
           }
         });
-        let promise = cache.readAsync(5, 9, "test");
+        cache.readAsync(5, 9, "test");
         deferredResolves.resolve([5, 6]);
+
         deferredRejects.reject(new Error("Expected"));
-        await expect(() => promise).rejects.toThrow("Expected");
 
         // The failed interval will fail future requests that contain it
-        await expect(cache.readAsync(5, 9, "test")).rejects.toThrow("Expected");
-        await expect(cache.readAsync(9, 9, "test")).rejects.toThrow("Expected");
+        await expect(() => cache.readAsync(5, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
+        await expect(() => cache.readAsync(9, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
 
         // Evicting the failed interval will allow it to be requested again
         cache.evictAll();

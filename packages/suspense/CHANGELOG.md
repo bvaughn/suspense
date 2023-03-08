@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.23
+* Rewrote deferred internals to wrap a `Promise` and implement the full `Promise` API rather than `PromiseLike`.
+
 ## 0.0.22
 * Fixed type definition for internal `ResolvedRecordData` structure.
 

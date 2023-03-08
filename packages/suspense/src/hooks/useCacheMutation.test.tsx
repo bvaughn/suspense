@@ -118,7 +118,7 @@ describe("useCacheMutation", () => {
       console.error = () => {};
 
       await act(async () => {
-        mutationApi.two.mutateAsync(["two"], async () => {
+        await mutationApi.two.mutateAsync(["two"], async () => {
           throw "errored-two";
         });
       });

@@ -144,7 +144,12 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           status: STATUS_REJECTED,
         };
 
-        deferred.reject(error);
+        try {
+          deferred.reject(error);
+          await deferred;
+        } catch (error) {
+          // Don't trigger an unhandled rejection
+        }
 
         backupRecordMap.set(cacheKey, record);
 
@@ -154,7 +159,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         });
       } finally {
         // Cleanup after mutation by deleting the abort controller
-        // If this mutation has already been aborted by a condata mutation
+        // If this mutation has already been preempted by a newer mutation
         // don't delete the newer controller
         if (abortController === mutationAbortControllerMap.get(cacheKey)) {
           mutationAbortControllerMap.delete(cacheKey);

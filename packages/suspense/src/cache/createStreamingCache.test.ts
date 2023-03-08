@@ -278,6 +278,12 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and rejection", async () => {
         const streaming = cache.stream("string");
 
+        // Prevent Jest from failing due to unhandled promise rejection
+        streaming.resolver.then(
+          () => {},
+          () => {}
+        );
+
         expect(fetch).toHaveBeenCalledTimes(1);
         expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
@@ -293,6 +299,7 @@ describe("createStreamingCache", () => {
         expect(streaming.value).toEqual([1]);
 
         options.reject("Expected");
+
         expect(subscription).toHaveBeenCalledTimes(2);
         expect(streaming.complete).toEqual(true);
         expect(streaming.progress).toBeUndefined();
@@ -312,6 +319,12 @@ describe("createStreamingCache", () => {
         });
 
         const streaming = cache.stream("string");
+
+        // Prevent Jest from failing due to unhandled promise rejection
+        streaming.resolver.then(
+          () => {},
+          () => {}
+        );
 
         expect(fetch).toHaveBeenCalledTimes(1);
         expect(fetch.mock.lastCall?.[1]).toEqual("string");
