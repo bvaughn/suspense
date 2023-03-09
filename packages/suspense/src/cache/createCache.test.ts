@@ -609,9 +609,10 @@ describe("createCache", () => {
   });
 
   describe("getCache: WeakRefMap", () => {
-    let gcCache: Cache<[string], Object>;
+    type TestValue = { key: string };
+    let gcCache: Cache<[string], object>;
     let loadObject: jest.Mock<
-      Promise<Object> | Object,
+      Promise<object> | object,
       [string, CacheLoadOptions]
     >;
     let weakRefArray: WeakRefArray<any>;
@@ -630,10 +631,10 @@ describe("createCache", () => {
         }
       });
 
-      gcCache = createCache<[string], Object>({
+      gcCache = createCache({
         load: loadObject,
         config: {
-          getCache: (onEvict) => new WeakRefMap<string, Object>(onEvict) as any,
+          getCache: (onEvict) => new WeakRefMap(onEvict),
         },
       });
     });
@@ -655,9 +656,7 @@ describe("createCache", () => {
       expect(weakRefArray.length).toBe(1);
       weakRefArray[0].collect();
 
-      expect(() => gcCache.getValue("test")).toThrow(
-        "No record found"
-      );
+      expect(() => gcCache.getValue("test")).toThrow("No record found");
     });
 
     it("getValueIfCached: should return undefined if previously loaded value has been collected", async () => {

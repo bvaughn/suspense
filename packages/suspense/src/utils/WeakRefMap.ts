@@ -1,14 +1,19 @@
 export type FinalizerCallback<Key> = (key: Key) => void;
 
-export class WeakRefMap<Key, Value extends Object> {
+// WeakRefs only work with objects, yet the user may be specifying an arbitrary type.
+// This doesn't actually matter since internally what is stored is Record<Value>
+// which is an object.
+// Currently we lie to the type system to make this work seamlessly.
+// TODO: Find a better way to do this.
+export class WeakRefMap<Key extends string, Value> {
   private finalizerCallback: FinalizerCallback<Key>;
   private finalizationRegistry: FinalizationRegistry<Key>;
-  private map: Map<Key, WeakRef<Value>>;
+  private map: Map<Key, WeakRef<any>>;
 
   constructor(finalizerCallback: FinalizerCallback<Key>) {
     this.finalizerCallback = finalizerCallback;
 
-    this.map = new Map<Key, WeakRef<Value>>();
+    this.map = new Map<Key, WeakRef<any>>();
     this.finalizationRegistry = new FinalizationRegistry<Key>((key) => {
       this.map.delete(key);
 
@@ -47,7 +52,7 @@ export class WeakRefMap<Key, Value extends Object> {
     return weakRef != null && weakRef.deref() != null;
   }
 
-  set(key: Key, value: Value): void {
+  set(key: Key, value: Value): this {
     if (this.map.has(key)) {
       this.unregister(key);
 
@@ -55,27 +60,26 @@ export class WeakRefMap<Key, Value extends Object> {
       this.finalizerCallback(key);
     }
 
-    this.map.set(key, new WeakRef(value));
+    this.map.set(key, new WeakRef(value!));
 
     if (value != null) {
       this.finalizationRegistry.register(value, key, value);
     }
+    return this;
   }
 
   clear(): void {
     this.map.clear();
   }
 
-  size(): number {
+  get size(): number {
     return this.map.size;
   }
 
-  forEach(
-    callback: (value: Value, key: Key, map: WeakRefMap<Key, Value>) => void
-  ): void {
+  forEach(callback: (value: Value, key: Key, map: this) => void): void {
     this.map.forEach((weakRef, key) => {
       const value = weakRef.deref();
-      callback(value!, key, this);
+      callback(value as Value, key, this);
     });
   }
 }
