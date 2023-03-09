@@ -96,14 +96,7 @@ export class SimpleLRUCache<Value> {
   }
 
   get(key: string) {
-    if (!this.cache.has(key)) return undefined;
-
-    let val = this.cache.get(key);
-
-    this.cache.delete(key);
-    this.cache.set(key, val);
-
-    return val;
+    return this.cache.get(key);
   }
 
   set(key: string, value: Value) {
