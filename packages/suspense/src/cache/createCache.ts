@@ -26,7 +26,7 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
-import { defaultGetCacher } from "../utils/defaultGetCacher";
+import { defaultGetCache } from "../utils/defaultGetCache";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
@@ -60,7 +60,7 @@ export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
 ): Cache<Params, Value> {
   const { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
-  const { getCache = defaultGetCacher } = config;
+  const { getCache = defaultGetCache } = config;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
