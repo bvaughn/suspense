@@ -93,7 +93,7 @@ export function configure<Point>(
       currentInterval = sortedIntervals[index];
 
       const tempMerged = merge(prevInterval, currentInterval);
-      prevInterval = tempMerged.pop();
+      prevInterval = tempMerged.pop()!;
       merged.push(...tempMerged);
     }
 
@@ -175,14 +175,14 @@ export function configure<Point>(
         currentA = a[++indexA] ?? null;
         currentB = b[++indexB] ?? null;
       } else if (pointUtils.greaterThan(currentA[1], currentB[1])) {
-        currentA = separatedLoop.a.pop();
+        currentA = separatedLoop.a.pop()!;
 
         separated.b.push(...separatedLoop.b);
         separated.a.push(...separatedLoop.a);
 
         currentB = b[++indexB] ?? null;
       } else {
-        currentB = separatedLoop.b.pop();
+        currentB = separatedLoop.b.pop()!;
 
         separated.b.push(...separatedLoop.b);
         separated.a.push(...separatedLoop.a);

@@ -173,7 +173,7 @@ describe("createIntervalCache", () => {
       // Verify values in cache "one" have been evicted
       await cache.readAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(numCalls + 1);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([1, 10, "one"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([1, 10, "one"]);
     });
 
     it("should only evict values for the requested parameters", async () => {
@@ -225,23 +225,23 @@ describe("createIntervalCache", () => {
       let values = await cache.readAsync(2, 4, "test");
       expect(values).toEqual(createContiguousArray(2, 4));
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([2, 4, "test"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([2, 4, "test"]);
 
       values = await cache.readAsync(7, 8, "test");
       expect(values).toEqual(createContiguousArray(7, 8));
       expect(load).toHaveBeenCalledTimes(2);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([7, 8, "test"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([7, 8, "test"]);
 
       values = await cache.readAsync(3, 8, "test");
       expect(values).toEqual(createContiguousArray(3, 8));
       expect(load).toHaveBeenCalledTimes(3);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([4, 7, "test"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([4, 7, "test"]);
     });
 
     it("should cache intervals separately based on parameters", async () => {
       await cache.readAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([1, 10, "one"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([1, 10, "one"]);
 
       // These intervals have already been loaded for key "one",
       await cache.readAsync(2, 4, "one");
@@ -251,10 +251,10 @@ describe("createIntervalCache", () => {
       // But key "two" needs to load them for the first time
       await cache.readAsync(2, 4, "two");
       expect(load).toHaveBeenCalledTimes(2);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([2, 4, "two"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([2, 4, "two"]);
       await cache.readAsync(6, 9, "two");
       expect(load).toHaveBeenCalledTimes(3);
-      expect(load.mock.lastCall.slice(0, 3)).toEqual([6, 9, "two"]);
+      expect(load.mock.lastCall?.slice(0, 3)).toEqual([6, 9, "two"]);
     });
 
     describe("concurrent requests", () => {
@@ -359,9 +359,6 @@ describe("createIntervalCache", () => {
         deferred.reject(new Error("Expected"));
         await expect(() => promise).rejects.toThrow("Expected");
 
-        // Wait for promise rejection to finish
-        await Promise.resolve();
-
         expect(() => cache.readAsync(1, 5, "test")).toThrow(
           "Cannot load interval"
         );
@@ -418,14 +415,18 @@ describe("createIntervalCache", () => {
             return deferredRejects;
           }
         });
-        let promise = cache.readAsync(5, 9, "test");
+        cache.readAsync(5, 9, "test");
         deferredResolves.resolve([5, 6]);
+
         deferredRejects.reject(new Error("Expected"));
-        await expect(() => promise).rejects.toThrow("Expected");
 
         // The failed interval will fail future requests that contain it
-        await expect(cache.readAsync(5, 9, "test")).rejects.toThrow("Expected");
-        await expect(cache.readAsync(9, 9, "test")).rejects.toThrow("Expected");
+        await expect(() => cache.readAsync(5, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
+        await expect(() => cache.readAsync(9, 9, "test")).rejects.toThrow(
+          "Expected"
+        );
 
         // Evicting the failed interval will allow it to be requested again
         cache.evictAll();

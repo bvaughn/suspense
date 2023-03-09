@@ -36,10 +36,11 @@ const streamingCache = createStreamingCache<[Post[]], Post[], Metadata>({
         return;
       }
 
-      const post = posts[i];
       const progress = i / posts.length;
 
-      options.update([post], progress, { postCount: posts.length });
+      options.update(posts.slice(0, i + 1), progress, {
+        postCount: posts.length,
+      });
     }
     options.resolve();
   },
@@ -181,7 +182,7 @@ export function ProgressBar({ progress }: { progress: number }) {
 }
 
 function PostRow({ post, user }: { post: Post | null; user: User | null }) {
-  if (post === null) {
+  if (post === null || user == null) {
     return <PlaceholderRow />;
   }
 

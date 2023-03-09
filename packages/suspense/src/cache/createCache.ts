@@ -43,7 +43,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
     getCache?: <Value>(
-      onEviction?: (key: string) => void
+      onEviction: (key: string) => void
     ) => Cacher<string, Value>;
   };
   debugLabel?: string;
@@ -264,7 +264,15 @@ export function createCache<Params extends Array<any>, Value>(
   function prefetch(...params: Params): void {
     debugLogInDev(`prefetch()`, params);
 
-    readAsync(...params);
+    const promiseOrValue = readAsync(...params);
+    if (isPromiseLike(promiseOrValue)) {
+      promiseOrValue.then(
+        () => {},
+        (error) => {
+          // Don't let readAsync throw an uncaught error.
+        }
+      );
+    }
   }
 
   function readAsync(...params: Params): PromiseLike<Value> | Value {
@@ -336,7 +344,7 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: ResolvedRecord<Value>): Value | undefined {
+  function readRecordValue(record: ResolvedRecord<Value>): Value {
     return record.data.value;
   }
 

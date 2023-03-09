@@ -45,16 +45,19 @@ export function useImperativeCacheValue<Params extends any[], Value>(
       }
       return { error: caught, status: STATUS_REJECTED, value: undefined };
     case STATUS_RESOLVED:
-      return {
-        error: undefined,
-        status: STATUS_RESOLVED,
-        value: cache.getValueIfCached(...params),
-      };
+      try {
+        return {
+          error: undefined,
+          status: STATUS_RESOLVED,
+          value: cache.getValue(...params),
+        };
+      } catch (error) {}
     default:
-      return {
-        error: undefined,
-        status: STATUS_PENDING,
-        value: undefined,
-      };
   }
+
+  return {
+    error: undefined,
+    status: STATUS_PENDING,
+    value: undefined,
+  };
 }

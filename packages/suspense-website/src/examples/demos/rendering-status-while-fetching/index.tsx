@@ -41,8 +41,8 @@ export const userProfileCache = createCache<[number], User>({
 });
 
 export const SelectedUserContext = createContext<{
-  selectedUserId: number;
-  setSelectedUserId: (username: number) => void;
+  selectedUserId: number | null;
+  setSelectedUserId: (userId: number | null) => void;
 }>(null as any);
 
 export default function Demo() {

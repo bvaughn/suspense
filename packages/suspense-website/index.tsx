@@ -38,7 +38,7 @@ import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-s
 import CreatingStreamingCacheRoute from "./src/routes/examples/streaming-cache";
 import ScrollToTop from "./src/components/ScrollToTop";
 
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById("root")!;
 const root = createRoot(rootElement);
 root.render(
   <StrictMode>

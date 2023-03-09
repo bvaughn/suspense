@@ -1,8 +1,15 @@
 # Changelog
 
+## 0.0.23
+* Rewrote deferred internals to wrap a `Promise` and implement the full `Promise` API rather than `PromiseLike`.
+
+## 0.0.22
+* Fixed type definition for internal `ResolvedRecordData` structure.
+
 ## 0.0.21
 * Fix bug where `createCache` subscribers were not notified after `evict` or `evictAll`.
 * Renamed `STATUS_NOT_STARTED` ("not-started") status to `STATUS_NOT_FOUND` ("not-found") for better semantics.
+* Exposed/exported some of the lower-level record utilities for creating custom cache types.
 
 ## 0.0.20
 * Fixed type definition for `createStreamingCache` `StreamingCacheLoadOptions` param.

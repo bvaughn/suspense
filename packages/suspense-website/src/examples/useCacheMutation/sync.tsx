@@ -12,7 +12,7 @@ const inputRef: RefObject<HTMLInputElement> = null as any;
 const { mutateSync } = useCacheMutation(userCache);
 
 const onClick = () => {
-  const newName = inputRef.current.value;
+  const newName = inputRef.current!.value;
 
   mutateSync([userId], {
     id: userId,

@@ -9,7 +9,7 @@ export function mockWeakRef(): WeakRefArray<any> {
   const weakRefArray: WeakRefArray<any> = [];
 
   class MockWeakRef<Value> {
-    [Symbol.toStringTag]: "WeakRef";
+    [Symbol.toStringTag]: "WeakRef" = "WeakRef";
 
     value: Value | undefined = undefined;
 
@@ -39,7 +39,7 @@ export async function requestGC() {
   await wait(100);
 
   // Node --expose-gc flag
-  globalThis.gc();
+  globalThis.gc!();
 
   await wait(100);
 }

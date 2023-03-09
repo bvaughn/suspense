@@ -73,7 +73,7 @@ export const {
       DEFAULT_MAX_TIME
     );
     if (tree === null) {
-      return;
+      return [];
     }
 
     let characterIndex = 0;

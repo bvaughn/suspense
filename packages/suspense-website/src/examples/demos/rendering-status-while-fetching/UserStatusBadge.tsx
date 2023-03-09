@@ -19,6 +19,8 @@ function UserStatusBadge({ id }: { id: number }) {
     case "resolved":
       type = "status-resolved";
       break;
+    default:
+      return null;
   }
 
   return <Icon type={type} />;

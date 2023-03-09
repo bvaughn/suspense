@@ -3,7 +3,7 @@ export function throttle<T extends (...args: any[]) => void>(
   throttleByAmount: number
 ): T & { cancel: () => void } {
   let lastCalledAt = -Infinity;
-  let timeoutId: NodeJS.Timeout = null;
+  let timeoutId: NodeJS.Timeout | null = null;
 
   const throttled = (...args: any[]) => {
     const elapsed = performance.now() - lastCalledAt;
@@ -11,7 +11,9 @@ export function throttle<T extends (...args: any[]) => void>(
       lastCalledAt = performance.now();
       callback(...args);
     } else {
-      clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
 
       timeoutId = setTimeout(() => {
         lastCalledAt = performance.now();
@@ -21,7 +23,9 @@ export function throttle<T extends (...args: any[]) => void>(
   };
 
   throttled.cancel = () => {
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
   };
 
   return throttled as T & { cancel: () => void };

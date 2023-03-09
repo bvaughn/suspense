@@ -17,7 +17,7 @@ describe("useStreamingValue", () => {
   let lastRendered: StreamingValuePartial<any, any> | undefined = undefined;
 
   function Component({
-    simulateRenderDuration,
+    simulateRenderDuration = 0,
     streaming,
     throttleUpdatesBy,
   }: {
@@ -178,25 +178,25 @@ describe("useStreamingValue", () => {
       act(() => {
         options.update([1], 0.25);
       });
-      expect(lastRendered.value).toEqual([1]);
+      expect(lastRendered?.value).toEqual([1]);
 
       act(() => {
         options.update([1, 2], 0.5);
       });
-      expect(lastRendered.value).toEqual([1]);
+      expect(lastRendered?.value).toEqual([1]);
 
       jest.advanceTimersByTime(50);
 
       act(() => {
         options.update([1, 2, 3], 0.75);
       });
-      expect(lastRendered.value).toEqual([1]);
+      expect(lastRendered?.value).toEqual([1]);
 
       act(() => {
         jest.advanceTimersByTime(50);
       });
 
-      expect(lastRendered.value).toEqual([1, 2, 3]);
+      expect(lastRendered?.value).toEqual([1, 2, 3]);
     });
 
     it("should update in response to an aborted request", async () => {

@@ -1,6 +1,4 @@
-import { Deferred } from "../types";
-
-let MAX_LOOP_COUNT = 1_000;
+import { Deferred, Status } from "../types";
 
 // A "thenable" is a subset of the Promise API.
 // We could use a Promise as thenable, but Promises have a downside: they use the microtask queue.
@@ -8,103 +6,70 @@ let MAX_LOOP_COUNT = 1_000;
 //
 // A "deferred" is a "thenable" that has convenience resolve/reject methods.
 export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
-  const resolveCallbacks: Set<(value?: Type) => void> = new Set();
-  const rejectCallbacks: Set<(error: Error) => void> = new Set();
+  let status: Status = "pending";
 
-  let status: "unresolved" | "resolved" | "rejected" = "unresolved";
-  let data: Type | Error | null = null;
+  let rejectPromise: (error: Error) => void;
+  let resolvePromise: (value: Type | PromiseLike<Type>) => void;
 
-  let callbacksRegisteredAfterResolutionCount = 0;
+  const promise = new Promise<Type>((resolve, reject) => {
+    rejectPromise = reject;
+    resolvePromise = resolve;
+  });
+  promise.catch(() => {
+    // Prevent unhandled promise rejection warning.
+  });
 
-  // Guard against a case where promise resolution results in a new deferred listener being added.
-  // That cause would result in an infinite loop.
-  // Note that our guard counter should be somewhat high to avoid false positives.
-  // It is a legitimate use-case to register handlers after a deferred has been resolved or rejected.
-  const checkCircularPromiseLikeChain = () => {
-    if (++callbacksRegisteredAfterResolutionCount > MAX_LOOP_COUNT) {
-      throw Error(
-        `Circular thenable chain detected (infinite loop) for resource: ${debugLabel}`
-      );
+  function assertPending() {
+    if (status !== "pending") {
+      throw Error(`Deferred has already been ${status}`);
     }
-  };
+  }
 
   const deferred: Deferred<Type> = {
+    // @ts-ignore
+    debugLabel,
+
+    catch<ThenResult = Type, ErrorResult = never>(
+      rejectCallback?:
+        | ((error: Error) => Promise<ErrorResult>)
+        | undefined
+        | null
+    ): Promise<ThenResult | ErrorResult> {
+      // @ts-ignore
+      return promise.catch(rejectCallback);
+    },
+
+    finally(onFinally?: (() => void) | undefined | null) {
+      return promise.finally(onFinally);
+    },
+
     then<ThenResult = Type, ErrorResult = never>(
       resolveCallback?:
-        | ((value?: Type) => ThenResult | PromiseLike<ThenResult>)
+        | ((value: Type) => ThenResult | Promise<ThenResult>)
         | undefined
         | null,
       rejectCallback?:
-        | ((error: Error) => PromiseLike<ErrorResult>)
+        | ((error: Error) => Promise<ErrorResult>)
         | undefined
         | null
-    ) {
-      switch (status) {
-        case "unresolved":
-          resolveCallbacks.add(resolveCallback);
-          rejectCallbacks.add(rejectCallback);
-          break;
-        case "rejected":
-          checkCircularPromiseLikeChain();
-          rejectCallback(data as Error);
-          break;
-        case "resolved":
-          checkCircularPromiseLikeChain();
-          resolveCallback(data as Type);
-          break;
-      }
-
-      return null;
+    ): Promise<ThenResult | ErrorResult> {
+      return promise.then(resolveCallback, rejectCallback);
     },
+
     reject(error: Error) {
-      if (status !== "unresolved") {
-        throw Error(`Deferred has already been ${status}`);
-      }
+      assertPending();
 
       status = "rejected";
-      data = error;
 
-      rejectCallbacks.forEach((rejectCallback) => {
-        let thrownValue = null;
-
-        try {
-          rejectCallback(error);
-        } catch (error) {
-          thrownValue = error;
-        }
-
-        if (thrownValue !== null) {
-          throw thrownValue;
-        }
-      });
-
-      rejectCallbacks.clear();
-      resolveCallbacks.clear();
+      rejectPromise(error);
     },
-    resolve(value?: Type) {
-      if (status !== "unresolved") {
-        throw Error(`Deferred has already been ${status}`);
-      }
+
+    resolve(value: Type) {
+      assertPending();
 
       status = "resolved";
-      data = value;
 
-      resolveCallbacks.forEach((resolveCallback) => {
-        let thrownValue = null;
-
-        try {
-          resolveCallback(value);
-        } catch (error) {
-          thrownValue = error;
-        }
-
-        if (thrownValue !== null) {
-          throw thrownValue;
-        }
-      });
-
-      rejectCallbacks.clear();
-      resolveCallbacks.clear();
+      resolvePromise(value);
     },
   };
 

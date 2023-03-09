@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 
+import { Component, PropsWithChildren } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createCache } from "../cache/createCache";
@@ -13,7 +14,9 @@ import {
 } from "../constants";
 import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
-import { mockWeakRef, SimpleLRUCache, WeakRefArray } from "../utils/test";
+import { isPromiseLike } from "../utils/isPromiseLike";
+import { SimpleLRUCache } from "../utils/test";
+
 import { useImperativeCacheValue } from "./useImperativeCacheValue";
 
 type Value = { key: string };
@@ -22,20 +25,34 @@ describe("useImperativeCacheValue", () => {
   let cache: Cache<[string], Value>;
   let fetch: jest.Mock<Promise<Value> | Value, [string, CacheLoadOptions]>;
 
+  let container: HTMLDivElement | null = null;
   let lastRenderedError: any = undefined;
   let lastRenderedStatus: Status | undefined = undefined;
   let lastRenderedValue: string | undefined = undefined;
 
   let pendingDeferred: Deferred<Value>[] = [];
 
-  function Component({ string }: { string: string }): any {
-    const result = useImperativeCacheValue(cache, string);
+  function Component({ cacheKey }: { cacheKey: string }): any {
+    const result = useImperativeCacheValue(cache, cacheKey);
 
     lastRenderedError = result.error;
     lastRenderedStatus = result.status;
     lastRenderedValue = result.value;
 
     return null;
+  }
+  async function mount() {
+    container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <>
+          <ErrorBoundary>
+            <Component cacheKey="test" />
+          </ErrorBoundary>
+        </>
+      );
+    });
   }
 
   beforeEach(() => {
@@ -50,6 +67,8 @@ describe("useImperativeCacheValue", () => {
 
       return deferred;
     });
+
+    container = null;
 
     cache = createCache<[string], Value>({
       load: fetch,
@@ -68,11 +87,7 @@ describe("useImperativeCacheValue", () => {
   it("should return values that have already been loaded", async () => {
     cache.cache({ key: "cached" }, "test");
 
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(<Component string="test" />);
-    });
+    await mount();
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
@@ -82,11 +97,7 @@ describe("useImperativeCacheValue", () => {
   it("should fetch values that have not yet been fetched", async () => {
     expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(<Component string="test" />);
-    });
+    await mount();
 
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
@@ -101,18 +112,21 @@ describe("useImperativeCacheValue", () => {
   it("should handle values that are rejected", async () => {
     expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(<Component string="test" />);
-    });
+    await mount();
 
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].reject("rejected"));
+    await act(async () => {
+      try {
+        const deferred = pendingDeferred[0];
+        deferred.reject(new Error("rejected"));
 
-    expect(lastRenderedError).toBe("rejected");
+        await deferred;
+      } catch (error) {}
+    });
+
+    expect(lastRenderedError?.message).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
   });
@@ -121,11 +135,7 @@ describe("useImperativeCacheValue", () => {
     cache.readAsync("test");
     expect(pendingDeferred).toHaveLength(1);
 
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(<Component string="test" />);
-    });
+    await mount();
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
@@ -137,18 +147,24 @@ describe("useImperativeCacheValue", () => {
   });
 
   it("should wait for values that have already been loaded to be rejected", async () => {
-    cache.readAsync("test");
+    const value = cache.readAsync("test");
+    if (isPromiseLike(value)) {
+      value.then(
+        () => {},
+        () => {}
+      );
+    }
+
     expect(pendingDeferred).toHaveLength(1);
 
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(<Component string="test" />);
-    });
+    await mount();
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].reject("rejected"));
+    await act(async () => {
+      const deferred = pendingDeferred[0];
+      deferred.reject("rejected");
+    });
 
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
@@ -156,12 +172,6 @@ describe("useImperativeCacheValue", () => {
   });
 
   describe("getCache", () => {
-    let weakRefArray: WeakRefArray<Object>;
-
-    beforeEach(() => {
-      weakRefArray = mockWeakRef();
-    });
-
     it("should re-fetch a value that has been evicted by the provided cache", async () => {
       // Pre-cache value
       cache.cache({ key: "test" }, "test");
@@ -170,11 +180,7 @@ describe("useImperativeCacheValue", () => {
       cache.cache({ key: "test-2" }, "test-2");
 
       // Rendering should trigger a re-fetch
-      const container = document.createElement("div");
-      const root = createRoot(container);
-      await act(async () => {
-        root.render(<Component string="test" />);
-      });
+      await mount();
 
       expect(lastRenderedError).toBeUndefined();
       expect(lastRenderedStatus).toBe(STATUS_PENDING);
@@ -189,3 +195,18 @@ describe("useImperativeCacheValue", () => {
     });
   });
 });
+
+type State = { errorMessage: string | null };
+class ErrorBoundary extends Component<PropsWithChildren> {
+  state: State = { errorMessage: null };
+  static getDerivedStateFromError(error: any): State {
+    return { errorMessage: typeof error === "string" ? error : error.message };
+  }
+  render() {
+    if (this.state.errorMessage) {
+      return this.state.errorMessage;
+    }
+
+    return this.props.children;
+  }
+}

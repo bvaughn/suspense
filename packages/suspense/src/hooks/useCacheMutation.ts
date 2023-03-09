@@ -4,13 +4,8 @@ import {
   useTransition,
 } from "react";
 import { InternalCache } from "../cache/createCache";
-import {
-  STATUS_NOT_FOUND,
-  STATUS_PENDING,
-  STATUS_REJECTED,
-  STATUS_RESOLVED,
-} from "../constants";
-import { Cache, Record, RejectedRecord } from "../types";
+import { STATUS_PENDING, STATUS_REJECTED } from "../constants";
+import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 
 type MutationCallback<Value> = () => Promise<Value>;
@@ -52,7 +47,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const cacheKey = getKey(...params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
-        const abortController = mutationAbortControllerMap.get(cacheKey);
+        const abortController = mutationAbortControllerMap.get(cacheKey)!;
         abortController.abort();
 
         mutationAbortControllerMap.delete(cacheKey);
@@ -79,7 +74,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       const cacheKey = getKey(...params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
-        const abortController = mutationAbortControllerMap.get(cacheKey);
+        const abortController = mutationAbortControllerMap.get(cacheKey)!;
         abortController.abort();
 
         mutationAbortControllerMap.delete(cacheKey);
@@ -149,7 +144,12 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           status: STATUS_REJECTED,
         };
 
-        deferred.reject(error);
+        try {
+          deferred.reject(error);
+          await deferred;
+        } catch (error) {
+          // Don't trigger an unhandled rejection
+        }
 
         backupRecordMap.set(cacheKey, record);
 
@@ -159,7 +159,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         });
       } finally {
         // Cleanup after mutation by deleting the abort controller
-        // If this mutation has already been aborted by a condata mutation
+        // If this mutation has already been preempted by a newer mutation
         // don't delete the newer controller
         if (abortController === mutationAbortControllerMap.get(cacheKey)) {
           mutationAbortControllerMap.delete(cacheKey);

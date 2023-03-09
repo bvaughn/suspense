@@ -1,6 +1,5 @@
 import {
   STATUS_ABORTED,
-  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -40,7 +39,7 @@ describe("createStreamingCache", () => {
       const streaming = cache.stream("string");
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.lastCall[1]).toEqual("string");
+      expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
       const subscription = jest.fn();
       streaming.subscribe(subscription);
@@ -183,7 +182,7 @@ describe("createStreamingCache", () => {
         // Verify value is no longer cached
         streaming = cache.stream("string");
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
         expect(streaming.value).toBeUndefined();
       });
     });
@@ -238,7 +237,7 @@ describe("createStreamingCache", () => {
         // Verify other values fetch independently
         streaming = cache.stream("string-2");
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string-2");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string-2");
         expect(streaming.value).toBeUndefined();
       });
     });
@@ -248,7 +247,7 @@ describe("createStreamingCache", () => {
         const streaming = cache.stream("string");
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -279,8 +278,14 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and rejection", async () => {
         const streaming = cache.stream("string");
 
+        // Prevent Jest from failing due to unhandled promise rejection
+        streaming.resolver.then(
+          () => {},
+          () => {}
+        );
+
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -294,6 +299,7 @@ describe("createStreamingCache", () => {
         expect(streaming.value).toEqual([1]);
 
         options.reject("Expected");
+
         expect(subscription).toHaveBeenCalledTimes(2);
         expect(streaming.complete).toEqual(true);
         expect(streaming.progress).toBeUndefined();
@@ -314,8 +320,14 @@ describe("createStreamingCache", () => {
 
         const streaming = cache.stream("string");
 
+        // Prevent Jest from failing due to unhandled promise rejection
+        streaming.resolver.then(
+          () => {},
+          () => {}
+        );
+
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
         expect(streaming.status).toBe(STATUS_REJECTED);
       });
@@ -347,7 +359,7 @@ describe("createStreamingCache", () => {
         options.resolve();
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
         const streaming = cache.stream("string");
 
@@ -398,7 +410,7 @@ describe("createStreamingCache", () => {
         const streaming = cache.stream("string");
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall[1]).toEqual("string");
+        expect(fetch.mock.lastCall?.[1]).toEqual("string");
 
         const subscription = jest.fn();
         const unsubscribe = streaming.subscribe(subscription);
