@@ -61,4 +61,21 @@ export class WeakRefMap<Key, Value extends Object> {
       this.finalizationRegistry.register(value, key, value);
     }
   }
+
+  clear(): void {
+    this.map.clear();
+  }
+
+  size(): number {
+    return this.map.size;
+  }
+
+  forEach(
+    callback: (value: Value, key: Key, map: WeakRefMap<Key, Value>) => void
+  ): void {
+    this.map.forEach((weakRef, key) => {
+      const value = weakRef.deref();
+      callback(value!, key, this);
+    });
+  }
 }
