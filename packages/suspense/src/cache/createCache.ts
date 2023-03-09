@@ -1,10 +1,5 @@
 import { unstable_getCacheForType as getCacheForType } from "react";
-import {
-  STATUS_NOT_FOUND,
-  STATUS_PENDING,
-  STATUS_REJECTED,
-  STATUS_RESOLVED,
-} from "../constants";
+import { STATUS_NOT_FOUND, STATUS_PENDING } from "../constants";
 import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
@@ -12,7 +7,6 @@ import {
   PendingRecord,
   Record,
   ResolvedRecord,
-  ResolvedRecordData,
   Status,
   StatusCallback,
   UnsubscribeCallback,
@@ -25,6 +19,12 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
+import {
+  createPendingRecord,
+  createResolvedRecord,
+  updateRecordToRejected,
+  updateRecordToResolved,
+} from "../utils/Record";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
@@ -35,7 +35,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
   __getKey: (...params: Params) => string;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (...params: Params) => void;
-  __writeResolvedRecordData: (value: Value) => ResolvedRecordData<Value>;
+  __useWeakRef: boolean;
 };
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
@@ -133,9 +133,10 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const recordMap = getCacheForType(createRecordMap);
 
-    const record: ResolvedRecord<Value> = {
-      data: writeResolvedRecordData<Value>(value),
-    };
+    const record: ResolvedRecord<Value> = createResolvedRecord(
+      value,
+      useWeakRef
+    );
 
     debugLogInDev("cache()", params, value);
 
@@ -192,13 +193,7 @@ export function createCache<Params extends Array<any>, Value>(
         debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
       );
 
-      record = {
-        data: {
-          abortController,
-          deferred,
-          status: STATUS_PENDING,
-        },
-      } as Record<Value>;
+      record = createPendingRecord<Value>(deferred, abortController);
 
       backupRecordMap.set(cacheKey, record);
       recordMap.set(cacheKey, record);
@@ -345,16 +340,13 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
-        (record as Record<Value>).data = writeResolvedRecordData<Value>(value);
+        updateRecordToResolved(record, value, useWeakRef);
 
         deferred.resolve(value);
       }
     } catch (error) {
       if (!abortSignal.aborted) {
-        (record as Record<Value>).data = {
-          error,
-          status: STATUS_REJECTED,
-        };
+        updateRecordToRejected(record, error);
 
         deferred.reject(error);
       }
@@ -406,22 +398,6 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function writeResolvedRecordData<Value>(
-    value: Value
-  ): ResolvedRecordData<Value> {
-    if (useWeakRef && value != null && typeof value === "object") {
-      return {
-        status: STATUS_RESOLVED,
-        weakRef: new WeakRef(value) as any,
-      };
-    } else {
-      return {
-        status: STATUS_RESOLVED,
-        value,
-      };
-    }
-  }
-
   const value: InternalCache<Params, Value> = {
     // Internal API (used by useCacheMutation)
     __backupRecordMap: backupRecordMap,
@@ -429,7 +405,7 @@ export function createCache<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
-    __writeResolvedRecordData: writeResolvedRecordData,
+    __useWeakRef: useWeakRef,
 
     // Public API
     abort,

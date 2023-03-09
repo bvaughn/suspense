@@ -184,6 +184,72 @@ const isPromiseLike = {
   ),
 };
 
+const recordUtils = {
+  assertRecordStatus: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "assertRecordStatus.ts"),
+      "utf8"
+    )
+  ),
+  createPendingRecord: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createPendingRecord.ts"),
+      "utf8"
+    )
+  ),
+  createPendingRecordData: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createPendingRecordData.ts"),
+      "utf8"
+    )
+  ),
+  createRejectedRecord: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createRejectedRecord.ts"),
+      "utf8"
+    )
+  ),
+  createRejectedRecordData: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createRejectedRecordData.ts"),
+      "utf8"
+    )
+  ),
+  createResolvedRecord: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createResolvedRecord.ts"),
+      "utf8"
+    )
+  ),
+  createResolvedRecordData: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "createResolvedRecordData.ts"),
+      "utf8"
+    )
+  ),
+  isRecordStatus: processExample(
+    readFileSync(join(__dirname, "RecordUtils", "isRecordStatus.ts"), "utf8")
+  ),
+  updateRecordToPending: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "updateRecordToPending.ts"),
+      "utf8"
+    )
+  ),
+  updateRecordToRejected: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "updateRecordToRejected.ts"),
+      "utf8"
+    )
+  ),
+  updateRecordToResolved: processExample(
+    readFileSync(
+      join(__dirname, "RecordUtils", "updateRecordToResolved.ts"),
+      "utf8"
+    )
+  ),
+};
+
 const useCacheMutation = {
   async: processExample(
     readFileSync(join(__dirname, "useCacheMutation", "async.tsx"), "utf8")
@@ -210,6 +276,7 @@ export {
   createStreamingCache,
   demos,
   isPromiseLike,
+  recordUtils,
   useCacheMutation,
   useImperativeCacheValue,
 };

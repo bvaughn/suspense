@@ -17,6 +17,7 @@ import {
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
   IS_PROMISE_LIKE,
+  RECORD_AND_RECORD_DATA_UTILS,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_CACHE_VALUE,
@@ -111,6 +112,11 @@ export default function Route() {
           <LinkListItem
             children="isPromiseLike"
             to={IS_PROMISE_LIKE}
+            type="code"
+          />
+          <LinkListItem
+            children="Record"
+            to={RECORD_AND_RECORD_DATA_UTILS}
             type="code"
           />
           {/*<LinkListItem children="parallelize" to={PARALLELIZE} type="code" />*/}

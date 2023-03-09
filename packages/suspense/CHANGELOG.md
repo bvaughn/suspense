@@ -2,6 +2,7 @@
 
 ## 0.0.24
 * Refactored internal structure of `Deferred` type to expose `promise` rather than proxy it.
+* Expose several additional low-level utilities for working with `Record` values (useful for creating custom caches).
 
 ## 0.0.23
 * Rewrote deferred internals to wrap a `Promise` and implement the full `Promise` API rather than `PromiseLike`.
