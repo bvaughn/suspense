@@ -228,6 +228,11 @@ export function createCache<Params extends Array<any>, Value>(
   function getStatus(...params: Params): Status {
     const cacheKey = getKey(...params);
 
+    // Check for pending mutations first
+    if (mutationAbortControllerMap.has(cacheKey)) {
+      return STATUS_PENDING;
+    }
+
     // Else fall back to Record status
     const record = backupRecordMap.get(cacheKey);
 
