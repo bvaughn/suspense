@@ -285,7 +285,7 @@ export function createCache<Params extends Array<any>, Value>(
   function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
-      return record.data.deferred;
+      return record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
       try {
         return readRecordValueThrowsIfGC(record);
@@ -303,7 +303,7 @@ export function createCache<Params extends Array<any>, Value>(
   function read(...params: Params): Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
-      throw record.data.deferred;
+      throw record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
       try {
         return readRecordValueThrowsIfGC(record);

@@ -146,7 +146,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
         try {
           deferred.reject(error);
-          await deferred;
+          await deferred.promise;
         } catch (error) {
           // Don't trigger an unhandled rejection
         }

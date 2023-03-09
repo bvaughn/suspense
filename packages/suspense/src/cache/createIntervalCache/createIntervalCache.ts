@@ -155,7 +155,7 @@ export function createIntervalCache<
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.data.status) {
       case STATUS_PENDING:
-        return record.data.deferred;
+        return record.data.deferred.promise;
       case STATUS_RESOLVED:
         return record.data.value as Value[];
       case STATUS_REJECTED:
@@ -170,7 +170,7 @@ export function createIntervalCache<
     if (record.data.status === STATUS_RESOLVED) {
       return record.data.value as Value[];
     } else if (isPendingRecord(record)) {
-      throw record.data.deferred;
+      throw record.data.deferred.promise;
     } else {
       throw record.data.error;
     }

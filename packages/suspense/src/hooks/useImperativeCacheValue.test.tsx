@@ -64,7 +64,7 @@ describe("useImperativeCacheValue", () => {
 
       pendingDeferred.push(deferred);
 
-      return deferred;
+      return deferred.promise;
     });
 
     container = null;
@@ -118,7 +118,7 @@ describe("useImperativeCacheValue", () => {
         const deferred = pendingDeferred[0];
         deferred.reject(new Error("rejected"));
 
-        await deferred;
+        await deferred.promise;
       } catch (error) {}
     });
 

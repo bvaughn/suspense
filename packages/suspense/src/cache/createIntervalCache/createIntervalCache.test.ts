@@ -53,7 +53,7 @@ describe("createIntervalCache", () => {
 
           deferreds.push(deferred);
 
-          return deferred;
+          return deferred.promise;
         }
       );
     });
@@ -352,7 +352,7 @@ describe("createIntervalCache", () => {
 
       it("should not load an interval that contains a previously failed interval", async () => {
         const deferred = createDeferred<number[]>();
-        load.mockReturnValueOnce(deferred);
+        load.mockReturnValueOnce(deferred.promise);
 
         const promise = cache.readAsync(2, 4, "test");
         expect(load).toHaveBeenCalledTimes(1);
@@ -366,7 +366,7 @@ describe("createIntervalCache", () => {
 
       it("should load an interval that is pert of (contained) by one that failed previously", async () => {
         const deferred = createDeferred<number[]>();
-        load.mockReturnValueOnce(deferred);
+        load.mockReturnValueOnce(deferred.promise);
 
         const promise = cache.readAsync(1, 5, "test");
         expect(load).toHaveBeenCalledTimes(1);
@@ -384,7 +384,7 @@ describe("createIntervalCache", () => {
 
       it("should merge loaded values that intersect with a previously failed interval", async () => {
         const deferred = createDeferred<number[]>();
-        load.mockReturnValueOnce(deferred);
+        load.mockReturnValueOnce(deferred.promise);
 
         const promise = cache.readAsync(4, 8, "test");
         expect(load).toHaveBeenCalledTimes(1);
@@ -410,9 +410,9 @@ describe("createIntervalCache", () => {
         const deferredRejects = createDeferred<number[]>();
         load.mockImplementation(async (start: number, end: number) => {
           if (start === 5) {
-            return deferredResolves;
+            return deferredResolves.promise;
           } else {
-            return deferredRejects;
+            return deferredRejects.promise;
           }
         });
         cache.readAsync(5, 9, "test");

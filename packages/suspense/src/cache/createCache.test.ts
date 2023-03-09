@@ -67,7 +67,7 @@ describe("createCache", () => {
       load.mockImplementation(async (...args) => {
         abortSignal = args[1].signal;
         deferred = createDeferred();
-        return deferred;
+        return deferred.promise;
       });
 
       cache.readAsync("async");
@@ -86,7 +86,7 @@ describe("createCache", () => {
       let deferred: Deferred<string> | null = null;
       load.mockImplementation(async () => {
         deferred = createDeferred();
-        return deferred;
+        return deferred.promise;
       });
 
       cache.readAsync("async");

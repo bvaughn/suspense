@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.24
+* Refactored internal structure of `Deferred` type to expose `promise` rather than proxy it.
+
 ## 0.0.23
 * Rewrote deferred internals to wrap a `Promise` and implement the full `Promise` API rather than `PromiseLike`.
 

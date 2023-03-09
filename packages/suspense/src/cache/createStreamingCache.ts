@@ -96,7 +96,7 @@ export function createStreamingCache<
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
-      const resolver = createDeferred<StreamingValue<Value, AdditionalData>>(
+      const deferred = createDeferred<StreamingValue<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
       );
 
@@ -106,7 +106,7 @@ export function createStreamingCache<
         complete: false,
         data: undefined,
         progress: undefined,
-        resolver,
+        resolver: deferred.promise,
         status: STATUS_PENDING,
         subscribe: (callback: StreamingSubscribeCallback) => {
           subscribers.add(callback);
@@ -145,7 +145,7 @@ export function createStreamingCache<
 
         notifySubscribers();
 
-        resolver.resolve();
+        deferred.resolve();
       });
 
       abortControllerMap.set(cacheKey, abortController);
@@ -178,7 +178,7 @@ export function createStreamingCache<
 
           notifySubscribers();
 
-          resolver.resolve(streamingValues);
+          deferred.resolve(streamingValues);
         },
         reject: (error: Error) => {
           assertPending();
@@ -188,7 +188,7 @@ export function createStreamingCache<
 
           notifySubscribers();
 
-          resolver.reject(error);
+          deferred.reject(error);
         },
         signal: abortController.signal,
       };
