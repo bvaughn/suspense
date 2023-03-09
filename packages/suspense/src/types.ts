@@ -26,7 +26,6 @@ export type PendingRecordData<Type> = {
 };
 export type ResolvedRecordData<Type> = {
   readonly status: StatusResolved;
-  readonly weakRef: Type extends Object ? WeakRef<Type> : null;
   readonly value: Type;
 };
 export type RejectedRecordData = {
@@ -139,4 +138,16 @@ export interface StreamingCache<
   evictAll(): boolean;
   prefetch(...params: Params): void;
   stream(...params: Params): StreamingValue<Value, AdditionalData>;
+}
+
+export interface Cacher<Key, Value> {
+  clear(): void;
+  delete(key: Key): boolean;
+  forEach(
+    callback: (value: Value, key: Key, cacher: Cacher<Key, Value>) => void
+  ): void;
+  get(key: Key): Value | undefined;
+  has(key: Key): boolean;
+  set(key: Key, value: Value): this;
+  readonly size: number;
 }

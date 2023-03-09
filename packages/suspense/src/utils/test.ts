@@ -85,3 +85,58 @@ export async function waitForGC(
   // Ensure additional constraints are met
   await waitUntil(conditional, timeout);
 }
+
+export class SimpleLRUCache<Value> {
+  private cache = new Map<string, Value>();
+  private capacity: number;
+  private onEvict?: (key: string) => void;
+  constructor(capacity: number, onEvict?: (key: string) => void) {
+    this.capacity = capacity;
+    this.onEvict = onEvict;
+  }
+
+  get(key: string) {
+    if (!this.cache.has(key)) return undefined;
+
+    let val = this.cache.get(key);
+
+    this.cache.delete(key);
+    this.cache.set(key, val);
+
+    return val;
+  }
+
+  set(key: string, value: Value) {
+    this.cache.delete(key);
+
+    if (this.cache.size === this.capacity) {
+      const evictedKey = this.cache.keys().next().value;
+      this.cache.delete(evictedKey);
+      this.onEvict?.(evictedKey);
+      this.cache.set(key, value);
+    } else {
+      this.cache.set(key, value);
+    }
+    return this;
+  }
+
+  delete(key: string) {
+    return this.cache.delete(key);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+
+  has(key: string) {
+    return this.cache.has(key);
+  }
+
+  get size() {
+    return this.cache.size;
+  }
+
+  forEach(callback: (value: Value, key: string, cache: this) => void) {
+    this.cache.forEach((value, key) => callback(value, key, this));
+  }
+}

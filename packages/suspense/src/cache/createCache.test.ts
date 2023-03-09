@@ -8,7 +8,7 @@ import { createCache } from "./createCache";
 import { Cache, Deferred, CacheLoadOptions } from "../types";
 import { isPromiseLike } from "../utils/isPromiseLike";
 import { createDeferred } from "../utils/createDeferred";
-import { mockWeakRef, WeakRefArray } from "../utils/test";
+import { SimpleLRUCache } from "../utils/test";
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
@@ -510,17 +510,16 @@ describe("createCache", () => {
     });
   });
 
-  describe("garbage collection", () => {
-    let gcCache: Cache<[string], Object>;
+  describe("getCacher", () => {
+    let lruCache: Cache<[string], Object>;
     let loadObject: jest.Mock<
       Promise<Object> | Object,
       [string, CacheLoadOptions]
     >;
-    let weakRefArray: WeakRefArray<any>;
+    let evictFn: jest.Mock<void, [string]>;
 
     beforeEach(() => {
-      weakRefArray = mockWeakRef();
-
+      evictFn = jest.fn();
       loadObject = jest.fn();
       loadObject.mockImplementation((key: string) => {
         if (key.startsWith("async")) {
@@ -532,65 +531,73 @@ describe("createCache", () => {
         }
       });
 
-      gcCache = createCache<[string], Object>({ load: loadObject });
+      lruCache = createCache<[string], Object>({
+        load: loadObject,
+        config: {
+          getCache: (onEvict) =>
+            new SimpleLRUCache(1, (key) => {
+              onEvict(key);
+              evictFn(key);
+            }),
+        },
+      });
     });
 
-    it("getStatus: should return not-found status if value has been collected", async () => {
-      gcCache.cache({ key: "test" }, "test");
-      expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
+    it("getStatus: should return not-found status if value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      lruCache.cache({ key: "test2" }, "test2");
 
-      expect(gcCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
     });
 
-    it("getValue: should throw if previously loaded value has been collected", async () => {
-      gcCache.cache({ key: "test" }, "test");
-      expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
+    it("getValue: should throw if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
 
-      expect(() => gcCache.getValue("test")).toThrow(
-        "Value was garbage collected"
-      );
+      expect(() => lruCache.getValue("test")).toThrow();
     });
 
-    it("getValueIfCached: should return undefined if previously loaded value has been collected", async () => {
-      gcCache.cache({ key: "test" }, "test");
-      expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
+    it("getValueIfCached: should return undefined if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
 
-      expect(gcCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
     });
 
-    it("read: should re-suspend if previously loaded value has been collected", async () => {
-      gcCache.cache({ key: "test" }, "test");
-      expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
+    it("read: should re-suspend if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
 
-      expect(gcCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
 
-      await expect(await fakeSuspend(() => gcCache.read("test"))).toEqual({
+      await expect(await fakeSuspend(() => lruCache.read("test"))).toEqual({
         key: "test",
       });
     });
 
-    it("readAsync: should re-suspend if previously loaded value has been collected", async () => {
-      gcCache.cache({ key: "test" }, "test");
-      expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
+    it("readAsync: should re-suspend if previously loaded value has been collected by provided cacher", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
 
-      expect(gcCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
 
-      await expect(await gcCache.readAsync("test")).toEqual({
+      await expect(await lruCache.readAsync("test")).toEqual({
         key: "test",
       });
     });
