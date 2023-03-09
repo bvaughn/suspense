@@ -13,6 +13,7 @@ export * from "./utils/createInfallibleCache";
 export * from "./utils/isPromiseLike";
 export * from "./utils/isRecordStatus";
 export * from "./utils/parallelize";
+export * from './utils/WeakRefMap'
 
 // TypeScript types
 export * from "./types";
