@@ -71,8 +71,4 @@ export class WeakRefMap<Key extends string, Value> {
   clear(): void {
     this.map.clear();
   }
-
-  get size(): number {
-    return this.map.size;
-  }
 }
