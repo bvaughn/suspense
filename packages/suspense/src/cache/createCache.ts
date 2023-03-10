@@ -194,9 +194,13 @@ export function createCache<Params extends Array<any>, Value>(
 
     let record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
     if (record == null) {
+      debugLogInDev(
+        "getOrCreateRecord(): record not found. creating record...",
+        params
+      );
       const abortController = new AbortController();
       const deferred = createDeferred<Value>(
-        debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
+        debugLabel ? `${debugLabel} ${cacheKey}` : cacheKey
       );
 
       record = createPendingRecord<Value>(deferred, abortController);
@@ -207,6 +211,10 @@ export function createCache<Params extends Array<any>, Value>(
 
       processPendingRecord(abortController.signal, record, ...params);
     }
+    debugLogInDev(
+      "getOrCreateRecord(): record found. returning record",
+      params
+    );
 
     return record;
   }
@@ -281,22 +289,33 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
+  let readAsyncLoopCount = 0;
+  const maxReadAsyncCount = 10;
+
   function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
       return record.data.deferred.promise;
-    } else if (isResolvedRecord(record)) {
+    }
+    if (isResolvedRecord(record)) {
       try {
-        return readRecordValueThrowsIfSilentlyEvicted(record);
+        const value = readRecordValueThrowsIfSilentlyEvicted(record);
+        readAsyncLoopCount = 0;
+        return value;
       } catch (error) {
         // If the value has been evicted since we last read it,
         // Delete the record and try again.
         evict(...params);
+        readAsyncLoopCount++;
+        if (readAsyncLoopCount > maxReadAsyncCount) {
+          throw new Error(
+            `readAsync() loop detected. This usually means the result of 'load' is undefined.`
+          );
+        }
         return readAsync(...params);
       }
-    } else {
-      throw record.data.error;
     }
+    throw record.data.error;
   }
 
   function read(...params: Params): Value {
@@ -344,12 +363,19 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
+        debugLogInDev(
+          "processPendingRecord(): resolved",
+          params,
+          "resolved value: ",
+          value
+        );
         updateRecordToResolved(record, value);
 
         deferred.resolve(value);
       }
     } catch (error) {
       if (!abortSignal.aborted) {
+        debugLogInDev("processPendingRecord(): rejected", params, error);
         updateRecordToRejected(record, error);
 
         deferred.reject(error);
