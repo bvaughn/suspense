@@ -250,7 +250,12 @@ export function createCache<Params extends Array<any>, Value>(
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
-      return readRecordValueThrowsIfSilentlyEvicted(record);
+      try {
+        return readRecordValueThrowsIfSilentlyEvicted(record);
+      } catch (error) {
+        evict(...params);
+        throw error;
+      }
     } else {
       throw Error(`Record found with status "${record.data.status}"`);
     }
@@ -288,7 +293,7 @@ export function createCache<Params extends Array<any>, Value>(
       try {
         return readRecordValueThrowsIfSilentlyEvicted(record);
       } catch (error) {
-        // If the value has been garbage collected since we last read it,
+        // If the value has been evicted since we last read it,
         // Delete the record and try again.
         evict(...params);
         return readAsync(...params);
@@ -306,7 +311,7 @@ export function createCache<Params extends Array<any>, Value>(
       try {
         return readRecordValueThrowsIfSilentlyEvicted(record);
       } catch (error) {
-        // If the value has been garbage collected since we last read it,
+        // If the value has been evicted since we last read it,
         // Delete the record and try again.
         evict(...params);
         return read(...params);

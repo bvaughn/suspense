@@ -610,9 +610,9 @@ describe("createCache", () => {
 
   describe("getCache: WeakRefMap", () => {
     type TestValue = { key: string };
-    let gcCache: Cache<[string], object>;
+    let gcCache: Cache<[string], TestValue>;
     let loadObject: jest.Mock<
-      Promise<object> | object,
+      Promise<TestValue> | TestValue,
       [string, CacheLoadOptions]
     >;
     let weakRefArray: WeakRefArray<any>;

@@ -36,7 +36,6 @@ export function useCacheMutation<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
-    __useWeakRef: useWeakRef,
   } = cache as InternalCache<Params, Value>;
 
   const [isPending, startTransition] = useTransition();
@@ -54,7 +53,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         mutationAbortControllerMap.delete(cacheKey);
       }
 
-      const record: Record<Value> = createResolvedRecord(newValue, useWeakRef);
+      const record: Record<Value> = createResolvedRecord(newValue);
 
       backupRecordMap.set(cacheKey, record);
 
@@ -124,7 +123,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           }
         } else {
           // This method determines whether to store the value in a WeakRef
-          updateRecordToResolved<Value>(record, newValue as Value, useWeakRef);
+          updateRecordToResolved<Value>(record, newValue as Value);
 
           deferred.resolve(newValue as Value);
 
