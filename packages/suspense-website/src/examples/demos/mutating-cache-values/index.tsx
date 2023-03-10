@@ -24,7 +24,7 @@ export type ApiClient = {
 
 export const itemsCache = createSingleEntryCache<[ApiClient], Item[]>({
   debugLabel: "Items",
-  load: async (client: ApiClient) => client.fetchItems(),
+  load: async ([client]) => client.fetchItems(),
 });
 
 function createDummyApiClient(): ApiClient {

@@ -5,7 +5,7 @@ type Module = any;
 export const { readAsync: fetchModuleAsync, read: fetchModuleSuspense } =
   createCache<[string], Module>({
     debugLabel: "ImportCache",
-    load: async (path: string) => {
+    load: async ([path]) => {
       switch (path) {
         case "@codemirror/lang-css":
           return await import("@codemirror/lang-css");

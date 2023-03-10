@@ -18,8 +18,8 @@ import { createDeferred } from "../utils/createDeferred";
 
 describe("useCacheStatus", () => {
   let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
-  let getCacheKey: jest.Mock<string, [string]>;
+  let fetch: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
+  let getCacheKey: jest.Mock<string, [[string]]>;
   let lastRenderedStatus: Status | undefined = undefined;
 
   function Component({ string }: { string: string }): any {
@@ -32,7 +32,7 @@ describe("useCacheStatus", () => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
     fetch = jest.fn();
-    fetch.mockImplementation(async (key: string) => {
+    fetch.mockImplementation(async ([key]) => {
       if (key.startsWith("async")) {
         return Promise.resolve(key);
       } else if (key.startsWith("error")) {
@@ -43,7 +43,7 @@ describe("useCacheStatus", () => {
     });
 
     getCacheKey = jest.fn();
-    getCacheKey.mockImplementation((key) => key.toString());
+    getCacheKey.mockImplementation(([key]) => key.toString());
 
     cache = createCache<[string], string>({
       debugLabel: "cache",
@@ -126,8 +126,8 @@ describe("useCacheStatus", () => {
   it("should update in response to an aborted request", async () => {
     let abortSignal: AbortSignal | undefined;
     let deferred: Deferred<string> | undefined;
-    fetch.mockImplementation(async (...args) => {
-      abortSignal = args[1].signal;
+    fetch.mockImplementation(async (params, options) => {
+      abortSignal = options.signal;
       deferred = createDeferred();
       return deferred.promise;
     });

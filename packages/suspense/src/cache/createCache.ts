@@ -32,9 +32,9 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
 > & {
   __backupRecordMap: Map<string, Record<Value>>;
   __createRecordMap: () => Map<string, Record<Value>>;
-  __getKey: (...params: Params) => string;
+  __getKey: (params: Params) => string;
   __mutationAbortControllerMap: Map<string, AbortController>;
-  __notifySubscribers: (...params: Params) => void;
+  __notifySubscribers: (params: Params) => void;
   __useWeakRef: boolean;
 };
 
@@ -43,9 +43,10 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
     useWeakRef?: boolean;
   };
   debugLabel?: string;
-  getKey?: (...params: Params) => string;
+  getKey?: (params: Params) => string;
   load: (
-    ...params: [...Params, CacheLoadOptions]
+    params: Params,
+    loadOptions: CacheLoadOptions
   ) => PromiseLike<Value> | Value;
 };
 
@@ -60,7 +61,7 @@ export function createCache<Params extends Array<any>, Value>(
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
-      const cacheKey = params ? `"${getKey(...params)}"` : "";
+      const cacheKey = params ? `"${getKey(params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
       console.log(
@@ -91,7 +92,7 @@ export function createCache<Params extends Array<any>, Value>(
   const subscriberMap = new Map<string, Set<StatusCallback>>();
 
   function abort(...params: Params): boolean {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const recordMap = getCacheForType(createRecordMap);
 
     // In-progress mutations aren't guaranteed to be in the recordMap.
@@ -102,7 +103,7 @@ export function createCache<Params extends Array<any>, Value>(
 
       abortController.abort();
 
-      notifySubscribers(...params);
+      notifySubscribers(params);
 
       return true;
     } else {
@@ -120,7 +121,7 @@ export function createCache<Params extends Array<any>, Value>(
 
         record.data.abortController.abort();
 
-        notifySubscribers(...params);
+        notifySubscribers(params);
 
         return true;
       }
@@ -130,7 +131,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function cache(value: Value, ...params: Params): void {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const recordMap = getCacheForType(createRecordMap);
 
     const record: ResolvedRecord<Value> = createResolvedRecord(
@@ -149,7 +150,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function evict(...params: Params): boolean {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const recordMap = getCacheForType(createRecordMap);
 
     debugLogInDev(`evict()`, params);
@@ -157,7 +158,7 @@ export function createCache<Params extends Array<any>, Value>(
     const didDelete = backupRecordMap.delete(cacheKey);
     recordMap.delete(cacheKey);
 
-    notifySubscribers(...params);
+    notifySubscribers(params);
 
     return didDelete;
   }
@@ -183,7 +184,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function getOrCreateRecord(...params: Params): Record<Value> {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const recordMap = getCacheForType(createRecordMap);
 
     let record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
@@ -198,7 +199,7 @@ export function createCache<Params extends Array<any>, Value>(
       backupRecordMap.set(cacheKey, record);
       recordMap.set(cacheKey, record);
 
-      notifySubscribers(...params);
+      notifySubscribers(params);
 
       processPendingRecord(
         abortController.signal,
@@ -211,7 +212,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function getStatus(...params: Params): Status {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
 
     // Check for pending mutations first
     if (mutationAbortControllerMap.has(cacheKey)) {
@@ -237,7 +238,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function getValue(...params: Params): Value {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const record = backupRecordMap.get(cacheKey);
 
     if (record == null) {
@@ -252,7 +253,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function getValueIfCached(...params: Params): Value | undefined {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     const record = backupRecordMap.get(cacheKey);
     if (record && isResolvedRecord(record)) {
       try {
@@ -313,8 +314,8 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function notifySubscribers(...params: Params): void {
-    const cacheKey = getKey(...params);
+  function notifySubscribers(params: Params): void {
+    const cacheKey = getKey(params);
     const set = subscriberMap.get(cacheKey);
     if (set) {
       const status = getStatus(...params);
@@ -334,7 +335,7 @@ export function createCache<Params extends Array<any>, Value>(
     const { abortController, deferred } = record.data;
 
     try {
-      const valueOrPromiseLike = load(...params, abortController);
+      const valueOrPromiseLike = load(params, abortController);
       const value = isPromiseLike(valueOrPromiseLike)
         ? await valueOrPromiseLike
         : valueOrPromiseLike;
@@ -352,7 +353,7 @@ export function createCache<Params extends Array<any>, Value>(
       }
     } finally {
       if (!abortSignal.aborted) {
-        notifySubscribers(...(params as unknown as Params));
+        notifySubscribers(params);
       }
     }
   }
@@ -375,7 +376,7 @@ export function createCache<Params extends Array<any>, Value>(
     callback: StatusCallback,
     ...params: Params
   ): UnsubscribeCallback {
-    const cacheKey = getKey(...params);
+    const cacheKey = getKey(params);
     let set = subscriberMap.get(cacheKey);
     if (set) {
       set.add(callback);

@@ -19,7 +19,7 @@ describe("useCacheMutation", () => {
   let cache: Cache<[string], string>;
   let container: HTMLDivElement | null = null;
   let Component: (props: Props) => any;
-  let load: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
+  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
   let mostRecentRenders: { [cacheKey: string]: Rendered } = {};
   let mutationApi: { [cacheKey: string]: MutationApi<[string], string> } = {};
 
@@ -32,9 +32,7 @@ describe("useCacheMutation", () => {
     container = null;
 
     load = jest.fn();
-    load.mockImplementation(async (cacheKey: string) =>
-      Promise.resolve(cacheKey)
-    );
+    load.mockImplementation(async ([cacheKey]) => Promise.resolve(cacheKey));
 
     cache = createCache<[string], string>({
       debugLabel: "cache",
