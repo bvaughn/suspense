@@ -16,17 +16,19 @@ describe("createCache", () => {
   let load: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [string]>;
 
+  const loadImpl = (key: string) => {
+    if (key.startsWith("async")) {
+      return Promise.resolve(key);
+    } else if (key.startsWith("error")) {
+      return Promise.reject(key);
+    } else {
+      return key;
+    }
+  };
+
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation((key: string) => {
-      if (key.startsWith("async")) {
-        return Promise.resolve(key);
-      } else if (key.startsWith("error")) {
-        return Promise.reject(key);
-      } else {
-        return key;
-      }
-    });
+    load.mockImplementation(loadImpl);
 
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation((key) => key.toString());
@@ -252,14 +254,6 @@ describe("createCache", () => {
 
       expect(load).toHaveBeenCalledTimes(1);
     });
-
-    it("should error if the load function syncronously resolves to undefined", async () => {
-      load.mockReturnValue(undefined!);
-
-      expect(() => cache.readAsync("sync-3")).toThrow(
-        "readAsync() loop detected. This usually means the return value of 'load' is syncronous and undefined."
-      );
-    });
   });
 
   describe("read", () => {
@@ -344,10 +338,11 @@ describe("createCache", () => {
       expect(cache.getValue("sync-1")).toEqual("sync-1");
 
       // Verify other values fetch independently
-      load.mockReturnValue("sync-2")
+      load.mockImplementation(loadImpl);
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall?.[0]).toEqual("sync-2");
+      expect(cache.getValue("sync-2")).toEqual("sync-2");
     });
   });
 

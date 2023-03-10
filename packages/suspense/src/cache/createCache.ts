@@ -41,9 +41,9 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
-    getCache?: <Value>(
+    getCache?: (
       onEviction: (key: string) => void
-    ) => CacheMap<string, Value>;
+    ) => CacheMap<string, Record<Value>>;
   };
   debugLabel?: string;
   getKey?: (...params: Params) => string;
@@ -82,7 +82,7 @@ export function createCache<Params extends Array<any>, Value>(
   // (one record can be invalidated without affecting others)
   // Reads will query the map created by createRecordMap first,
   // and fall back to this map if no match is found
-  const backupRecordMap = getCache<Record<Value>>(onExternalCacheEviction);
+  const backupRecordMap = getCache(onExternalCacheEviction);
 
   // Stores status of in-progress mutation
   // If no entry is present here, the Record map will be used instead
@@ -234,13 +234,7 @@ export function createCache<Params extends Array<any>, Value>(
     if (!record) {
       return STATUS_NOT_FOUND;
     } else if (isResolvedRecord(record)) {
-      try {
-        readRecordValueThrowsIfSilentlyEvicted(record);
-      } catch (error) {
-        evict(...params);
-
-        return STATUS_NOT_FOUND;
-      }
+      return record.data.status;
     }
 
     return record.data.status;
@@ -255,12 +249,7 @@ export function createCache<Params extends Array<any>, Value>(
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfSilentlyEvicted(record);
-      } catch (error) {
-        evict(...params);
-        throw error;
-      }
+      return record.data.value;
     } else {
       throw Error(`Record found with status "${record.data.status}"`);
     }
@@ -270,9 +259,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
     if (record && isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfSilentlyEvicted(record);
-      } catch {}
+      return record.data.value;
     }
   }
 
@@ -290,31 +277,13 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  let readAsyncLoopCount = 0;
-  const maxReadAsyncCount = 10;
-
   function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
       return record.data.deferred.promise;
     }
     if (isResolvedRecord(record)) {
-      try {
-        const value = readRecordValueThrowsIfSilentlyEvicted(record);
-        readAsyncLoopCount = 0;
-        return value;
-      } catch (error) {
-        // If the value has been evicted since we last read it,
-        // Delete the record and try again.
-        evict(...params);
-        readAsyncLoopCount++;
-        if (readAsyncLoopCount > maxReadAsyncCount) {
-          throw new Error(
-            `readAsync() loop detected. This usually means the return value of 'load' is syncronous and undefined.`
-          );
-        }
-        return readAsync(...params);
-      }
+      return record.data.value;
     }
     throw record.data.error;
   }
@@ -324,14 +293,7 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       throw record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfSilentlyEvicted(record);
-      } catch (error) {
-        // If the value has been evicted since we last read it,
-        // Delete the record and try again.
-        evict(...params);
-        return read(...params);
-      }
+      return record.data.value;
     } else {
       throw record.data.error;
     }
@@ -386,16 +348,6 @@ export function createCache<Params extends Array<any>, Value>(
         notifySubscribers(...(params as unknown as Params));
       }
     }
-  }
-
-  function readRecordValueThrowsIfSilentlyEvicted(
-    record: ResolvedRecord<Value>
-  ): Value {
-    const { value } = record.data;
-    if (value == null) {
-      throw Error("Value was silently evicted");
-    }
-    return value;
   }
 
   function subscribeToStatus(

@@ -1,19 +1,14 @@
 export type FinalizerCallback<Key> = (key: Key) => void;
 
-// WeakRefs only work with objects, yet the user may be specifying an arbitrary type.
-// This doesn't actually matter since internally what is stored is Record<Value>
-// which is an object.
-// Currently we lie to the type system to make this work seamlessly.
-// TODO: Find a better way to do this.
-export class WeakRefMap<Key extends string, Value> {
+export class WeakRefMap<Key extends string, Value extends Object> {
   private finalizerCallback: FinalizerCallback<Key>;
   private finalizationRegistry: FinalizationRegistry<Key>;
-  private map: Map<Key, WeakRef<any>>;
+  private map: Map<Key, WeakRef<Value>>;
 
   constructor(finalizerCallback: FinalizerCallback<Key>) {
     this.finalizerCallback = finalizerCallback;
 
-    this.map = new Map<Key, WeakRef<any>>();
+    this.map = new Map<Key, WeakRef<Value>>();
     this.finalizationRegistry = new FinalizationRegistry<Key>((key) => {
       this.map.delete(key);
 
