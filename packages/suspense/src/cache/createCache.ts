@@ -172,24 +172,20 @@ export function createCache<Params extends Array<any>, Value>(
     return didDelete;
   }
 
-  function evictAll(): boolean {
+  function evictAll(): void {
     const recordMap = getCacheForType(createRecordMap);
 
     debugLogInDev(`evictAll()`, undefined, `${recordMap.size} records`);
 
-    const hadRecords = recordMap.size > 0 || backupRecordMap.size > 0;
-
     backupRecordMap.clear();
     recordMap.clear();
 
-    subscriberMap.forEach((set, cacheKey) => {
+    subscriberMap.forEach((set) => {
       set.forEach((callback) => {
         callback(STATUS_NOT_FOUND);
       });
     });
     subscriberMap.clear();
-
-    return hadRecords;
   }
 
   function getOrCreateRecord(...params: Params): Record<Value> {

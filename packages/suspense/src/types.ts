@@ -72,7 +72,7 @@ export interface Cache<Params extends any[], Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
   evict(...params: Params): boolean;
-  evictAll(): boolean;
+  evictAll(): void;
   getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
@@ -148,5 +148,4 @@ export interface CacheMap<Key, Value> {
   get(key: Key): Value | undefined;
   has(key: Key): boolean;
   set(key: Key, value: Value): this;
-  readonly size: number;
 }
