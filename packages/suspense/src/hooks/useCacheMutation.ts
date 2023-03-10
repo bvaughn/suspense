@@ -7,6 +7,7 @@ import { InternalCache } from "../cache/createCache";
 import { STATUS_PENDING, STATUS_REJECTED } from "../constants";
 import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
+import { createResolvedRecord, updateRecordToResolved } from "../utils/Record";
 
 type MutationCallback<Value> = () => Promise<Value>;
 
@@ -35,7 +36,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
-    __writeResolvedRecordData: writeResolvedRecordData,
+    __useWeakRef: useWeakRef,
   } = cache as InternalCache<Params, Value>;
 
   const [isPending, startTransition] = useTransition();
@@ -53,9 +54,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         mutationAbortControllerMap.delete(cacheKey);
       }
 
-      const record: Record<Value> = {
-        data: writeResolvedRecordData(newValue),
-      };
+      const record: Record<Value> = createResolvedRecord(newValue, useWeakRef);
 
       backupRecordMap.set(cacheKey, record);
 
@@ -125,9 +124,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           }
         } else {
           // This method determines whether to store the value in a WeakRef
-          (record as Record<Value>).data = writeResolvedRecordData(
-            newValue as Value
-          );
+          updateRecordToResolved<Value>(record, newValue as Value, useWeakRef);
 
           deferred.resolve(newValue as Value);
 
@@ -146,7 +143,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
         try {
           deferred.reject(error);
-          await deferred;
+          await deferred.promise;
         } catch (error) {
           // Don't trigger an unhandled rejection
         }

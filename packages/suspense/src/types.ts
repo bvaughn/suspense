@@ -59,7 +59,9 @@ export type UnsubscribeCallback = () => void;
 
 // Convenience type used by Suspense caches.
 // Adds the ability to resolve or reject a pending PromiseLike.
-export interface Deferred<Type> extends Promise<Type> {
+export interface Deferred<Type> {
+  debugLabel: string | undefined;
+  promise: Promise<Type>;
   reject(error: any): void;
   resolve(value?: Type): void;
 }
@@ -140,12 +142,9 @@ export interface StreamingCache<
   stream(...params: Params): StreamingValue<Value, AdditionalData>;
 }
 
-export interface Cacher<Key, Value> {
+export interface CacheMap<Key, Value> {
   clear(): void;
   delete(key: Key): boolean;
-  forEach(
-    callback: (value: Value, key: Key, cacher: Cacher<Key, Value>) => void
-  ): void;
   get(key: Key): Value | undefined;
   has(key: Key): boolean;
   set(key: Key, value: Value): this;

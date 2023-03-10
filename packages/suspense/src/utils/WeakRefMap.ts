@@ -75,11 +75,4 @@ export class WeakRefMap<Key extends string, Value> {
   get size(): number {
     return this.map.size;
   }
-
-  forEach(callback: (value: Value, key: Key, map: this) => void): void {
-    this.map.forEach((weakRef, key) => {
-      const value = weakRef.deref();
-      callback(value as Value, key, this);
-    });
-  }
 }

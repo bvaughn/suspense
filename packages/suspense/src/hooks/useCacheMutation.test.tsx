@@ -90,7 +90,7 @@ describe("useCacheMutation", () => {
         // Don't wait for the mutation API to resolve; we want to test the in-between state too
         mutationApi.two.mutateAsync(["two"], async () => {
           pendingDeferred = createDeferred<string>();
-          return pendingDeferred;
+          return pendingDeferred.promise;
         });
       });
 
@@ -141,7 +141,7 @@ describe("useCacheMutation", () => {
       await act(async () => {
         // Don't wait for the mutation API to resolve; we want to test the in-between state too
         mutationApi.two.mutateAsync(["two"], async () => {
-          return pendingDeferred;
+          return pendingDeferred.promise;
         });
       });
 
@@ -178,7 +178,7 @@ describe("useCacheMutation", () => {
       await act(async () => {
         mutationApi.two.mutateAsync(["two"], async () => {
           pendingDeferredTwo = createDeferred<string>();
-          return pendingDeferredTwo;
+          return pendingDeferredTwo.promise;
         });
       });
 
@@ -189,7 +189,7 @@ describe("useCacheMutation", () => {
       await act(async () => {
         mutationApi.one.mutateAsync(["one"], async () => {
           pendingDeferredOne = createDeferred<string>();
-          return pendingDeferredOne;
+          return pendingDeferredOne.promise;
         });
       });
 
@@ -219,7 +219,7 @@ describe("useCacheMutation", () => {
       await act(async () => {
         mutationApi.two.mutateAsync(["two"], async () => {
           pendingDeferredTwo = createDeferred<string>();
-          return pendingDeferredTwo;
+          return pendingDeferredTwo.promise;
         });
       });
 
@@ -230,7 +230,7 @@ describe("useCacheMutation", () => {
       await act(async () => {
         mutationApi.one.mutateAsync(["one"], async () => {
           pendingDeferredOne = createDeferred<string>();
-          return pendingDeferredOne;
+          return pendingDeferredOne.promise;
         });
       });
 
@@ -268,13 +268,22 @@ describe("useCacheMutation", () => {
       let pendingDeferredB = createDeferred<string>();
       let pendingDeferredC = createDeferred<string>();
       await act(async () => {
-        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredA);
+        mutationApi.one.mutateAsync(
+          ["one"],
+          async () => pendingDeferredA.promise
+        );
       });
       await act(async () => {
-        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredB);
+        mutationApi.one.mutateAsync(
+          ["one"],
+          async () => pendingDeferredB.promise
+        );
       });
       await act(async () => {
-        mutationApi.one.mutateAsync(["one"], async () => pendingDeferredC);
+        mutationApi.one.mutateAsync(
+          ["one"],
+          async () => pendingDeferredC.promise
+        );
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
@@ -321,7 +330,7 @@ describe("useCacheMutation", () => {
       let pendingDeferred = createDeferred<string>();
       await act(async () => {
         mutationApi.two.mutateAsync(["two"], async () => {
-          return pendingDeferred;
+          return pendingDeferred.promise;
         });
       });
 
@@ -393,7 +402,10 @@ describe("useCacheMutation", () => {
 
       const pendingDeferred = createDeferred<string>();
       await act(async () => {
-        mutationApi.two.mutateAsync(["two"], async () => pendingDeferred);
+        mutationApi.two.mutateAsync(
+          ["two"],
+          async () => pendingDeferred.promise
+        );
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(

@@ -8,7 +8,7 @@ describe("createDeferred", () => {
       deferred.resolve("Resolved value");
     }, 0);
 
-    await expect(await deferred).toBe("Resolved value");
+    await expect(await deferred.promise).toBe("Resolved value");
   });
 
   it("should reject with a value", async () => {
@@ -19,7 +19,7 @@ describe("createDeferred", () => {
     let caught = null;
 
     try {
-      await deferred;
+      await deferred.promise;
     } catch (error) {
       caught = error;
     }

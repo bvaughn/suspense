@@ -1,19 +1,13 @@
 import { unstable_getCacheForType as getCacheForType } from "react";
-import {
-  STATUS_NOT_FOUND,
-  STATUS_PENDING,
-  STATUS_REJECTED,
-  STATUS_RESOLVED,
-} from "../constants";
+import { STATUS_NOT_FOUND, STATUS_PENDING } from "../constants";
 import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
   CacheLoadOptions,
-  Cacher,
+  CacheMap,
   PendingRecord,
   Record,
   ResolvedRecord,
-  ResolvedRecordData,
   Status,
   StatusCallback,
   UnsubscribeCallback,
@@ -27,24 +21,29 @@ import {
 } from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
 import { defaultGetCache } from "../utils/defaultGetCache";
+import {
+  createPendingRecord,
+  createResolvedRecord,
+  updateRecordToRejected,
+  updateRecordToResolved,
+} from "../utils/Record";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
   Value
 > & {
-  __backupRecordMap: Cacher<string, Record<Value>>;
-  __createRecordMap: () => Cacher<string, Record<Value>>;
+  __backupRecordMap: CacheMap<string, Record<Value>>;
+  __createRecordMap: () => CacheMap<string, Record<Value>>;
   __getKey: (...params: Params) => string;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (...params: Params) => void;
-  __writeResolvedRecordData: (value: Value) => ResolvedRecordData<Value>;
 };
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
     getCache?: <Value>(
       onEviction: (key: string) => void
-    ) => Cacher<string, Value>;
+    ) => CacheMap<string, Value>;
   };
   debugLabel?: string;
   getKey?: (...params: Params) => string;
@@ -137,9 +136,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const recordMap = getCacheForType(createRecordMap);
 
-    const record: ResolvedRecord<Value> = {
-      data: writeResolvedRecordData<Value>(value),
-    };
+    const record: ResolvedRecord<Value> = createResolvedRecord(value);
 
     debugLogInDev("cache()", params, value);
 
@@ -206,14 +203,7 @@ export function createCache<Params extends Array<any>, Value>(
         debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
       );
 
-      record = {
-        data: {
-          abortController,
-          deferred,
-          status: STATUS_PENDING,
-        },
-      };
-
+      record = createPendingRecord<Value>(deferred, abortController);
       backupRecordMap.set(cacheKey, record);
       recordMap.set(cacheKey, record);
 
@@ -238,6 +228,14 @@ export function createCache<Params extends Array<any>, Value>(
 
     if (!record) {
       return STATUS_NOT_FOUND;
+    } else if (isResolvedRecord(record)) {
+      try {
+        readRecordValueThrowsIfSilentlyEvicted(record);
+      } catch (error) {
+        evict(...params);
+
+        return STATUS_NOT_FOUND;
+      }
     }
 
     return record.data.status;
@@ -252,7 +250,7 @@ export function createCache<Params extends Array<any>, Value>(
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      return readRecordValueThrowsIfSilentlyEvicted(record);
     } else {
       throw Error(`Record found with status "${record.data.status}"`);
     }
@@ -262,7 +260,9 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = getKey(...params);
     const record = backupRecordMap.get(cacheKey);
     if (record && isResolvedRecord(record)) {
-      return readRecordValue(record);
+      try {
+        return readRecordValueThrowsIfSilentlyEvicted(record);
+      } catch {}
     }
   }
 
@@ -283,9 +283,16 @@ export function createCache<Params extends Array<any>, Value>(
   function readAsync(...params: Params): PromiseLike<Value> | Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
-      return record.data.deferred;
+      return record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      try {
+        return readRecordValueThrowsIfSilentlyEvicted(record);
+      } catch (error) {
+        // If the value has been garbage collected since we last read it,
+        // Delete the record and try again.
+        evict(...params);
+        return readAsync(...params);
+      }
     } else {
       throw record.data.error;
     }
@@ -294,9 +301,16 @@ export function createCache<Params extends Array<any>, Value>(
   function read(...params: Params): Value {
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
-      throw record.data.deferred;
+      throw record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
-      return readRecordValue(record);
+      try {
+        return readRecordValueThrowsIfSilentlyEvicted(record);
+      } catch (error) {
+        // If the value has been garbage collected since we last read it,
+        // Delete the record and try again.
+        evict(...params);
+        return read(...params);
+      }
     } else {
       throw record.data.error;
     }
@@ -329,16 +343,13 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
-        (record as Record<Value>).data = writeResolvedRecordData<Value>(value);
+        updateRecordToResolved(record, value);
 
         deferred.resolve(value);
       }
     } catch (error) {
       if (!abortSignal.aborted) {
-        (record as Record<Value>).data = {
-          error,
-          status: STATUS_REJECTED,
-        };
+        updateRecordToRejected(record, error);
 
         deferred.reject(error);
       }
@@ -349,8 +360,14 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function readRecordValue(record: ResolvedRecord<Value>): Value {
-    return record.data.value;
+  function readRecordValueThrowsIfSilentlyEvicted(
+    record: ResolvedRecord<Value>
+  ): Value {
+    const { value } = record.data;
+    if (value == null) {
+      throw Error("Value was silently evicted");
+    }
+    return value;
   }
 
   function subscribeToStatus(
@@ -380,15 +397,6 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function writeResolvedRecordData<Value>(
-    value: Value
-  ): ResolvedRecordData<Value> {
-    return {
-      status: STATUS_RESOLVED,
-      value,
-    };
-  }
-
   const value: InternalCache<Params, Value> = {
     // Internal API (used by useCacheMutation)
     __backupRecordMap: backupRecordMap,
@@ -396,7 +404,6 @@ export function createCache<Params extends Array<any>, Value>(
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
-    __writeResolvedRecordData: writeResolvedRecordData,
 
     // Public API
     abort,

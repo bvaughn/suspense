@@ -13,6 +13,7 @@ import {
   GUIDE_MUTATING_A_CACHE_VALUE,
   GUIDE_STREAMING_CACHE,
   IS_PROMISE_LIKE,
+  RECORD_AND_RECORD_DATA_UTILS,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_CACHE_VALUE,
@@ -27,6 +28,7 @@ import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
 import HomeRoute from "./src/routes/Home";
 import IsPromiseLikeRoute from "./src/routes/api/isPromiseLike";
 import PageNotFoundRoute from "./src/routes/PageNotFound";
+import RecordAndRecordDataUtils from "./src/examples/RecordUtils/RecordUtils";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
@@ -83,6 +85,10 @@ root.render(
           element={<CreatingStreamingCacheRoute />}
         />
         <Route path={IS_PROMISE_LIKE} element={<IsPromiseLikeRoute />} />
+        <Route
+          path={RECORD_AND_RECORD_DATA_UTILS}
+          element={<RecordAndRecordDataUtils />}
+        />
         <Route path={USE_CACHE_MUTATION} element={<UseCacheMutationRoute />} />
         <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
         <Route path={USE_CACHE_VALUE} element={<UseCacheValueRoute />} />

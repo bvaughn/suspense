@@ -3,7 +3,7 @@ import { createDeferred } from "suspense";
 const deferred = createDeferred<string>();
 
 // REMOVE_BEFORE
-deferred.then(
+deferred.promise.then(
   function onFulfill(value: string) {
     // ..
   },

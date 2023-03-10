@@ -129,7 +129,7 @@ describe("useCacheStatus", () => {
     fetch.mockImplementation(async (...args) => {
       abortSignal = args[1].signal;
       deferred = createDeferred();
-      return deferred;
+      return deferred.promise;
     });
 
     cache.readAsync("async");

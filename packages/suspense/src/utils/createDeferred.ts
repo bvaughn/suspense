@@ -29,32 +29,7 @@ export function createDeferred<Type>(debugLabel?: string): Deferred<Type> {
     // @ts-ignore
     debugLabel,
 
-    catch<ThenResult = Type, ErrorResult = never>(
-      rejectCallback?:
-        | ((error: Error) => Promise<ErrorResult>)
-        | undefined
-        | null
-    ): Promise<ThenResult | ErrorResult> {
-      // @ts-ignore
-      return promise.catch(rejectCallback);
-    },
-
-    finally(onFinally?: (() => void) | undefined | null) {
-      return promise.finally(onFinally);
-    },
-
-    then<ThenResult = Type, ErrorResult = never>(
-      resolveCallback?:
-        | ((value: Type) => ThenResult | Promise<ThenResult>)
-        | undefined
-        | null,
-      rejectCallback?:
-        | ((error: Error) => Promise<ErrorResult>)
-        | undefined
-        | null
-    ): Promise<ThenResult | ErrorResult> {
-      return promise.then(resolveCallback, rejectCallback);
-    },
+    promise,
 
     reject(error: Error) {
       assertPending();

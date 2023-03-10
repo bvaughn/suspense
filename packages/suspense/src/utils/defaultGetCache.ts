@@ -1,5 +1,5 @@
-import { Cacher } from "../types";
+import { CacheMap } from "../types";
 
-export function defaultGetCache<Key, Value>(): Cacher<Key, Value> {
+export function defaultGetCache<Key, Value>(): CacheMap<Key, Value> {
   return new Map<Key, Value>();
 }
