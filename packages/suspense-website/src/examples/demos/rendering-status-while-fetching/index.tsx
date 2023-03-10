@@ -25,7 +25,7 @@ function getRandomUsers(): User[] {
 
 export const userProfileCache = createCache<[number], User>({
   debugLabel: "userProfileCache",
-  load: async (id: number) => {
+  load: async ([id]) => {
     return new Promise((resolve, reject) => {
       const delay = 500 + Math.random() * 4_500;
       setTimeout(() => {

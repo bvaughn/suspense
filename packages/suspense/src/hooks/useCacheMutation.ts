@@ -45,7 +45,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
   const mutateSync = useCallback<MutateSync<Params, Value>>(
     (params: Params, newValue: Value) => {
-      const cacheKey = getKey(...params);
+      const cacheKey = getKey(params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
         const abortController = mutationAbortControllerMap.get(cacheKey)!;
@@ -70,7 +70,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
   const mutateAsync = useCallback<MutateAsync<Params, Value>>(
     async (params: Params, callback: MutationCallback<Value>) => {
-      const cacheKey = getKey(...params);
+      const cacheKey = getKey(params);
 
       if (mutationAbortControllerMap.has(cacheKey)) {
         const abortController = mutationAbortControllerMap.get(cacheKey)!;
@@ -99,7 +99,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       mutationAbortControllerMap.set(cacheKey, abortController);
 
       startTransition(() => {
-        notifySubscribers(...params);
+        notifySubscribers(params);
         refresh(createRecordMap, recordMap);
       });
 
@@ -132,7 +132,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         }
 
         startTransition(() => {
-          notifySubscribers(...params);
+          notifySubscribers(params);
           refresh(createRecordMap, recordMap);
         });
       } catch (error) {
@@ -151,7 +151,7 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         backupRecordMap.set(cacheKey, record);
 
         startTransition(() => {
-          notifySubscribers(...params);
+          notifySubscribers(params);
           refresh(createRecordMap, recordMap);
         });
       } finally {

@@ -22,7 +22,7 @@ type Value = { key: string };
 
 describe("useImperativeCacheValue", () => {
   let cache: Cache<[string], Value>;
-  let fetch: jest.Mock<Promise<Value> | Value, [string, CacheLoadOptions]>;
+  let fetch: jest.Mock<Promise<Value> | Value, [[string], CacheLoadOptions]>;
 
   let container: HTMLDivElement | null = null;
   let lastRenderedError: any = undefined;
@@ -59,7 +59,7 @@ describe("useImperativeCacheValue", () => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
     fetch = jest.fn();
-    fetch.mockImplementation(async (key: string) => {
+    fetch.mockImplementation(async ([key]) => {
       const deferred = createDeferred<Value>();
 
       pendingDeferred.push(deferred);

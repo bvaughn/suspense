@@ -4,11 +4,11 @@ import { requestGC, waitForGC } from "../utils/test";
 
 describe("createCache", () => {
   let cache: Cache<[string], Object>;
-  let fetch: jest.Mock<Promise<Object> | Object, [string, CacheLoadOptions]>;
+  let fetch: jest.Mock<Promise<Object> | Object, [[string], CacheLoadOptions]>;
 
   beforeEach(() => {
     fetch = jest.fn();
-    fetch.mockImplementation((key: string) => {
+    fetch.mockImplementation(([key]) => {
       if (key.startsWith("async")) {
         return Promise.resolve(createObject(key));
       } else if (key.startsWith("error")) {

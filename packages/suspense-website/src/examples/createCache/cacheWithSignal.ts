@@ -3,7 +3,7 @@ import { CacheLoadOptions, createCache } from "suspense";
 // REMOVE_BEFORE
 
 createCache<[userId: string], JSON>({
-  load: async (userId: string, options: CacheLoadOptions) => {
+  load: async ([userId], options: CacheLoadOptions) => {
     // An AbortSignal is passed in as the final parameter with each request
     const { signal } = options;
 
