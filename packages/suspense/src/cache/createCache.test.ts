@@ -252,6 +252,14 @@ describe("createCache", () => {
 
       expect(load).toHaveBeenCalledTimes(1);
     });
+
+    it("should error if the load function syncronously resolves to undefined", async () => {
+      load.mockReturnValue(undefined!);
+
+      expect(() => cache.readAsync("sync-3")).toThrow(
+        "readAsync() loop detected. This usually means the return value of 'load' is syncronous and undefined."
+      );
+    });
   });
 
   describe("read", () => {
@@ -336,6 +344,7 @@ describe("createCache", () => {
       expect(cache.getValue("sync-1")).toEqual("sync-1");
 
       // Verify other values fetch independently
+      load.mockReturnValue("sync-2")
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall?.[0]).toEqual("sync-2");

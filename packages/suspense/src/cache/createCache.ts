@@ -213,7 +213,8 @@ export function createCache<Params extends Array<any>, Value>(
     }
     debugLogInDev(
       "getOrCreateRecord(): record found. returning record",
-      params
+      params,
+      record
     );
 
     return record;
@@ -309,7 +310,7 @@ export function createCache<Params extends Array<any>, Value>(
         readAsyncLoopCount++;
         if (readAsyncLoopCount > maxReadAsyncCount) {
           throw new Error(
-            `readAsync() loop detected. This usually means the result of 'load' is undefined.`
+            `readAsync() loop detected. This usually means the return value of 'load' is syncronous and undefined.`
           );
         }
         return readAsync(...params);
