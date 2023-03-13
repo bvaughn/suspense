@@ -144,8 +144,13 @@ export function createCache<Params extends Array<any>, Value>(
     recordMap.set(cacheKey, record);
   }
 
-  function createRecordMap(): Map<string, Record<Value>> {
-    return new Map();
+  function createRecordMap(): CacheMap<string, Record<Value>> {
+    return getCache((key) => {
+      // we don't really need to do anything here, this map will almost always be a subset of the backupRecordMap
+      // but we also don't want it to bypass the getCache() eviction logic (if any)
+      // leave a debug log here in case we need to revisit this
+      debugLogInDev(`createRecordMap() -> eviction: ${key}`);
+    });
   }
 
   function onExternalCacheEviction(key: string): void {
@@ -175,7 +180,7 @@ export function createCache<Params extends Array<any>, Value>(
   function evictAll(): void {
     const recordMap = getCacheForType(createRecordMap);
 
-    debugLogInDev(`evictAll()`, undefined, `${recordMap.size} records`);
+    debugLogInDev(`evictAll()`, undefined);
 
     backupRecordMap.clear();
     recordMap.clear();
