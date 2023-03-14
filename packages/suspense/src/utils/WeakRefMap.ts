@@ -1,6 +1,6 @@
 export type FinalizerCallback<Key> = (key: Key) => void;
 
-export class WeakRefMap<Key, Value extends Object> {
+export class WeakRefMap<Key extends string, Value extends Object> {
   private finalizerCallback: FinalizerCallback<Key>;
   private finalizationRegistry: FinalizationRegistry<Key>;
   private map: Map<Key, WeakRef<Value>>;
@@ -47,7 +47,7 @@ export class WeakRefMap<Key, Value extends Object> {
     return weakRef != null && weakRef.deref() != null;
   }
 
-  set(key: Key, value: Value): void {
+  set(key: Key, value: Value): this {
     if (this.map.has(key)) {
       this.unregister(key);
 
@@ -55,10 +55,15 @@ export class WeakRefMap<Key, Value extends Object> {
       this.finalizerCallback(key);
     }
 
-    this.map.set(key, new WeakRef(value));
+    this.map.set(key, new WeakRef(value!));
 
     if (value != null) {
       this.finalizationRegistry.register(value, key, value);
     }
+    return this;
+  }
+
+  clear(): void {
+    this.map.clear();
   }
 }
