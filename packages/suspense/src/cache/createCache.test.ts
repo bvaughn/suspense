@@ -647,7 +647,7 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
@@ -657,7 +657,7 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(() => gcCache.getValue("test")).toThrow("No record found");
@@ -667,7 +667,7 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
@@ -677,7 +677,7 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
@@ -691,7 +691,7 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
