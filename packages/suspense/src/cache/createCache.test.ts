@@ -647,6 +647,8 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
+      // the cache creates two instances of the WeakRefMap
+      // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
@@ -657,6 +659,8 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
@@ -667,6 +671,8 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
@@ -677,6 +683,8 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
@@ -691,6 +699,8 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 

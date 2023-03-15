@@ -31,8 +31,8 @@ export function useCacheMutation<Params extends Array<any>, Value>(
   cache: Cache<Params, Value>
 ): MutationApi<Params, Value> {
   const {
-    __backupRecordMap: backupRecordMap,
-    __createRecordMap: createRecordMap,
+    __recordMap: recordMap,
+    __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
@@ -55,13 +55,13 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
       const record: Record<Value> = createResolvedRecord(newValue);
 
-      backupRecordMap.set(cacheKey, record);
-
-      const recordMap = createRecordMap();
       recordMap.set(cacheKey, record);
 
+      const pendingMutationRecordMap = createPendingMutationRecordMap();
+      pendingMutationRecordMap.set(cacheKey, record);
+
       startTransition(() => {
-        refresh(createRecordMap, recordMap);
+        refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
       });
     },
     [refresh, startTransition]
@@ -92,14 +92,14 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       // Don't mutate the module-level cache yet;
       // this might cause other components to suspend (and fallback)
       // if they happened to re-render before the mutation finished
-      const recordMap = createRecordMap();
-      recordMap.set(cacheKey, record);
+      const pendingMutationRecordMap = createPendingMutationRecordMap();
+      pendingMutationRecordMap.set(cacheKey, record);
 
       mutationAbortControllerMap.set(cacheKey, abortController);
 
       startTransition(() => {
         notifySubscribers(...params);
-        refresh(createRecordMap, recordMap);
+        refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
       });
 
       try {
@@ -115,11 +115,11 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         if (abortController.signal.aborted) {
           // The mutation was aborted;
           // if we can restore the previous record, do it
-          const backupRecord = backupRecordMap.get(cacheKey);
+          const backupRecord = recordMap.get(cacheKey);
           if (backupRecord) {
-            recordMap.set(cacheKey, backupRecord);
+            pendingMutationRecordMap.set(cacheKey, backupRecord);
           } else {
-            recordMap.delete(cacheKey);
+            pendingMutationRecordMap.delete(cacheKey);
           }
         } else {
           // This method determines whether to store the value in a WeakRef
@@ -127,12 +127,12 @@ export function useCacheMutation<Params extends Array<any>, Value>(
 
           deferred.resolve(newValue as Value);
 
-          backupRecordMap.set(cacheKey, record);
+          recordMap.set(cacheKey, record);
         }
 
         startTransition(() => {
           notifySubscribers(...params);
-          refresh(createRecordMap, recordMap);
+          refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
         });
       } catch (error) {
         (record as Record<Value>).data = {
@@ -147,11 +147,11 @@ export function useCacheMutation<Params extends Array<any>, Value>(
           // Don't trigger an unhandled rejection
         }
 
-        backupRecordMap.set(cacheKey, record);
+        recordMap.set(cacheKey, record);
 
         startTransition(() => {
           notifySubscribers(...params);
-          refresh(createRecordMap, recordMap);
+          refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
         });
       } finally {
         // Cleanup after mutation by deleting the abort controller
