@@ -5,6 +5,7 @@ import {
 import { configure as configurePointUtilities } from "point-utilities";
 
 import {
+  STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
@@ -16,6 +17,7 @@ import {
   PendingRecord,
   IntervalCache,
   Record,
+  StatusCallback,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
@@ -72,6 +74,11 @@ export function createIntervalCache<
 
   const metadataMap = new Map<string, Metadata<Point, Value>>();
 
+  // Subscribers are stored in a two-level Map:
+  // First a key constructed from the params Array (getKey) points to another Map,
+  // Then a key constructed from the interval Array points to a Set of subscribers
+  const subscriberMap = new Map<string, Map<string, Set<StatusCallback>>>();
+
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
@@ -110,6 +117,8 @@ export function createIntervalCache<
             metadata.recordMap.delete(recordKey);
 
             record.data.abortController.abort();
+
+            notifySubscribers(start, end, ...params);
           } catch (error) {
             caught = error;
           }
@@ -132,7 +141,16 @@ export function createIntervalCache<
     debugLogInDev("evict()", params);
 
     const cacheKey = getKey(...params);
-    return metadataMap.delete(cacheKey);
+    const result = metadataMap.delete(cacheKey);
+
+    const map = subscriberMap.get(cacheKey);
+    if (map) {
+      map.forEach((subscribers) => {
+        subscribers.forEach((callback) => callback(STATUS_NOT_FOUND));
+      });
+    }
+
+    return result;
   }
 
   function evictAll(): boolean {
@@ -142,38 +160,13 @@ export function createIntervalCache<
 
     metadataMap.clear();
 
+    subscriberMap.forEach((map) => {
+      map.forEach((subscribers) => {
+        subscribers.forEach((callback) => callback(STATUS_NOT_FOUND));
+      });
+    });
+
     return hadValues;
-  }
-
-  function readAsync(
-    start: Point,
-    end: Point,
-    ...params: Params
-  ): PromiseLike<Value[]> | Value[] {
-    debugLogInDev(`readAsync(${start}, ${end})`, params);
-
-    const record = getOrCreateRecord(start, end, ...params);
-    switch (record.data.status) {
-      case STATUS_PENDING:
-        return record.data.deferred.promise;
-      case STATUS_RESOLVED:
-        return record.data.value as Value[];
-      case STATUS_REJECTED:
-        throw record.data.error;
-    }
-  }
-
-  function read(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`read(${start}, ${end})`, params);
-
-    const record = getOrCreateRecord(start, end, ...params);
-    if (record.data.status === STATUS_RESOLVED) {
-      return record.data.value as Value[];
-    } else if (isPendingRecord(record)) {
-      throw record.data.deferred.promise;
-    } else {
-      throw record.data.error;
-    }
   }
 
   function getOrCreateIntervalMetadata(
@@ -220,6 +213,8 @@ export function createIntervalCache<
 
       metadata.recordMap.set(cacheKey, record);
 
+      notifySubscribers(start, end, ...params);
+
       processPendingRecord(
         metadata,
         record as PendingRecord<Value[]>,
@@ -230,6 +225,37 @@ export function createIntervalCache<
     }
 
     return record;
+  }
+
+  function getStatus(start: Point, end: Point, ...params: Params) {
+    const metadata = getOrCreateIntervalMetadata(...params);
+    const cacheKey = `${start}–${end}`;
+
+    let record = metadata.recordMap.get(cacheKey);
+    if (!record) {
+      return STATUS_NOT_FOUND;
+    }
+
+    return record.data.status;
+  }
+
+  function notifySubscribers(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): void {
+    const cacheKey = getKey(...params);
+    const map = subscriberMap.get(cacheKey);
+    if (map) {
+      const intervalKey = `${start}–${end}`;
+      const set = map.get(intervalKey);
+      if (set) {
+        const status = getStatus(start, end, ...params);
+        set.forEach((callback) => {
+          callback(status);
+        });
+      }
+    }
   }
 
   async function processPendingInterval(
@@ -354,6 +380,8 @@ export function createIntervalCache<
 
       deferred.reject(error);
 
+      notifySubscribers(start, end, ...params);
+
       return;
     }
 
@@ -412,6 +440,8 @@ export function createIntervalCache<
         };
 
         deferred.resolve(record.data.value);
+
+        notifySubscribers(start, end, ...params);
       }
     } catch (error) {
       let errorMessage = "Unknown Error";
@@ -434,7 +464,76 @@ export function createIntervalCache<
         };
 
         deferred.reject(error);
+
+        notifySubscribers(start, end, ...params);
       }
+    }
+  }
+
+  function read(start: Point, end: Point, ...params: Params): Value[] {
+    debugLogInDev(`read(${start}, ${end})`, params);
+
+    const record = getOrCreateRecord(start, end, ...params);
+    if (record.data.status === STATUS_RESOLVED) {
+      return record.data.value as Value[];
+    } else if (isPendingRecord(record)) {
+      throw record.data.deferred.promise;
+    } else {
+      throw record.data.error;
+    }
+  }
+
+  function readAsync(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): PromiseLike<Value[]> | Value[] {
+    debugLogInDev(`readAsync(${start}, ${end})`, params);
+
+    const record = getOrCreateRecord(start, end, ...params);
+    switch (record.data.status) {
+      case STATUS_PENDING:
+        return record.data.deferred.promise;
+      case STATUS_RESOLVED:
+        return record.data.value as Value[];
+      case STATUS_REJECTED:
+        throw record.data.error;
+    }
+  }
+
+  function subscribeToStatus(
+    callback: StatusCallback,
+    start: Point,
+    end: Point,
+    ...params: Params
+  ) {
+    const cacheKey = getKey(...params);
+    let map = subscriberMap.get(cacheKey);
+    if (!map) {
+      map = new Map();
+      subscriberMap.set(cacheKey, map);
+    }
+
+    const intervalKey = `${start}–${end}`;
+    let set = map.get(intervalKey);
+    if (set) {
+      set.add(callback);
+    } else {
+      set = new Set([callback]);
+      map.set(intervalKey, set);
+    }
+
+    try {
+      const status = getStatus(start, end, ...params);
+
+      callback(status);
+    } finally {
+      return () => {
+        set!.delete(callback);
+        if (set!.size === 0) {
+          subscriberMap.delete(cacheKey);
+        }
+      };
     }
   }
 
@@ -442,8 +541,10 @@ export function createIntervalCache<
     abort,
     evict,
     evictAll,
+    getStatus,
     readAsync,
     read,
+    subscribeToStatus,
   };
 }
 

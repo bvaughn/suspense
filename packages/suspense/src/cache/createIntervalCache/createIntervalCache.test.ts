@@ -1,4 +1,10 @@
 import { compare as compareBigInt } from "extra-bigint";
+import {
+  STATUS_NOT_FOUND,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../../constants";
 
 import { IntervalCacheLoadOptions, Deferred, IntervalCache } from "../../types";
 import { createDeferred } from "../../utils/createDeferred";
@@ -22,7 +28,7 @@ describe("createIntervalCache", () => {
 
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation(async (start: number, end: number) =>
+    load.mockImplementation(async (start: number, end: number, text: string) =>
       createContiguousArray(start, end)
     );
 
@@ -217,6 +223,53 @@ describe("createIntervalCache", () => {
       await cache.readAsync(1, 1, "one");
       await cache.readAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 2);
+    });
+  });
+
+  describe("getStatus", () => {
+    it("should return not-found for keys that have not been loaded", () => {
+      expect(cache.getStatus(1, 5, "nope")).toBe(STATUS_NOT_FOUND);
+    });
+
+    it("should transition from pending to resolved", async () => {
+      const willResolve = cache.readAsync(1, 5, "test");
+
+      expect(cache.getStatus(1, 5, "test")).toBe(STATUS_PENDING);
+
+      await willResolve;
+
+      expect(cache.getStatus(1, 5, "test")).toBe(STATUS_RESOLVED);
+    });
+
+    it("should transition from pending to rejected", async () => {
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+
+      const willReject = cache.readAsync(1, 5, "test");
+
+      expect(cache.getStatus(1, 5, "test")).toBe(STATUS_PENDING);
+
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+
+      expect(cache.getStatus(1, 5, "test")).toBe(STATUS_REJECTED);
+    });
+
+    it("should return resolved or rejected for keys that have already been loaded", async () => {
+      const willResolve = cache.readAsync(1, 5, "will-resolve");
+      await willResolve;
+      expect(cache.getStatus(1, 5, "will-resolve")).toBe(STATUS_RESOLVED);
+
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+      const willReject = cache.readAsync(6, 10, "will-reject");
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+      expect(cache.getStatus(6, 10, "will-reject")).toBe(STATUS_REJECTED);
     });
   });
 
@@ -460,6 +513,172 @@ describe("createIntervalCache", () => {
 
         expect(cache.read(1, 3, "test")).toEqual(createContiguousArray(1, 3));
       }
+    });
+  });
+
+  describe("subscribeToStatus", () => {
+    let callbackA: jest.Mock;
+    let callbackB: jest.Mock;
+
+    beforeEach(() => {
+      callbackA = jest.fn();
+      callbackB = jest.fn();
+    });
+
+    it("should subscribe to keys that have not been loaded", async () => {
+      cache.subscribeToStatus(callbackA, 1, 5, "text");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+
+      await Promise.resolve();
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+    });
+
+    it("should notify of the transition from undefined to pending to resolved", async () => {
+      cache.subscribeToStatus(callbackA, 1, 5, "text");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+
+      const promise = cache.readAsync(1, 5, "text");
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_PENDING);
+
+      await promise;
+
+      expect(callbackA).toHaveBeenCalledTimes(3);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+    });
+
+    it("should only notify each subscriber once", async () => {
+      cache.subscribeToStatus(callbackA, 1, 5, "text");
+      cache.subscribeToStatus(callbackB, 1, 5, "text");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+
+      const promise = cache.readAsync(1, 5, "text");
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_PENDING);
+
+      expect(callbackB).toHaveBeenCalledTimes(2);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_PENDING);
+
+      await promise;
+
+      expect(callbackA).toHaveBeenCalledTimes(3);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+
+      expect(callbackB).toHaveBeenCalledTimes(3);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+    });
+
+    it("should not notify after a subscriber unsubscribes", async () => {
+      const unsubscribe = cache.subscribeToStatus(callbackA, 1, 5, "test");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+
+      unsubscribe();
+
+      await cache.readAsync(1, 5, "test");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+    });
+
+    it("should track subscribers separately, per key", async () => {
+      cache.subscribeToStatus(callbackA, 1, 5, "test-1");
+      cache.subscribeToStatus(callbackB, 1, 5, "test-2");
+
+      callbackA.mockReset();
+      callbackB.mockReset();
+
+      await cache.readAsync(1, 5, "test-2");
+
+      expect(callbackA).not.toHaveBeenCalled();
+      expect(callbackB).toHaveBeenCalledTimes(2);
+    });
+
+    it("should track unsubscriptions separately, per key", async () => {
+      const unsubscribeA = cache.subscribeToStatus(callbackA, 1, 5, "test-1");
+      cache.subscribeToStatus(callbackB, 1, 5, "test-2");
+
+      callbackA.mockReset();
+      callbackB.mockReset();
+
+      unsubscribeA();
+
+      await cache.readAsync(1, 5, "test-1");
+      await cache.readAsync(1, 5, "test-2");
+
+      expect(callbackA).not.toHaveBeenCalled();
+      expect(callbackB).toHaveBeenCalledTimes(2);
+    });
+
+    it("should return the correct value for keys that have already been resolved or rejected", async () => {
+      await cache.readAsync(1, 5, "will-resolve");
+
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+      const willReject = cache.readAsync(1, 5, "will-error");
+
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+
+      cache.subscribeToStatus(callbackA, 1, 5, "will-resolve");
+      cache.subscribeToStatus(callbackB, 1, 5, "will-error");
+
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_REJECTED);
+    });
+
+    it("should notify subscribers after a value is evicted", async () => {
+      await cache.readAsync(1, 5, "test-1");
+      await cache.readAsync(1, 5, "test-2");
+
+      cache.subscribeToStatus(callbackA, 1, 5, "test-1");
+      cache.subscribeToStatus(callbackB, 1, 5, "test-2");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+
+      cache.evict("test-1");
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+    });
+
+    it("should notify subscribers after all values are evicted", async () => {
+      await cache.readAsync(1, 5, "test-1");
+      await cache.readAsync(1, 5, "test-2");
+
+      cache.subscribeToStatus(callbackA, 1, 5, "test-1");
+      cache.subscribeToStatus(callbackB, 1, 5, "test-2");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callbackB).toHaveBeenCalledTimes(1);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_RESOLVED);
+
+      cache.evictAll();
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+      expect(callbackB).toHaveBeenCalledTimes(2);
+      expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_FOUND);
     });
   });
 });

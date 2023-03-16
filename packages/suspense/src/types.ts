@@ -96,12 +96,19 @@ export type IntervalCache<Point, Params extends any[], Value> = {
   abort(...params: Params): boolean;
   evict(...params: Params): boolean;
   evictAll(): boolean;
+  getStatus(start: Point, end: Point, ...params: Params): Status;
   readAsync(
     start: Point,
     end: Point,
     ...params: Params
   ): PromiseLike<Value[]> | Value[];
   read(start: Point, end: Point, ...params: Params): Value[];
+  subscribeToStatus(
+    callback: StatusCallback,
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): UnsubscribeCallback;
 };
 
 export type IntervalCacheLoadOptions = {

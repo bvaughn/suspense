@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.26
+* Add `getStatus` and `subscribe` methods to interval caches.
+* Add `useIntervalCacheStatus` hook for interval caches.
+
 ## 0.0.25
 Parameters passed to `createCache` methods `load` and `getKey` are no longer spread in order to avoid potential parameter mismatch caused by optional parameters.
 

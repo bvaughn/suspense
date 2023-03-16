@@ -374,7 +374,7 @@ describe("createCache", () => {
       expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
     });
 
-    it("should notify of the transition from undefined to from pending to resolved for async caches", async () => {
+    it("should notify of the transition from undefined to pending to resolved for async caches", async () => {
       cache.subscribeToStatus(callbackA, "async");
 
       expect(callbackA).toHaveBeenCalledTimes(1);

@@ -6,6 +6,7 @@ export * from "./cache/createStreamingCache";
 export * from "./hooks/useCacheMutation";
 export * from "./hooks/useCacheStatus";
 export * from "./hooks/useImperativeCacheValue";
+export * from "./hooks/useIntervalCacheStatus";
 export * from "./hooks/useStreamingValue";
 export * from "./utils/assertRecordStatus";
 export * from "./utils/createDeferred";
