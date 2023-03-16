@@ -16,6 +16,7 @@ import {
   RECORD_AND_RECORD_DATA_UTILS,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
+  USE_INTERVAL_CACHE_STATUS,
   USE_CACHE_VALUE,
   USE_STREAMING_CACHE,
 } from "./src/routes/config";
@@ -32,6 +33,7 @@ import RecordAndRecordDataUtils from "./src/examples/RecordUtils/RecordUtils";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
 import UseCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
+import UseIntervalCacheStatusRoute from "./src/routes/api/useIntervalCacheStatus";
 import UseStreamingValueRoute from "./src/routes/api/useStreamingValue";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";
@@ -91,6 +93,10 @@ root.render(
         />
         <Route path={USE_CACHE_MUTATION} element={<UseCacheMutationRoute />} />
         <Route path={USE_CACHE_STATUS} element={<UseCacheStatusRoute />} />
+        <Route
+          path={USE_INTERVAL_CACHE_STATUS}
+          element={<UseIntervalCacheStatusRoute />}
+        />
         <Route path={USE_CACHE_VALUE} element={<UseCacheValueRoute />} />
         <Route
           path={USE_STREAMING_CACHE}

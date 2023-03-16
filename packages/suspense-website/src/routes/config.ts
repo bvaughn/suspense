@@ -9,6 +9,7 @@ export const RECORD_AND_RECORD_DATA_UTILS = "/Record-and-RecordData-utils";
 export const USE_CACHE_MUTATION = "/useCacheMutation";
 export const USE_CACHE_STATUS = "/useCacheStatus";
 export const USE_CACHE_VALUE = "/useImperativeCacheValue";
+export const USE_INTERVAL_CACHE_STATUS = "/useIntervalCacheStatus";
 export const USE_STREAMING_CACHE = "/useStreamingValue";
 
 // Guides

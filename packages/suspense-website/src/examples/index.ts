@@ -91,6 +91,9 @@ const createIntervalCache = {
   evict: processExample(
     readFileSync(join(__dirname, "createIntervalCache", "evict.ts"), "utf8")
   ),
+  hook: processExample(
+    readFileSync(join(__dirname, "createIntervalCache", "hook.ts"), "utf8")
+  ),
   loadWithAbortSignal: processExample(
     readFileSync(
       join(__dirname, "createIntervalCache", "loadWithAbortSignal.ts"),
