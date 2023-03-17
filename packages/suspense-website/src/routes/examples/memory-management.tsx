@@ -16,29 +16,24 @@ export default function Route() {
       </Block>
       <Block>
         <p>
-          By default,{" "}
+          By default{" "}
           <code>
             <Link to={CREATE_CACHE}>createCache</Link>
           </code>{" "}
-          does not evict cache values. Depending on the needs of your
-          application, use the
-          <code>getCache</code> config option to specify a{" "}
-          <ExternalLink to="https://en.wikipedia.org/wiki/Cache_replacement_policies">
-            Least Recently Used (LRU) cache
-          </ExternalLink>{" "}
-          or{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef">
-              WeakRef
-            </ExternalLink>
-          </code>{" "}
-          based strategy instead.
+          does not evict cache values. This means that over time, the size of
+          the cache will grow and may cause memory issues for large
+          applications. This behavior can be customized using the{" "}
+          <code>getCache</code> configuration option as shown below.
         </p>
       </Block>
       <Block>
         <SubHeading title="LRU Cache" />
         <p>
-          The easiest way to do this is to use a pre-built cache like{" "}
+          Caches can be configured to store values in a{" "}
+          <ExternalLink to="https://en.wikipedia.org/wiki/Cache_replacement_policies">
+            Least Recently Used (LRU) cache
+          </ExternalLink>
+          . The recommended way to do this is to use a pre-built cache like{" "}
           <code>
             <ExternalLink to="https://www.npmjs.com/package/lru-cache">
               lru-cache
@@ -51,8 +46,13 @@ export default function Route() {
       <Block>
         <SubHeading title="WeakRef" />
         <p>
-          Caches can be configured to store values in a <code>WeakRef</code> as
-          well. The easiest way to do this is using the provided{" "}
+          Caches can also be configured to store values in a{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef">
+              WeakRef
+            </ExternalLink>
+          </code>
+          . The recommended way to do this is using the provided{" "}
           <code>WeakRefMap</code> class.
         </p>
         <Code code={createCache.cacheWithWeakRefMap} />
