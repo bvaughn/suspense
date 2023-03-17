@@ -1,6 +1,6 @@
 {
   "name": "suspense",
-  "version": "0.0.24",
+  "version": "0.0.26",
   "description": "Utilities for working with React suspense",
   "author": "Brian Vaughn <brian.david.vaughn@gmail.com>",
   "license": "MIT",

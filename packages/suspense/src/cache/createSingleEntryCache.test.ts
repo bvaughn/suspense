@@ -5,7 +5,7 @@ import { isPromiseLike } from "../utils/isPromiseLike";
 // Minimal testing of this cache is okay since it's just a wrapper around createCache.
 describe("createSingleEntryCache", () => {
   let cache: Cache<[], string>;
-  let load: jest.Mock<Promise<string> | string, [CacheLoadOptions]>;
+  let load: jest.Mock<Promise<string> | string, [[], CacheLoadOptions]>;
 
   beforeEach(() => {
     load = jest.fn();

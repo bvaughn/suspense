@@ -9,5 +9,5 @@ class ApiClient {
 // REMOVE_BEFORE
 
 createSingleEntryCache<[ApiClient], JSON>({
-  load: async (client: ApiClient) => client.getRecentArticles(),
+  load: async ([apiClient]) => apiClient.getRecentArticles(),
 });

@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.0.26
+* Add `getStatus` and `subscribe` methods to interval caches.
+* Add `useIntervalCacheStatus` hook for interval caches.
+
+## 0.0.25
+Parameters passed to `createCache` methods `load` and `getKey` are no longer spread in order to avoid potential parameter mismatch caused by optional parameters.
+
+Before:
+```ts
+createCache<[bool: boolean, num: number, str: string], boolean>({
+  getKey: async (bool, num, str) => {
+    // ...
+  },
+  load: async (bool, num, str) => {
+    // ...
+  }
+});
+```
+
+After:
+```ts
+createCache<[bool: boolean, num: number, str: string], boolean>({
+  // Note the added [] wrapper
+  getKey: async ([bool, num, str]) => {
+    // ...
+  },
+  load: async ([bool, num, str]) => {
+    // ...
+  }
+});
+```
+
 ## 0.0.24
 * Refactored internal structure of `Deferred` type to expose `promise` rather than proxy it.
 * Expose several additional low-level utilities for working with `Record` values (useful for creating custom caches).

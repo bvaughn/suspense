@@ -11,27 +11,30 @@ import { createDeferred } from "../utils/createDeferred";
 import { mockWeakRef, SimpleLRUCache, WeakRefArray } from "../utils/test";
 import { WeakRefMap } from "../utils/WeakRefMap";
 
+function defaultLoad(
+  [key]: [key: string],
+  options: CacheLoadOptions
+): Promise<string> | string {
+  if (key.startsWith("async")) {
+    return Promise.resolve(key);
+  } else if (key.startsWith("error")) {
+    return Promise.reject(key);
+  } else {
+    return key;
+  }
+}
+
 describe("createCache", () => {
   let cache: Cache<[string], string>;
-  let load: jest.Mock<Promise<string> | string, [string, CacheLoadOptions]>;
-  let getCacheKey: jest.Mock<string, [string]>;
-
-  const loadImpl = (key: string) => {
-    if (key.startsWith("async")) {
-      return Promise.resolve(key);
-    } else if (key.startsWith("error")) {
-      return Promise.reject(key);
-    } else {
-      return key;
-    }
-  };
+  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
+  let getCacheKey: jest.Mock<string, [[string]]>;
 
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation(loadImpl);
+    load.mockImplementation(defaultLoad);
 
     getCacheKey = jest.fn();
-    getCacheKey.mockImplementation((key) => key.toString());
+    getCacheKey.mockImplementation(([key]) => key.toString());
 
     cache = createCache<[string], string>({
       debugLabel: "cache",
@@ -54,7 +57,7 @@ describe("createCache", () => {
 
   it("should supply a working default getCacheKey if none is provided", () => {
     const cache = createCache<[string, number, boolean], string>({
-      load: (string: string, number: number, boolean: boolean) => string,
+      load: ([string, number, boolean]) => string,
     });
     cache.cache("foo", "string", 123, true);
     cache.cache("bar", "other string", 456, false);
@@ -67,8 +70,8 @@ describe("createCache", () => {
     it("should abort an active request", () => {
       let abortSignal: AbortSignal | undefined;
       let deferred: Deferred<string> | undefined;
-      load.mockImplementation(async (...args) => {
-        abortSignal = args[1].signal;
+      load.mockImplementation(async (params, options) => {
+        abortSignal = options.signal;
         deferred = createDeferred();
         return deferred.promise;
       });
@@ -338,10 +341,10 @@ describe("createCache", () => {
       expect(cache.getValue("sync-1")).toEqual("sync-1");
 
       // Verify other values fetch independently
-      load.mockImplementation(loadImpl);
+      load.mockImplementation(defaultLoad);
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall?.[0]).toEqual("sync-2");
+      expect(load.mock.lastCall?.[0]).toEqual(["sync-2"]);
       expect(cache.getValue("sync-2")).toEqual("sync-2");
     });
   });
@@ -379,7 +382,7 @@ describe("createCache", () => {
       expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
     });
 
-    it("should notify of the transition from undefined to from pending to resolved for async caches", async () => {
+    it("should notify of the transition from undefined to pending to resolved for async caches", async () => {
       cache.subscribeToStatus(callbackA, "async");
 
       expect(callbackA).toHaveBeenCalledTimes(1);
@@ -523,14 +526,14 @@ describe("createCache", () => {
     let lruCache: Cache<[string], Object>;
     let loadObject: jest.Mock<
       Promise<Object> | Object,
-      [string, CacheLoadOptions]
+      [[string], CacheLoadOptions]
     >;
     let evictFn: jest.Mock<void, [string]>;
 
     beforeEach(() => {
       evictFn = jest.fn();
       loadObject = jest.fn();
-      loadObject.mockImplementation((key: string) => {
+      loadObject.mockImplementation(([key]) => {
         if (key.startsWith("async")) {
           return Promise.resolve({ key });
         } else if (key.startsWith("error")) {
@@ -617,7 +620,7 @@ describe("createCache", () => {
     let gcCache: Cache<[string], TestValue>;
     let loadObject: jest.Mock<
       Promise<TestValue> | TestValue,
-      [string, CacheLoadOptions]
+      [[string], CacheLoadOptions]
     >;
     let weakRefArray: WeakRefArray<any>;
 
@@ -625,7 +628,7 @@ describe("createCache", () => {
       weakRefArray = mockWeakRef();
 
       loadObject = jest.fn();
-      loadObject.mockImplementation((key: string) => {
+      loadObject.mockImplementation(([key]) => {
         if (key.startsWith("async")) {
           return Promise.resolve({ key });
         } else if (key.startsWith("error")) {

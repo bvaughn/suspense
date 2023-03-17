@@ -32,10 +32,7 @@ const createCache = {
     readFileSync(join(__dirname, "createCache", "cacheWithSignal.ts"), "utf8")
   ),
   cacheWithGetCache: processExample(
-    readFileSync(
-      join(__dirname, "createCache", "cacheWithGetCache.ts"),
-      "utf8"
-    )
+    readFileSync(join(__dirname, "createCache", "cacheWithGetCache.ts"), "utf8")
   ),
   evict: processExample(
     readFileSync(join(__dirname, "createCache", "evict.ts"), "utf8")
@@ -90,6 +87,9 @@ const createIntervalCache = {
   ),
   evict: processExample(
     readFileSync(join(__dirname, "createIntervalCache", "evict.ts"), "utf8")
+  ),
+  hook: processExample(
+    readFileSync(join(__dirname, "createIntervalCache", "hook.ts"), "utf8")
   ),
   loadWithAbortSignal: processExample(
     readFileSync(

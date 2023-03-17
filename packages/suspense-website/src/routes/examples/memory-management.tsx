@@ -27,7 +27,8 @@ export default function Route() {
             <ExternalLink to="https://www.npmjs.com/package/lru-cache">
               lru-cache
             </ExternalLink>
-          </code> to manage the cache size.
+          </code>{" "}
+          to manage the cache size.
         </p>
         <Code code={createCache.cacheWithGetCache} />
         <Note type="warn">
