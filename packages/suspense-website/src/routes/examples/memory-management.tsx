@@ -4,6 +4,7 @@ import Code from "../../components/Code";
 import Container from "../../components/Container";
 import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
+import Note from "../../components/Note";
 import SubHeading from "../../components/SubHeading";
 import { createCache } from "../../examples";
 import { CREATE_CACHE } from "../config";
@@ -20,14 +21,19 @@ export default function Route() {
           <code>
             <Link to={CREATE_CACHE}>createCache</Link>
           </code>{" "}
-          does not evict cache values. This means that over time, the size of
-          the cache will grow and may cause memory issues for large
-          applications. This behavior can be customized using the{" "}
-          <code>getCache</code> configuration option as shown below.
+          does not evict cache values.
+          <Note>
+            <p>
+              This means that over time, the size of the cache will grow and may
+              cause memory issues for large applications. This behavior can be
+              customized using the <code>getCache</code> configuration option as
+              shown below.
+            </p>
+          </Note>
         </p>
       </Block>
       <Block>
-        <SubHeading title="LRU Cache" />
+        <SubHeading title="LRU cache" />
         <p>
           Caches can be configured to store values in a{" "}
           <ExternalLink to="https://en.wikipedia.org/wiki/Cache_replacement_policies">
@@ -44,7 +50,7 @@ export default function Route() {
         <Code code={createCache.cacheWithLRU} />
       </Block>
       <Block>
-        <SubHeading title="WeakRef" />
+        <SubHeading title="WeakRef cache" />
         <p>
           Caches can also be configured to store values in a{" "}
           <code>

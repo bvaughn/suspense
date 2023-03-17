@@ -11,7 +11,10 @@ createCache<[userId: string], JSON>({
     getCache: (onEvict) =>
       new LRUCache<string, Record<JSON>>({
         max: 100,
-        dispose: (value, key) => onEvict(key),
+        dispose: (value, key, reason) => {
+          if (reason === "evict") {
+            onEvict(key);
+          },
       }),
   },
   load,
