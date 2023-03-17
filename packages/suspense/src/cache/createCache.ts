@@ -159,16 +159,6 @@ export function createCache<Params extends Array<any>, Value>(
     });
   }
 
-  function onExternalCacheEviction(key: string): void {
-    debugLogInDev(`onExternalCacheEviction(${key})`);
-    const set = subscriberMap.get(key);
-    if (set) {
-      set.forEach((callback) => {
-        callback(STATUS_NOT_FOUND);
-      });
-    }
-  }
-
   function evict(...params: Params): boolean {
     const cacheKey = getKey(params);
     const pendingMutationRecordMap = getCacheForType(
@@ -278,6 +268,17 @@ export function createCache<Params extends Array<any>, Value>(
     const record = recordMap.get(cacheKey);
     if (record && isResolvedRecord(record)) {
       return record.data.value;
+    }
+  }
+
+  function onExternalCacheEviction(key: string): void {
+    debugLogInDev(`onExternalCacheEviction(${key})`);
+
+    const set = subscriberMap.get(key);
+    if (set) {
+      set.forEach((callback) => {
+        callback(STATUS_NOT_FOUND);
+      });
     }
   }
 

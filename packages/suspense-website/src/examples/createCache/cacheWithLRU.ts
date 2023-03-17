@@ -14,7 +14,8 @@ createCache<[userId: string], JSON>({
         dispose: (value, key, reason) => {
           if (reason === "evict") {
             onEvict(key);
-          },
+          }
+        },
       }),
   },
   load,

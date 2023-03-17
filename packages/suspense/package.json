@@ -24,10 +24,12 @@
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
+    "@types/lru-cache": "^7.10.10",
     "@types/node": "^18.14.6",
     "extra-bigint": "^1.1.10",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "^29.4.3",
+    "lru-cache": "^8.0.3",
     "react": "0.0.0-experimental-49f741046-20230305",
     "react-dom": "0.0.0-experimental-49f741046-20230305",
     "ts-jest": "^29.0.5",
