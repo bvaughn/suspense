@@ -17,20 +17,21 @@ export default function Route() {
       </Block>
       <Block>
         <p>
-          By default{" "}
+          By default, values stored in a{" "}
           <code>
             <Link to={CREATE_CACHE}>createCache</Link>
           </code>{" "}
-          does not evict cache values.
-          <Note>
-            <p>
-              This means that over time, the size of the cache will grow and may
-              cause memory issues for large applications. This behavior can be
-              customized using the <code>getCache</code> configuration option as
-              shown below.
-            </p>
-          </Note>
+          will never be garbage collected unless they are explicitly removed
+          from the cache. This is the default behavior because it is the most
+          predictable. However this behavior can be customized using the{" "}
+          <code>getCache</code> configuration option as shown below.
         </p>
+        <Note>
+          <p>
+            Caches that do not evict values may cause memory leaks for certain
+            types of applications.
+          </p>
+        </Note>
       </Block>
       <Block>
         <SubHeading title="LRU cache" />
