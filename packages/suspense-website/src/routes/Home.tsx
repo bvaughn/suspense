@@ -61,7 +61,8 @@ export default function Route() {
         <InstallationPanel />
       </Block>
       <Block>
-        <SubHeading title="Core API" />
+        <SubHeading title="APIs" />
+        <SubHeading level={2} title="Caches" />
         <ul>
           <LinkListItem children="createCache" to={CREATE_CACHE} type="code" />
           <LinkListItem
@@ -79,6 +80,9 @@ export default function Route() {
             to={CREATE_STREAMING_CACHE}
             type="code"
           />
+        </ul>
+        <SubHeading level={2} title="Hooks" />
+        <ul>
           <LinkListItem
             children="useCacheMutation"
             to={USE_CACHE_MUTATION}
@@ -105,9 +109,7 @@ export default function Route() {
             type="code"
           />
         </ul>
-      </Block>
-      <Block>
-        <SubHeading title="Low-level API" />
+        <SubHeading level={2} title="Low-level API" />
         <ul>
           {/*<LinkListItem children="createInfallibleCache" to="{CREATE_INFALLIBLE_CACHE} type="code" />*/}
           <LinkListItem

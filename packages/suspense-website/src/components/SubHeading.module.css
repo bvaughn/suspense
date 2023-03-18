@@ -1,9 +1,16 @@
 .SubHeading {
-  font-size: 1.5rem;
-  line-height: 1.5rem;
-
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 1ch;
+}
+
+.SubHeading[data-level="1"] {
+  font-size: 1.5rem;
+  line-height: 1.5rem;
+}
+
+.SubHeading[data-level="2"] {
+  font-size: 1rem;
+  line-height: 1rem;
 }
