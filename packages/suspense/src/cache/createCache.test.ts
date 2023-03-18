@@ -523,15 +523,16 @@ describe("createCache", () => {
   });
 
   describe("getCache: LRU Cache", () => {
-    let lruCache: Cache<[string], Object>;
+    let evictFn: jest.Mock<void, [string]>;
     let loadObject: jest.Mock<
       Promise<Object> | Object,
       [[string], CacheLoadOptions]
     >;
-    let evictFn: jest.Mock<void, [string]>;
+    let lruCache: Cache<[string], Object>;
 
     beforeEach(() => {
       evictFn = jest.fn();
+
       loadObject = jest.fn();
       loadObject.mockImplementation(([key]) => {
         if (key.startsWith("async")) {
@@ -584,6 +585,7 @@ describe("createCache", () => {
       expect(evictFn).toHaveBeenCalledTimes(1);
 
       expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
     });
 
     it("read: should re-suspend if previously loaded value has been evicted by provided cache", async () => {
@@ -594,6 +596,7 @@ describe("createCache", () => {
       expect(evictFn).toHaveBeenCalledTimes(1);
 
       expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
       await expect(await fakeSuspend(() => lruCache.read("test"))).toEqual({
         key: "test",
@@ -608,6 +611,7 @@ describe("createCache", () => {
       expect(evictFn).toHaveBeenCalledTimes(1);
 
       expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
 
       await expect(await lruCache.readAsync("test")).toEqual({
         key: "test",
