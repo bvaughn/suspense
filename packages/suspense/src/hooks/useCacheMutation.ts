@@ -31,11 +31,11 @@ export function useCacheMutation<Params extends Array<any>, Value>(
   cache: Cache<Params, Value>
 ): MutationApi<Params, Value> {
   const {
-    __recordMap: recordMap,
     __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
+    __recordMap: recordMap,
   } = cache as InternalCache<Params, Value>;
 
   const [isPending, startTransition] = useTransition();
