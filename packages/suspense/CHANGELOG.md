@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.0.27
-* Removed `useWeakRef` config option for `createCache` and replaced with `getCache` option in order to support LRU type caches in addition to `WeakRef` based caches.
+* Removed `useWeakRef` config option for `createCache` and replaced with `getCache` option in order to support LRU type caches in addition to `WeakRef` based caches. Thanks to @cevr for contributing to this release!
 
 ## 0.0.26
 * Add `getStatus` and `subscribe` methods to interval caches.
