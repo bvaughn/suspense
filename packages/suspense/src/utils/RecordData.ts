@@ -26,19 +26,8 @@ export function createRejectedRecordData(error: any): RejectedRecordData {
 }
 
 export function createResolvedRecordData<Type>(
-  value: Type,
-  useWeakRef: boolean = false
+  value: Type
 ): ResolvedRecordData<Type> {
-  if (useWeakRef) {
-    if (value != null && typeof value === "object") {
-      return {
-        status: STATUS_RESOLVED,
-        // @ts-ignore
-        weakRef: new WeakRef(value),
-      };
-    }
-  }
-
   return {
     status: STATUS_RESOLVED,
     value,

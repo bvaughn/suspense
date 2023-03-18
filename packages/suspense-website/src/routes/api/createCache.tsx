@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import {
   GUIDE_MEMORY_MANAGEMENT,
   IS_PROMISE_LIKE,
+  USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
 } from "../config";
 import Note from "../../components/Note";
@@ -109,9 +110,22 @@ export default function Route() {
         <SubHeading title="Evicting stale values" />
         <p>Stale values can be evicted from a cache.</p>
         <Code code={createCache.evict} />
+        <p>
+          Caches can also be configured to{" "}
+          <Link to={GUIDE_MEMORY_MANAGEMENT}>
+            automatically evict stale values
+          </Link>
+          .
+        </p>
         <Note>
-          Evicting cache values does not currently schedule an update with
-          React.
+          <p>
+            Evicting cache values does not currently schedule an update with
+            React. Use the{" "}
+            <code>
+              <Link to={USE_CACHE_MUTATION}>useCacheMutation</Link>
+            </code>{" "}
+            hook if an update is required.
+          </p>
         </Note>
       </Block>
       <Block>

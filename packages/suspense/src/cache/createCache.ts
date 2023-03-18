@@ -4,6 +4,7 @@ import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
   CacheLoadOptions,
+  CacheMap,
   PendingRecord,
   Record,
   ResolvedRecord,
@@ -19,6 +20,7 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 import { defaultGetKey } from "../utils/defaultGetKey";
+import { defaultGetCache } from "../utils/defaultGetCache";
 import {
   createPendingRecord,
   createResolvedRecord,
@@ -30,17 +32,18 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
   Value
 > & {
-  __backupRecordMap: Map<string, Record<Value>>;
-  __createRecordMap: () => Map<string, Record<Value>>;
+  __createPendingMutationRecordMap: () => CacheMap<string, Record<Value>>;
   __getKey: (params: Params) => string;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (params: Params) => void;
-  __useWeakRef: boolean;
+  __recordMap: CacheMap<string, Record<Value>>;
 };
 
 export type CreateCacheOptions<Params extends Array<any>, Value> = {
   config?: {
-    useWeakRef?: boolean;
+    getCache?: (
+      onEviction: (key: string) => void
+    ) => CacheMap<string, Record<Value>>;
   };
   debugLabel?: string;
   getKey?: (params: Params) => string;
@@ -57,7 +60,7 @@ export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
 ): Cache<Params, Value> {
   const { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
-  const { useWeakRef = true } = config;
+  const { getCache = defaultGetCache } = config;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
@@ -80,7 +83,7 @@ export function createCache<Params extends Array<any>, Value>(
   // (one record can be invalidated without affecting others)
   // Reads will query the map created by createRecordMap first,
   // and fall back to this map if no match is found
-  const backupRecordMap = new Map<string, Record<Value>>();
+  const recordMap = getCache(onExternalCacheEviction);
 
   // Stores status of in-progress mutation
   // If no entry is present here, the Record map will be used instead
@@ -93,7 +96,9 @@ export function createCache<Params extends Array<any>, Value>(
 
   function abort(...params: Params): boolean {
     const cacheKey = getKey(params);
-    const recordMap = getCacheForType(createRecordMap);
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
+    );
 
     // In-progress mutations aren't guaranteed to be in the recordMap.
     // So we check the mutationAbortControllerMap to infer this.
@@ -107,16 +112,17 @@ export function createCache<Params extends Array<any>, Value>(
 
       return true;
     } else {
-      const record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
+      const record =
+        pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
       if (record && isPendingRecord(record)) {
         debugLogInDev("abort()", params);
 
-        recordMap.delete(cacheKey);
+        pendingMutationRecordMap.delete(cacheKey);
 
-        // Only delete the backup cache if it's the same record/request
-        // Aborting a mutation should not affect the backup cache
-        if (backupRecordMap.get(cacheKey) === record) {
-          backupRecordMap.delete(cacheKey);
+        // Only delete the main cache if it's the same record/request
+        // Aborting a mutation should not affect the main cache
+        if (recordMap.get(cacheKey) === record) {
+          recordMap.delete(cacheKey);
         }
 
         record.data.abortController.abort();
@@ -132,81 +138,92 @@ export function createCache<Params extends Array<any>, Value>(
 
   function cache(value: Value, ...params: Params): void {
     const cacheKey = getKey(params);
-    const recordMap = getCacheForType(createRecordMap);
-
-    const record: ResolvedRecord<Value> = createResolvedRecord(
-      value,
-      useWeakRef
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
     );
+
+    const record: ResolvedRecord<Value> = createResolvedRecord(value);
 
     debugLogInDev("cache()", params, value);
 
-    backupRecordMap.set(cacheKey, record);
     recordMap.set(cacheKey, record);
+    pendingMutationRecordMap.set(cacheKey, record);
   }
 
-  function createRecordMap(): Map<string, Record<Value>> {
-    return new Map();
+  function createPendingMutationRecordMap(): CacheMap<string, Record<Value>> {
+    return getCache((key) => {
+      // we don't really need to do anything here, this map will almost always be a subset of the recordMap
+      // but we also don't want it to bypass the getCache() eviction logic (if any)
+      // leave a debug log here in case we need to revisit this
+      debugLogInDev(`createRecordMap() -> eviction: ${key}`);
+    });
   }
 
   function evict(...params: Params): boolean {
     const cacheKey = getKey(params);
-    const recordMap = getCacheForType(createRecordMap);
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
+    );
 
     debugLogInDev(`evict()`, params);
 
-    const didDelete = backupRecordMap.delete(cacheKey);
-    recordMap.delete(cacheKey);
+    const didDelete = recordMap.delete(cacheKey);
+    pendingMutationRecordMap.delete(cacheKey);
 
     notifySubscribers(params);
 
     return didDelete;
   }
 
-  function evictAll(): boolean {
-    const recordMap = getCacheForType(createRecordMap);
+  function evictAll(): void {
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
+    );
 
-    debugLogInDev(`evictAll()`, undefined, `${recordMap.size} records`);
+    debugLogInDev(`evictAll()`, undefined);
 
-    const hadRecords = recordMap.size > 0 || backupRecordMap.size > 0;
-
-    backupRecordMap.clear();
     recordMap.clear();
+    pendingMutationRecordMap.clear();
 
-    subscriberMap.forEach((set, cacheKey) => {
+    subscriberMap.forEach((set) => {
       set.forEach((callback) => {
         callback(STATUS_NOT_FOUND);
       });
     });
     subscriberMap.clear();
-
-    return hadRecords;
   }
 
   function getOrCreateRecord(...params: Params): Record<Value> {
     const cacheKey = getKey(params);
-    const recordMap = getCacheForType(createRecordMap);
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
+    );
 
-    let record = recordMap.get(cacheKey) ?? backupRecordMap.get(cacheKey);
+    let record =
+      pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
     if (record == null) {
+      debugLogInDev(
+        "getOrCreateRecord(): record not found. creating record...",
+        params
+      );
       const abortController = new AbortController();
       const deferred = createDeferred<Value>(
-        debugLabel ? `${debugLabel} ${cacheKey}}` : cacheKey
+        debugLabel ? `${debugLabel} ${cacheKey}` : cacheKey
       );
 
       record = createPendingRecord<Value>(deferred, abortController);
-
-      backupRecordMap.set(cacheKey, record);
       recordMap.set(cacheKey, record);
+      pendingMutationRecordMap.set(cacheKey, record);
 
       notifySubscribers(params);
 
-      processPendingRecord(
-        abortController.signal,
-        record as PendingRecord<Value>,
-        ...params
-      );
+      processPendingRecord(abortController.signal, record, ...params);
     }
+    debugLogInDev(
+      "getOrCreateRecord(): record found. returning record",
+      params,
+      record
+    );
 
     return record;
   }
@@ -220,18 +237,12 @@ export function createCache<Params extends Array<any>, Value>(
     }
 
     // Else fall back to Record status
-    const record = backupRecordMap.get(cacheKey);
+    const record = recordMap.get(cacheKey);
 
     if (!record) {
       return STATUS_NOT_FOUND;
     } else if (isResolvedRecord(record)) {
-      try {
-        readRecordValueThrowsIfGC(record);
-      } catch (error) {
-        evict(...params);
-
-        return STATUS_NOT_FOUND;
-      }
+      return record.data.status;
     }
 
     return record.data.status;
@@ -239,14 +250,14 @@ export function createCache<Params extends Array<any>, Value>(
 
   function getValue(...params: Params): Value {
     const cacheKey = getKey(params);
-    const record = backupRecordMap.get(cacheKey);
+    const record = recordMap.get(cacheKey);
 
     if (record == null) {
       throw Error("No record found");
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
-      return readRecordValueThrowsIfGC(record);
+      return record.data.value;
     } else {
       throw Error(`Record found with status "${record.data.status}"`);
     }
@@ -254,13 +265,20 @@ export function createCache<Params extends Array<any>, Value>(
 
   function getValueIfCached(...params: Params): Value | undefined {
     const cacheKey = getKey(params);
-    const record = backupRecordMap.get(cacheKey);
+    const record = recordMap.get(cacheKey);
     if (record && isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfGC(record);
-      } catch (error) {
-        // Ignore
-      }
+      return record.data.value;
+    }
+  }
+
+  function onExternalCacheEviction(key: string): void {
+    debugLogInDev(`onExternalCacheEviction(${key})`);
+
+    const set = subscriberMap.get(key);
+    if (set) {
+      set.forEach((callback) => {
+        callback(STATUS_NOT_FOUND);
+      });
     }
   }
 
@@ -282,18 +300,11 @@ export function createCache<Params extends Array<any>, Value>(
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
       return record.data.deferred.promise;
-    } else if (isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfGC(record);
-      } catch (error) {
-        // If the value has been garbage collected since we last read it,
-        // Delete the record and try again.
-        evict(...params);
-        return readAsync(...params);
-      }
-    } else {
-      throw record.data.error;
     }
+    if (isResolvedRecord(record)) {
+      return record.data.value;
+    }
+    throw record.data.error;
   }
 
   function read(...params: Params): Value {
@@ -301,14 +312,7 @@ export function createCache<Params extends Array<any>, Value>(
     if (isPendingRecord(record)) {
       throw record.data.deferred.promise;
     } else if (isResolvedRecord(record)) {
-      try {
-        return readRecordValueThrowsIfGC(record);
-      } catch (error) {
-        // If the value has been garbage collected since we last read it,
-        // Delete the record and try again.
-        evict(...params);
-        return read(...params);
-      }
+      return record.data.value;
     } else {
       throw record.data.error;
     }
@@ -341,12 +345,19 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
-        updateRecordToResolved(record, value, useWeakRef);
+        debugLogInDev(
+          "processPendingRecord(): resolved",
+          params,
+          "resolved value: ",
+          value
+        );
+        updateRecordToResolved(record, value);
 
         deferred.resolve(value);
       }
     } catch (error) {
       if (!abortSignal.aborted) {
+        debugLogInDev("processPendingRecord(): rejected", params, error);
         updateRecordToRejected(record, error);
 
         deferred.reject(error);
@@ -355,20 +366,6 @@ export function createCache<Params extends Array<any>, Value>(
       if (!abortSignal.aborted) {
         notifySubscribers(params);
       }
-    }
-  }
-
-  function readRecordValueThrowsIfGC(record: ResolvedRecord<Value>): Value {
-    const { weakRef, value } = record.data;
-    if (weakRef != null) {
-      const retainedValue = weakRef.deref();
-      if (retainedValue == null) {
-        throw Error("Value was garbage collected");
-      } else {
-        return retainedValue;
-      }
-    } else {
-      return value!;
     }
   }
 
@@ -401,12 +398,11 @@ export function createCache<Params extends Array<any>, Value>(
 
   const value: InternalCache<Params, Value> = {
     // Internal API (used by useCacheMutation)
-    __backupRecordMap: backupRecordMap,
-    __createRecordMap: createRecordMap,
+    __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
-    __useWeakRef: useWeakRef,
+    __recordMap: recordMap,
 
     // Public API
     abort,

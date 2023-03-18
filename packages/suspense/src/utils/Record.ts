@@ -23,11 +23,8 @@ export function createRejectedRecord(error: any): RejectedRecord {
   return { data: createRejectedRecordData(error) };
 }
 
-export function createResolvedRecord<Type>(
-  value: Type,
-  useWeakRef: boolean = false
-): ResolvedRecord<Type> {
-  return { data: createResolvedRecordData<Type>(value, useWeakRef) };
+export function createResolvedRecord<Type>(value: Type): ResolvedRecord<Type> {
+  return { data: createResolvedRecordData<Type>(value) };
 }
 
 export function updateRecordToPending<Type>(
@@ -44,8 +41,7 @@ export function updateRecordToRejected(record: Record<any>, error: any): void {
 
 export function updateRecordToResolved<Type>(
   record: Record<Type>,
-  value: Type,
-  useWeak: boolean = false
+  value: Type
 ): void {
-  record.data = createResolvedRecordData<Type>(value, useWeak);
+  record.data = createResolvedRecordData<Type>(value);
 }

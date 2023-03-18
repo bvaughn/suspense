@@ -1,3 +1,5 @@
+import LRUCache from "lru-cache";
+
 export type WeakRefArray<Value> = MockWeakRefInterface<Value>[];
 export interface MockWeakRefInterface<Value> {
   collect(): void;
@@ -84,4 +86,17 @@ export async function waitForGC(
 
   // Ensure additional constraints are met
   await waitUntil(conditional, timeout);
+}
+
+export class SimpleLRUCache extends LRUCache<string, any> {
+  constructor(maxSize: number, onEvict: (key: string) => void) {
+    super({
+      dispose: (value, key, reason) => {
+        if (reason === "evict") {
+          onEvict(key);
+        }
+      },
+      max: maxSize,
+    });
+  }
 }

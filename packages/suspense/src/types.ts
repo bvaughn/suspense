@@ -26,8 +26,7 @@ export type PendingRecordData<Type> = {
 };
 export type ResolvedRecordData<Type> = {
   readonly status: StatusResolved;
-  readonly weakRef?: Type extends Object ? WeakRef<Type> : undefined;
-  readonly value?: Type;
+  readonly value: Type;
 };
 export type RejectedRecordData = {
   readonly error: any;
@@ -73,7 +72,7 @@ export interface Cache<Params extends any[], Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
   evict(...params: Params): boolean;
-  evictAll(): boolean;
+  evictAll(): void;
   getStatus(...params: Params): Status;
   getValue(...params: Params): Value;
   getValueIfCached(...params: Params): Value | undefined;
@@ -148,4 +147,12 @@ export interface StreamingCache<
   evictAll(): boolean;
   prefetch(...params: Params): void;
   stream(...params: Params): StreamingValue<Value, AdditionalData>;
+}
+
+export interface CacheMap<Key, Value> {
+  clear(): void;
+  delete(key: Key): boolean;
+  get(key: Key): Value | undefined;
+  has(key: Key): boolean;
+  set(key: Key, value: Value): this;
 }

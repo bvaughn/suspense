@@ -15,7 +15,8 @@ import {
 import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { isPromiseLike } from "../utils/isPromiseLike";
-import { mockWeakRef, WeakRefArray } from "../utils/test";
+import { SimpleLRUCache } from "../utils/test";
+
 import { useImperativeCacheValue } from "./useImperativeCacheValue";
 
 type Value = { key: string };
@@ -71,6 +72,9 @@ describe("useImperativeCacheValue", () => {
 
     cache = createCache<[string], Value>({
       load: fetch,
+      config: {
+        getCache: (onEviction) => new SimpleLRUCache(1, onEviction),
+      },
     });
 
     lastRenderedStatus = undefined;
@@ -167,20 +171,13 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedValue).toBeUndefined();
   });
 
-  describe("garbage collection", () => {
-    let weakRefArray: WeakRefArray<Object>;
-
-    beforeEach(() => {
-      weakRefArray = mockWeakRef();
-    });
-
-    it("should re-fetch a value that has been garbage collected", async () => {
+  describe("getCache", () => {
+    it("should re-fetch a value that has been evicted by the provided cache", async () => {
       // Pre-cache value
       cache.cache({ key: "test" }, "test");
 
-      // Then garbage collect it
-      expect(weakRefArray.length).toBe(1);
-      weakRefArray[0].collect();
+      // The LRU cache has a max size of 1, so this should evict the previous
+      cache.cache({ key: "test-2" }, "test-2");
 
       // Rendering should trigger a re-fetch
       await mount();

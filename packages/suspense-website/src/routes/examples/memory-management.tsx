@@ -5,6 +5,7 @@ import Container from "../../components/Container";
 import { ExternalLink } from "../../components/ExternalLink";
 import Header from "../../components/Header";
 import Note from "../../components/Note";
+import SubHeading from "../../components/SubHeading";
 import { createCache } from "../../examples";
 import { CREATE_CACHE } from "../config";
 
@@ -16,33 +17,52 @@ export default function Route() {
       </Block>
       <Block>
         <p>
-          Caches created with{" "}
+          By default, values stored in a{" "}
           <code>
             <Link to={CREATE_CACHE}>createCache</Link>
           </code>{" "}
-          use{" "}
+          will never be garbage collected unless they are explicitly removed
+          from the cache. This is the default behavior because it is the most
+          predictable. However this behavior can be customized using the{" "}
+          <code>getCache</code> configuration option as shown below.
+        </p>
+        <Note>
+          <p>
+            Caches that do not evict values may cause memory leaks for certain
+            types of applications.
+          </p>
+        </Note>
+      </Block>
+      <Block>
+        <SubHeading title="LRU cache" />
+        <p>
+          Caches can be configured to store values in a{" "}
+          <ExternalLink to="https://en.wikipedia.org/wiki/Cache_replacement_policies">
+            Least Recently Used (LRU) cache
+          </ExternalLink>
+          . The recommended way to do this is to use a pre-built cache like{" "}
+          <code>
+            <ExternalLink to="https://www.npmjs.com/package/lru-cache">
+              lru-cache
+            </ExternalLink>
+          </code>
+          .
+        </p>
+        <Code code={createCache.cacheWithLRU} />
+      </Block>
+      <Block>
+        <SubHeading title="WeakRef cache" />
+        <p>
+          Caches can also be configured to store values in a{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef">
               WeakRef
             </ExternalLink>
-          </code>{" "}
-          and{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry">
-              FinalizationRegistry
-            </ExternalLink>
-          </code>{" "}
-          APIs to avoid leaking memory. This behavior can be disabled using the{" "}
-          <code>useWeakRef</code> configuration flag.
+          </code>
+          . The recommended way to do this is using the provided{" "}
+          <code>WeakRefMap</code> class.
         </p>
-        <Code code={createCache.cacheWithoutWeakRef} />
-        <Note type="warn">
-          <p>Caches that don't use weak refs may leak memory over time.</p>
-          <p>
-            To avoid this, use the <code>evict</code> method to remove entries
-            once you are done using them.
-          </p>
-        </Note>
+        <Code code={createCache.cacheWithWeakRefMap} />
       </Block>
     </Container>
   );

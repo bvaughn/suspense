@@ -8,7 +8,21 @@ import { createCache } from "./createCache";
 import { Cache, Deferred, CacheLoadOptions } from "../types";
 import { isPromiseLike } from "../utils/isPromiseLike";
 import { createDeferred } from "../utils/createDeferred";
-import { mockWeakRef, WeakRefArray } from "../utils/test";
+import { mockWeakRef, SimpleLRUCache, WeakRefArray } from "../utils/test";
+import { WeakRefMap } from "../utils/WeakRefMap";
+
+function defaultLoad(
+  [key]: [key: string],
+  options: CacheLoadOptions
+): Promise<string> | string {
+  if (key.startsWith("async")) {
+    return Promise.resolve(key);
+  } else if (key.startsWith("error")) {
+    return Promise.reject(key);
+  } else {
+    return key;
+  }
+}
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
@@ -17,15 +31,7 @@ describe("createCache", () => {
 
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation(([key]) => {
-      if (key.startsWith("async")) {
-        return Promise.resolve(key);
-      } else if (key.startsWith("error")) {
-        return Promise.reject(key);
-      } else {
-        return key;
-      }
-    });
+    load.mockImplementation(defaultLoad);
 
     getCacheKey = jest.fn();
     getCacheKey.mockImplementation(([key]) => key.toString());
@@ -335,9 +341,11 @@ describe("createCache", () => {
       expect(cache.getValue("sync-1")).toEqual("sync-1");
 
       // Verify other values fetch independently
+      load.mockImplementation(defaultLoad);
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
       expect(load.mock.lastCall?.[0]).toEqual(["sync-2"]);
+      expect(cache.getValue("sync-2")).toEqual("sync-2");
     });
   });
 
@@ -514,10 +522,108 @@ describe("createCache", () => {
     });
   });
 
-  describe("garbage collection", () => {
-    let gcCache: Cache<[string], Object>;
+  describe("getCache: LRU Cache", () => {
+    let evictFn: jest.Mock<void, [string]>;
     let loadObject: jest.Mock<
       Promise<Object> | Object,
+      [[string], CacheLoadOptions]
+    >;
+    let lruCache: Cache<[string], Object>;
+
+    beforeEach(() => {
+      evictFn = jest.fn();
+
+      loadObject = jest.fn();
+      loadObject.mockImplementation(([key]) => {
+        if (key.startsWith("async")) {
+          return Promise.resolve({ key });
+        } else if (key.startsWith("error")) {
+          return Promise.reject(key);
+        } else {
+          return { key };
+        }
+      });
+
+      lruCache = createCache<[string], Object>({
+        load: loadObject,
+        config: {
+          getCache: (onEvict) =>
+            new SimpleLRUCache(1, (key) => {
+              onEvict(key);
+              evictFn(key);
+            }),
+        },
+      });
+    });
+
+    it("getStatus: should return not-found status if value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
+
+      lruCache.cache({ key: "test2" }, "test2");
+
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+    });
+
+    it("getValue: should throw if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
+
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(() => lruCache.getValue("test")).toThrow();
+    });
+
+    it("getValueIfCached: should return undefined if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
+
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+    });
+
+    it("read: should re-suspend if previously loaded value has been evicted by provided cache", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
+
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+
+      await expect(await fakeSuspend(() => lruCache.read("test"))).toEqual({
+        key: "test",
+      });
+    });
+
+    it("readAsync: should re-suspend if previously loaded value has been collected by provided cacher", async () => {
+      lruCache.cache({ key: "test" }, "test");
+      expect(lruCache.getValueIfCached("test")).toEqual({ key: "test" });
+
+      lruCache.cache({ key: "test2" }, "test2");
+      expect(evictFn).toHaveBeenCalledTimes(1);
+
+      expect(lruCache.getValueIfCached("test")).toBeUndefined();
+      expect(lruCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+
+      await expect(await lruCache.readAsync("test")).toEqual({
+        key: "test",
+      });
+    });
+  });
+
+  describe("getCache: WeakRefMap", () => {
+    type TestValue = { key: string };
+    let gcCache: Cache<[string], TestValue>;
+    let loadObject: jest.Mock<
+      Promise<TestValue> | TestValue,
       [[string], CacheLoadOptions]
     >;
     let weakRefArray: WeakRefArray<any>;
@@ -536,14 +642,21 @@ describe("createCache", () => {
         }
       });
 
-      gcCache = createCache<[string], Object>({ load: loadObject });
+      gcCache = createCache({
+        load: loadObject,
+        config: {
+          getCache: (onEvict) => new WeakRefMap(onEvict),
+        },
+      });
     });
 
     it("getStatus: should return not-found status if value has been collected", async () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      // the cache creates two instances of the WeakRefMap
+      // collecting the first one is enough to trigger the onEvict callback
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
@@ -553,19 +666,21 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
-      expect(() => gcCache.getValue("test")).toThrow(
-        "Value was garbage collected"
-      );
+      expect(() => gcCache.getValue("test")).toThrow("No record found");
     });
 
     it("getValueIfCached: should return undefined if previously loaded value has been collected", async () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
@@ -575,7 +690,9 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
@@ -589,7 +706,9 @@ describe("createCache", () => {
       gcCache.cache({ key: "test" }, "test");
       expect(gcCache.getValueIfCached("test")).toEqual({ key: "test" });
 
-      expect(weakRefArray.length).toBe(1);
+      // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
+      // collecting the first one is enough to trigger the onEvict callback
+      expect(weakRefArray.length).toBe(2);
       weakRefArray[0].collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
