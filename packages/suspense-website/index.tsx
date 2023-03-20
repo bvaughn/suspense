@@ -17,7 +17,8 @@ import {
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
   USE_INTERVAL_CACHE_STATUS,
-  USE_CACHE_VALUE,
+  USE_IMPERATIVE_CACHE_VALUE,
+  USE_IMPERATIVE_INTERVAL_CACHE_VALUES,
   USE_STREAMING_CACHE,
 } from "./src/routes/config";
 
@@ -32,7 +33,8 @@ import PageNotFoundRoute from "./src/routes/PageNotFound";
 import RecordAndRecordDataUtils from "./src/examples/RecordUtils/RecordUtils";
 import UseCacheMutationRoute from "./src/routes/api/useCacheMutation";
 import UseCacheStatusRoute from "./src/routes/api/useCacheStatus";
-import UseCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
+import UseImperativeCacheValueRoute from "./src/routes/api/useImperativeCacheValue";
+import UseImperativeIntervalCacheValuesRoute from "./src/routes/api/useImperativeIntervalCacheValues";
 import UseIntervalCacheStatusRoute from "./src/routes/api/useIntervalCacheStatus";
 import UseStreamingValueRoute from "./src/routes/api/useStreamingValue";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
@@ -97,7 +99,14 @@ root.render(
           path={USE_INTERVAL_CACHE_STATUS}
           element={<UseIntervalCacheStatusRoute />}
         />
-        <Route path={USE_CACHE_VALUE} element={<UseCacheValueRoute />} />
+        <Route
+          path={USE_IMPERATIVE_CACHE_VALUE}
+          element={<UseImperativeCacheValueRoute />}
+        />
+        <Route
+          path={USE_IMPERATIVE_INTERVAL_CACHE_VALUES}
+          element={<UseImperativeIntervalCacheValuesRoute />}
+        />
         <Route
           path={USE_STREAMING_CACHE}
           element={<UseStreamingValueRoute />}

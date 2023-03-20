@@ -6,34 +6,65 @@ import { Component, PropsWithChildren } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createCache } from "../cache/createCache";
+import { createIntervalCache } from "../cache/createIntervalCache";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "../constants";
-import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
+import {
+  CacheLoadOptions,
+  Deferred,
+  IntervalCache,
+  IntervalCacheLoadOptions,
+  Status,
+} from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { isPromiseLike } from "../utils/isPromiseLike";
 import { SimpleLRUCache } from "../utils/test";
 
-import { useImperativeCacheValue } from "./useImperativeCacheValue";
+import { useImperativeIntervalCacheValues } from "./useImperativeIntervalCacheValues";
 
 type Value = { key: string };
 
-describe("useImperativeCacheValue", () => {
-  let cache: Cache<[string], Value>;
-  let fetch: jest.Mock<Promise<Value> | Value, [[string], CacheLoadOptions]>;
+function createContiguousArray(start: number, end: number) {
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function getPointForValue(value: number) {
+  return value;
+}
+
+describe("useImperativeIntervalCacheValues", () => {
+  let cache: IntervalCache<number, [id: string], number>;
+  let load: jest.Mock<
+    number[] | PromiseLike<number[]>,
+    [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
+  >;
 
   let container: HTMLDivElement | null = null;
   let lastRenderedError: any = undefined;
   let lastRenderedStatus: Status | undefined = undefined;
   let lastRenderedValue: string | undefined = undefined;
 
-  let pendingDeferred: Deferred<Value>[] = [];
+  let pendingDeferred: Deferred<number[]>[] = [];
 
-  function Component({ cacheKey }: { cacheKey: string }): any {
-    const result = useImperativeCacheValue(cache, cacheKey);
+  function Component({
+    cacheKey,
+    end,
+    start,
+  }: {
+    cacheKey: string;
+    end: number;
+    start: number;
+  }): any {
+    const result = useImperativeIntervalCacheValues(
+      cache,
+      start,
+      end,
+      cacheKey
+    );
 
     lastRenderedError = result.error;
     lastRenderedStatus = result.status;
@@ -42,14 +73,14 @@ describe("useImperativeCacheValue", () => {
     return null;
   }
 
-  async function mount() {
+  async function mount({ end, start }: { end: number; start: number }) {
     container = document.createElement("div");
     const root = createRoot(container);
     await act(async () => {
       root.render(
         <>
           <ErrorBoundary>
-            <Component cacheKey="test" />
+            <Component cacheKey="test" end={end} start={start} />
           </ErrorBoundary>
         </>
       );
@@ -60,22 +91,20 @@ describe("useImperativeCacheValue", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    fetch = jest.fn();
-    fetch.mockImplementation(async ([key]) => {
-      const deferred = createDeferred<Value>();
+    load = jest.fn();
+    load.mockImplementation(
+      async (start: number, end: number, text: string) => {
+        const deferred = createDeferred<number[]>();
 
-      pendingDeferred.push(deferred);
+        pendingDeferred.push(deferred);
 
-      return deferred.promise;
-    });
+        return deferred.promise;
+      }
+    );
 
-    container = null;
-
-    cache = createCache<[string], Value>({
-      load: fetch,
-      config: {
-        getCache: (onEviction) => new SimpleLRUCache(1, onEviction),
-      },
+    cache = createIntervalCache<number, [id: string], number>({
+      getPointForValue,
+      load,
     });
 
     lastRenderedStatus = undefined;
@@ -86,34 +115,37 @@ describe("useImperativeCacheValue", () => {
   });
 
   it("should return values that have already been loaded", async () => {
-    cache.cache({ key: "cached" }, "test");
+    load.mockReturnValue(createContiguousArray(2, 4));
 
-    await mount();
+    await cache.readAsync(2, 4, "test");
+    await mount({ end: 4, start: 2 });
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toEqual({ key: "cached" });
+    expect(lastRenderedValue).toEqual(createContiguousArray(2, 4));
   });
 
   it("should fetch values that have not yet been fetched", async () => {
-    expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+    expect(cache.getStatus(1, 5, "test")).toBe(STATUS_NOT_FOUND);
 
-    await mount();
+    await mount({ end: 5, start: 1 });
 
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+    await act(async () =>
+      pendingDeferred[0].resolve(createContiguousArray(1, 5))
+    );
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toEqual({ key: "resolved" });
+    expect(lastRenderedValue).toEqual(createContiguousArray(1, 5));
   });
 
   it("should handle values that are rejected", async () => {
-    expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+    expect(cache.getStatus(1, 2, "test")).toBe(STATUS_NOT_FOUND);
 
-    await mount();
+    await mount({ end: 2, start: 1 });
 
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
@@ -133,32 +165,28 @@ describe("useImperativeCacheValue", () => {
   });
 
   it("should wait for values that have already been loaded to be resolved", async () => {
-    cache.readAsync("test");
+    cache.readAsync(5, 8, "test");
     expect(pendingDeferred).toHaveLength(1);
 
-    await mount();
+    await mount({ end: 8, start: 5 });
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+    await act(async () =>
+      pendingDeferred[0].resolve(createContiguousArray(5, 8))
+    );
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-    expect(lastRenderedValue).toEqual({ key: "resolved" });
+    expect(lastRenderedValue).toEqual(createContiguousArray(5, 8));
   });
 
   it("should wait for values that have already been loaded to be rejected", async () => {
-    const value = cache.readAsync("test");
-    if (isPromiseLike(value)) {
-      value.then(
-        () => {},
-        () => {}
-      );
-    }
+    cache.readAsync(1, 2, "test");
 
     expect(pendingDeferred).toHaveLength(1);
 
-    await mount();
+    await mount({ end: 2, start: 1 });
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
@@ -170,30 +198,6 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
-  });
-
-  describe("getCache", () => {
-    it("should re-fetch a value that has been evicted by the provided cache", async () => {
-      // Pre-cache value
-      cache.cache({ key: "test" }, "test");
-
-      // The LRU cache has a max size of 1, so this should evict the previous
-      cache.cache({ key: "test-2" }, "test-2");
-
-      // Rendering should trigger a re-fetch
-      await mount();
-
-      expect(lastRenderedError).toBeUndefined();
-      expect(lastRenderedStatus).toBe(STATUS_PENDING);
-      expect(lastRenderedValue).toBeUndefined();
-
-      expect(pendingDeferred.length).toBe(1);
-      await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
-
-      expect(lastRenderedError).toBeUndefined();
-      expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
-      expect(lastRenderedValue).toEqual({ key: "resolved" });
-    });
   });
 });
 

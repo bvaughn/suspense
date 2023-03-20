@@ -8,7 +8,9 @@ export const IS_PROMISE_LIKE = "/isPromiseLike";
 export const RECORD_AND_RECORD_DATA_UTILS = "/Record-and-RecordData-utils";
 export const USE_CACHE_MUTATION = "/useCacheMutation";
 export const USE_CACHE_STATUS = "/useCacheStatus";
-export const USE_CACHE_VALUE = "/useImperativeCacheValue";
+export const USE_IMPERATIVE_CACHE_VALUE = "/useImperativeCacheValue";
+export const USE_IMPERATIVE_INTERVAL_CACHE_VALUES =
+  "/useImperativeIntervalCacheValues";
 export const USE_INTERVAL_CACHE_STATUS = "/useIntervalCacheStatus";
 export const USE_STREAMING_CACHE = "/useStreamingValue";
 

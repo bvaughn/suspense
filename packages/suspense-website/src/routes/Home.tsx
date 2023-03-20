@@ -20,7 +20,8 @@ import {
   RECORD_AND_RECORD_DATA_UTILS,
   USE_CACHE_MUTATION,
   USE_CACHE_STATUS,
-  USE_CACHE_VALUE,
+  USE_IMPERATIVE_CACHE_VALUE,
+  USE_IMPERATIVE_INTERVAL_CACHE_VALUES,
   USE_INTERVAL_CACHE_STATUS,
   USE_STREAMING_CACHE,
 } from "./config";
@@ -100,7 +101,12 @@ export default function Route() {
           />
           <LinkListItem
             children="useImperativeCacheValue"
-            to={USE_CACHE_VALUE}
+            to={USE_IMPERATIVE_CACHE_VALUE}
+            type="code"
+          />
+          <LinkListItem
+            children="useImperativeIntervalCacheValues"
+            to={USE_IMPERATIVE_INTERVAL_CACHE_VALUES}
             type="code"
           />
           <LinkListItem

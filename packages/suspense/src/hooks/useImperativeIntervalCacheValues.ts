@@ -6,34 +6,40 @@ import {
   STATUS_RESOLVED,
 } from "../constants";
 import {
-  Cache,
+  IntervalCache,
   ImperativeErrorResponse,
   ImperativePendingResponse,
   ImperativeResolvedResponse,
 } from "../types";
-import { useCacheStatus } from "./useCacheStatus";
+import { useIntervalCacheStatus } from "./useIntervalCacheStatus";
 
-export function useImperativeCacheValue<Params extends any[], Value>(
-  cache: Cache<Params, Value>,
+export function useImperativeIntervalCacheValues<
+  Point,
+  Params extends Array<any>,
+  Value
+>(
+  cache: IntervalCache<Point, Params, Value>,
+  start: Point,
+  end: Point,
   ...params: Params
 ):
   | ImperativeErrorResponse
   | ImperativePendingResponse
-  | ImperativeResolvedResponse<Value> {
-  const status = useCacheStatus(cache, ...params);
+  | ImperativeResolvedResponse<Value[]> {
+  const status = useIntervalCacheStatus(cache, start, end, ...params);
 
   useEffect(() => {
     switch (status) {
       case STATUS_NOT_FOUND:
-        cache.prefetch(...params);
+        cache.readAsync(start, end, ...params);
     }
-  }, [cache, status, ...params]);
+  }, [cache, status, start, end, ...params]);
 
   switch (status) {
     case STATUS_REJECTED:
       let caught;
       try {
-        cache.getValue(...params);
+        cache.getValue(start, end, ...params);
       } catch (error) {
         caught = error;
       }
@@ -43,7 +49,7 @@ export function useImperativeCacheValue<Params extends any[], Value>(
         return {
           error: undefined,
           status: STATUS_RESOLVED,
-          value: cache.getValue(...params),
+          value: cache.getValue(start, end, ...params),
         };
       } catch (error) {}
     default:

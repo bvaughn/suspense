@@ -273,6 +273,67 @@ describe("createIntervalCache", () => {
     });
   });
 
+  describe("getValue", () => {
+    it("it should return a value if cached", async () => {
+      await cache.readAsync(2, 4, "test");
+      expect(cache.getValue(2, 4, "test")).toEqual(createContiguousArray(2, 4));
+    });
+
+    it("it should throw if value is not cached", async () => {
+      expect(() => cache.getValue(2, 4, "test")).toThrow("No record found");
+    });
+
+    it("it should throw if value is pending", async () => {
+      cache.readAsync(2, 4, "test");
+      expect(() => cache.getValue(2, 4, "test")).toThrow(
+        'Record found with status "pending"'
+      );
+    });
+
+    it("it should throw if value was rejected", async () => {
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+      const willReject = cache.readAsync(6, 10, "will-reject");
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+
+      expect(() => cache.getValue(6, 10, "will-reject")).toThrow("expected");
+    });
+  });
+
+  describe("getValueIfCached", () => {
+    it("should return undefined for values not yet loaded", async () => {
+      expect(cache.getValueIfCached(2, 4, "test")).toBeUndefined();
+      expect(load).not.toHaveBeenCalled();
+    });
+
+    it("should return undefined for values that are pending", async () => {
+      cache.readAsync(2, 4, "test");
+      expect(cache.getValueIfCached(2, 4, "test")).toBeUndefined();
+    });
+
+    it("should return a cached value for values that have resolved", async () => {
+      await cache.readAsync(2, 4, "test");
+      expect(cache.getValueIfCached(2, 4, "test")).toEqual(
+        createContiguousArray(2, 4)
+      );
+    });
+
+    it("should return undefined for values that have rejected", async () => {
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+      const willReject = cache.readAsync(6, 10, "will-reject");
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+
+      expect(cache.getValueIfCached(6, 10, "will-reject")).toBeUndefined();
+    });
+  });
+
   describe("readAsync", () => {
     it("should progressively fetch and fill-in values for missing intervals", async () => {
       let values = await cache.readAsync(2, 4, "test");

@@ -304,10 +304,6 @@ describe("createCache", () => {
   describe("getValueIfCached", () => {
     it("should return undefined for values not yet loaded", () => {
       expect(cache.getValueIfCached("sync")).toBeUndefined();
-    });
-
-    it("should not trigger a fetch", () => {
-      expect(cache.getValueIfCached("sync")).toBeUndefined();
       expect(load).not.toHaveBeenCalled();
     });
 

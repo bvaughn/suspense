@@ -274,6 +274,15 @@ const useImperativeCacheValue = {
   ),
 };
 
+const useImperativeIntervalCacheValues = {
+  hook: processExample(
+    readFileSync(
+      join(__dirname, "useImperativeIntervalCacheValues", "hook.ts"),
+      "utf8"
+    )
+  ),
+};
+
 export {
   createCache,
   createDeferred,
@@ -285,4 +294,5 @@ export {
   recordUtils,
   useCacheMutation,
   useImperativeCacheValue,
+  useImperativeIntervalCacheValues,
 };

@@ -22,7 +22,11 @@ import {
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
-import { isPendingRecord } from "../../utils/isRecordStatus";
+import {
+  isPendingRecord,
+  isRejectedRecord,
+  isResolvedRecord,
+} from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
 import { isPromiseLike } from "../../utils/isPromiseLike";
@@ -237,6 +241,40 @@ export function createIntervalCache<
     }
 
     return record.data.status;
+  }
+
+  function getValue(start: Point, end: Point, ...params: Params): Value[] {
+    debugLogInDev(`getValue(${start}, ${end})`, params);
+
+    const metadata = getOrCreateIntervalMetadata(...params);
+    const cacheKey = `${start}–${end}`;
+
+    const record = metadata.recordMap.get(cacheKey);
+    if (record == null) {
+      throw Error("No record found");
+    } else if (isRejectedRecord(record)) {
+      throw record.data.error;
+    } else if (isResolvedRecord(record)) {
+      return record.data.value;
+    } else {
+      throw Error(`Record found with status "${record.data.status}"`);
+    }
+  }
+
+  function getValueIfCached(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): Value[] | undefined {
+    debugLogInDev(`getValueIfCached(${start}, ${end})`, params);
+
+    const metadata = getOrCreateIntervalMetadata(...params);
+    const cacheKey = `${start}–${end}`;
+
+    const record = metadata.recordMap.get(cacheKey);
+    if (record && isResolvedRecord(record)) {
+      return record.data.value;
+    }
   }
 
   function notifySubscribers(
@@ -542,6 +580,8 @@ export function createIntervalCache<
     evict,
     evictAll,
     getStatus,
+    getValue,
+    getValueIfCached,
     readAsync,
     read,
     subscribeToStatus,

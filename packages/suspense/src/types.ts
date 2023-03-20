@@ -96,6 +96,12 @@ export type IntervalCache<Point, Params extends any[], Value> = {
   evict(...params: Params): boolean;
   evictAll(): boolean;
   getStatus(start: Point, end: Point, ...params: Params): Status;
+  getValue(start: Point, end: Point, ...params: Params): Value[];
+  getValueIfCached(
+    start: Point,
+    end: Point,
+    ...params: Params
+  ): Value[] | undefined;
   readAsync(
     start: Point,
     end: Point,
@@ -156,3 +162,21 @@ export interface CacheMap<Key, Value> {
   has(key: Key): boolean;
   set(key: Key, value: Value): this;
 }
+
+// Hook types
+
+export type ImperativeErrorResponse = {
+  error: any;
+  status: StatusRejected;
+  value: any;
+};
+export type ImperativePendingResponse = {
+  error: undefined;
+  status: StatusPending;
+  value: undefined;
+};
+export type ImperativeResolvedResponse<Value> = {
+  error: undefined;
+  status: StatusResolved;
+  value: Value;
+};
