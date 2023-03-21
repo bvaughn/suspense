@@ -7,7 +7,6 @@ import {
   CacheMap,
   PendingRecord,
   Record,
-  ResolvedRecord,
   Status,
   StatusCallback,
   UnsubscribeCallback,
@@ -142,9 +141,27 @@ export function createCache<Params extends Array<any>, Value>(
       createPendingMutationRecordMap
     );
 
-    const record: ResolvedRecord<Value> = createResolvedRecord(value);
+    let record: Record<Value> | undefined = getRecord(...params);
+    if (record != null) {
+      if (isPendingRecord(record)) {
+        debugLogInDev("cache()", params, "Update pending record to:", value);
 
-    debugLogInDev("cache()", params, value);
+        const { abortController, deferred } = record.data;
+
+        abortController.abort();
+
+        updateRecordToResolved(record, value);
+
+        // Don't leave any pending request hanging
+        deferred.resolve(value);
+
+        return;
+      }
+    }
+
+    debugLogInDev("cache()", params, "Create new resolved record with:", value);
+
+    record = createResolvedRecord<Value>(value);
 
     recordMap.set(cacheKey, record);
     pendingMutationRecordMap.set(cacheKey, record);
@@ -193,14 +210,22 @@ export function createCache<Params extends Array<any>, Value>(
     subscriberMap.clear();
   }
 
+  function getRecord(...params: Params): Record<Value> | undefined {
+    const cacheKey = getKey(params);
+    const pendingMutationRecordMap = getCacheForType(
+      createPendingMutationRecordMap
+    );
+
+    return pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
+  }
+
   function getOrCreateRecord(...params: Params): Record<Value> {
     const cacheKey = getKey(params);
     const pendingMutationRecordMap = getCacheForType(
       createPendingMutationRecordMap
     );
 
-    let record =
-      pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
+    let record = getRecord(...params);
     if (record == null) {
       debugLogInDev(
         "getOrCreateRecord(): record not found. creating record...",

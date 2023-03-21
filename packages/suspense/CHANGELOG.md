@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.29
+* Edge case bugfix: Calling `cache` while a value is being loaded will resolve/replace the pending record.
+
 ## 0.0.28
 * Add `useImperativeIntervalCacheValue` hook for imperatively loading and subscribing to `createIntervalCache` data.
 * Add `getValue` and `getValueIfCached` methods to `createIntervalCache` type.

@@ -135,6 +135,23 @@ describe("createCache", () => {
 
       expect(load).not.toHaveBeenCalled();
     });
+
+    it("should resolve an in-progress read", async () => {
+      const wouldReject = cache.readAsync("error");
+
+      expect(cache.getValueIfCached("error")).toBeUndefined();
+      expect(cache.getStatus("error")).toBe(STATUS_PENDING);
+
+      cache.cache("VALUE", "error");
+
+      expect(cache.getValueIfCached("error")).toBe("VALUE");
+      expect(cache.getStatus("error")).toBe(STATUS_RESOLVED);
+
+      await wouldReject;
+
+      expect(cache.getValueIfCached("error")).toBe("VALUE");
+      expect(cache.getStatus("error")).toBe(STATUS_RESOLVED);
+    });
   });
 
   describe("evict", () => {
