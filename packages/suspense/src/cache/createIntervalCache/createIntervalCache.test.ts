@@ -40,11 +40,11 @@ describe("createIntervalCache", () => {
 
   describe("abort", () => {
     let abortSignals: AbortSignal[] = [];
-    let deferreds: Deferred<number[]>[] = [];
+    let deferredArray: Deferred<number[]>[] = [];
 
     beforeEach(() => {
       abortSignals = [];
-      deferreds = [];
+      deferredArray = [];
 
       load.mockImplementation(
         async (
@@ -57,7 +57,7 @@ describe("createIntervalCache", () => {
 
           const deferred = createDeferred<number[]>();
 
-          deferreds.push(deferred);
+          deferredArray.push(deferred);
 
           return deferred.promise;
         }
@@ -740,6 +740,34 @@ describe("createIntervalCache", () => {
       expect(callbackA).toHaveBeenCalledWith(STATUS_NOT_FOUND);
       expect(callbackB).toHaveBeenCalledTimes(2);
       expect(callbackB).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+    });
+
+    it("should notify of in-progress request when an interval is refined", async () => {
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+
+      const willReject = cache.readAsync(1, 5, "test");
+      expect(load).toHaveBeenCalledTimes(1);
+      deferred.reject(new Error("Expected"));
+      await expect(() => willReject).rejects.toThrow("Expected");
+
+      // Wait for promise rejection to finish
+      await Promise.resolve();
+
+      const willResolve = cache.readAsync(2, 4, "test");
+
+      cache.subscribeToStatus(callbackA, 2, 4, "test");
+
+      expect(callbackA).toHaveBeenCalledTimes(1);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_PENDING);
+      expect(cache.getStatus(2, 4, "test")).toBe(STATUS_PENDING);
+
+      await willResolve;
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_PENDING);
+      expect(callbackA).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(cache.getStatus(2, 4, "test")).toBe(STATUS_RESOLVED);
     });
   });
 });
