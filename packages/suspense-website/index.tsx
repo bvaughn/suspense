@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   CREATE_CACHE,
   CREATE_DEFERRED,
+  CREATE_EXTERNALLY_MANAGED_CACHE,
   CREATE_INTERVAL_CACHE,
   CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
@@ -24,6 +25,7 @@ import {
 
 import CreateCacheRoute from "./src/routes/api/createCache";
 import CreateDeferredRoute from "./src/routes/api/createDeferred";
+import CreateExternallyManagedCacheRoute from "./src/routes/api/createExternallyManagedCache";
 import CreateIntervalCacheRoute from "./src/routes/api/createIntervalCache";
 import CreateSingleEntryCacheRoute from "./src/routes/api/createSingleEntryCache";
 import CreateStreamingCacheRoute from "./src/routes/api/createStreamingCache";
@@ -56,6 +58,10 @@ root.render(
         <Route path="/" element={<HomeRoute />} />
         <Route path={CREATE_CACHE} element={<CreateCacheRoute />} />
         <Route path={CREATE_DEFERRED} element={<CreateDeferredRoute />} />
+        <Route
+          path={CREATE_EXTERNALLY_MANAGED_CACHE}
+          element={<CreateExternallyManagedCacheRoute />}
+        />
         <Route
           path={CREATE_INTERVAL_CACHE}
           element={<CreateIntervalCacheRoute />}

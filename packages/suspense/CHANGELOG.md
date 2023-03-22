@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.30
+* Add new edge-case externally-managed cache type (`createExternallyManagedCache`) as a convenience wrapper around `createCache`.
+
 ## 0.0.29
 * Edge case bugfix: Calling `cache` while a value is being loaded will resolve/replace the pending record.
 

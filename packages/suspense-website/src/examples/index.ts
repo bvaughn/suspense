@@ -69,6 +69,15 @@ const createDeferred = {
   ),
 };
 
+const createExternallyManagedCache = {
+  cache: processExample(
+    readFileSync(
+      join(__dirname, "createExternallyManagedCache", "cache.ts"),
+      "utf8"
+    )
+  ),
+};
+
 const createIntervalCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createIntervalCache", "cache.ts"), "utf8")
@@ -286,6 +295,7 @@ const useImperativeIntervalCacheValues = {
 export {
   createCache,
   createDeferred,
+  createExternallyManagedCache,
   createIntervalCache,
   createSingleEntryCache,
   createStreamingCache,

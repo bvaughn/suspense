@@ -1,5 +1,6 @@
 export * from "./constants";
 export * from "./cache/createCache";
+export * from "./cache/createExternallyManagedCache";
 export * from "./cache/createIntervalCache";
 export * from "./cache/createSingleEntryCache";
 export * from "./cache/createStreamingCache";
