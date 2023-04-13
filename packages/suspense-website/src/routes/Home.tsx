@@ -16,6 +16,7 @@ import {
   GUIDE_FETCH_WITH_STATUS,
   GUIDE_MEMORY_MANAGEMENT,
   GUIDE_MUTATING_A_CACHE_VALUE,
+  GUIDE_OPTIMIZING_IMMUTABLE_CACHES,
   GUIDE_STREAMING_CACHE,
   IS_PROMISE_LIKE,
   RECORD_AND_RECORD_DATA_UTILS,
@@ -168,6 +169,11 @@ export default function Route() {
           <LinkListItem
             children="Rendering cache status"
             to={GUIDE_FETCH_WITH_STATUS}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Optimizing immutable caches"
+            to={GUIDE_OPTIMIZING_IMMUTABLE_CACHES}
             type="plaintext"
           />
         </ul>

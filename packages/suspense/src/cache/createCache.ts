@@ -1,4 +1,4 @@
-import { unstable_getCacheForType as getCacheForType } from "react";
+import { unstable_getCacheForType as getCacheForTypeMutable } from "react";
 import { STATUS_NOT_FOUND, STATUS_PENDING } from "../constants";
 import { createDeferred } from "../utils/createDeferred";
 import {
@@ -33,6 +33,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
 > & {
   __createPendingMutationRecordMap: () => CacheMap<string, Record<Value>>;
   __getKey: (params: Params) => string;
+  __isImmutable: () => boolean;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (params: Params) => void;
   __recordMap: CacheMap<string, Record<Value>>;
@@ -43,6 +44,7 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
     getCache?: (
       onEviction: (key: string) => void
     ) => CacheMap<string, Record<Value>>;
+    immutable?: boolean;
   };
   debugLabel?: string;
   getKey?: (params: Params) => string;
@@ -59,7 +61,7 @@ export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
 ): Cache<Params, Value> {
   const { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
-  const { getCache = defaultGetCache } = config;
+  const { getCache = defaultGetCache, immutable = false } = config;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
@@ -92,6 +94,11 @@ export function createCache<Params extends Array<any>, Value>(
 
   // Stores a set of callbacks (by key) for status subscribers.
   const subscriberMap = new Map<string, Set<StatusCallback>>();
+
+  // Immutable caches should read from backing cache directly.
+  // Only mutable caches should use React-managed cache
+  // in order to reduce re-renders when caches are refreshed for mutations.
+  const getCacheForType = immutable ? () => recordMap : getCacheForTypeMutable;
 
   function abort(...params: Params): boolean {
     const cacheKey = getKey(params);
@@ -425,6 +432,7 @@ export function createCache<Params extends Array<any>, Value>(
     // Internal API (used by useCacheMutation)
     __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
+    __isImmutable: () => immutable,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
     __recordMap: recordMap,

@@ -46,6 +46,9 @@ const createCache = {
   hook: processExample(
     readFileSync(join(__dirname, "createCache", "hook.ts"), "utf8")
   ),
+  immutable: processExample(
+    readFileSync(join(__dirname, "createCache", "immutable.ts"), "utf8")
+  ),
   prefetch: processExample(
     readFileSync(join(__dirname, "createCache", "prefetch.ts"), "utf8")
   ),

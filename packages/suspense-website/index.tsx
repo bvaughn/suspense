@@ -21,6 +21,7 @@ import {
   USE_IMPERATIVE_CACHE_VALUE,
   USE_IMPERATIVE_INTERVAL_CACHE_VALUES,
   USE_STREAMING_CACHE,
+  GUIDE_OPTIMIZING_IMMUTABLE_CACHES,
 } from "./src/routes/config";
 
 import CreateCacheRoute from "./src/routes/api/createCache";
@@ -44,6 +45,7 @@ import MemoryManagementRoute from "./src/routes/examples/memory-management";
 import MutatingCacheValueRoute from "./src/routes/examples/mutating-cache-values";
 import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-status-while-fetching";
 import CreatingStreamingCacheRoute from "./src/routes/examples/streaming-cache";
+import OptimizingImmutableCachesRoute from "./src/routes/examples/optimizing-immutable-caches";
 import ScrollToTop from "./src/components/ScrollToTop";
 
 const rootElement = document.getElementById("root")!;
@@ -89,6 +91,10 @@ root.render(
         <Route
           path={GUIDE_MUTATING_A_CACHE_VALUE}
           element={<MutatingCacheValueRoute />}
+        />
+        <Route
+          path={GUIDE_OPTIMIZING_IMMUTABLE_CACHES}
+          element={<OptimizingImmutableCachesRoute />}
         />
         <Route
           path={GUIDE_STREAMING_CACHE}

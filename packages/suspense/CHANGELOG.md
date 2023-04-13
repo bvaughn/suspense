@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.31
+* Add optional `immutable` config param to `createCache` to enable optimizing rendering performance for immutable caches. (See [this Loom video](https://www.loom.com/share/dde355b8a9e643adb146768cbd943d39) for background information.)
+
 ## 0.0.30
 * Add new edge-case externally-managed cache type (`createExternallyManagedCache`) as a convenience wrapper around `createCache`.
 

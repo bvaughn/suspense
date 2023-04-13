@@ -8,6 +8,7 @@ import { STATUS_PENDING, STATUS_REJECTED } from "../constants";
 import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { createResolvedRecord, updateRecordToResolved } from "../utils/Record";
+import { assert } from "../utils/assert";
 
 type MutationCallback<Value> = () => Promise<Value>;
 
@@ -33,10 +34,13 @@ export function useCacheMutation<Params extends Array<any>, Value>(
   const {
     __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
+    __isImmutable: isImmutable,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,
     __recordMap: recordMap,
   } = cache as InternalCache<Params, Value>;
+
+  assert(!isImmutable(), "Cannot mutate an immutable cache");
 
   const [isPending, startTransition] = useTransition();
 

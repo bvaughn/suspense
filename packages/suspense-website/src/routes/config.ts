@@ -20,4 +20,6 @@ export const GUIDE_ABORT_A_REQUEST = "/guide/abort-a-request";
 export const GUIDE_FETCH_WITH_STATUS = "/guide/rendering-cache-status";
 export const GUIDE_MEMORY_MANAGEMENT = "/guide/memory-management";
 export const GUIDE_MUTATING_A_CACHE_VALUE = "/guide/mutating-cache-values";
+export const GUIDE_OPTIMIZING_IMMUTABLE_CACHES =
+  "/guide/optimizing-immutable-caches";
 export const GUIDE_STREAMING_CACHE = "/guide/writing-a-streaming-cache";
