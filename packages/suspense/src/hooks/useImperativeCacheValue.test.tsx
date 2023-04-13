@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { Component, PropsWithChildren } from "react";
+import { Component, PropsWithChildren, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createCache } from "../cache/createCache";
@@ -32,8 +32,15 @@ describe("useImperativeCacheValue", () => {
 
   let pendingDeferred: Deferred<Value>[] = [];
 
-  function Component({ cacheKey }: { cacheKey: string }): any {
-    const result = useImperativeCacheValue(cache, cacheKey);
+  let componentSetSkip: React.Dispatch<boolean>;
+  let componentSetCacheKey: React.Dispatch<string>;
+
+  function Component(): any {
+    const [skip, setSkip] = useState(false);
+    const [cacheKey, setCacheKey] = useState("test");
+    componentSetSkip = setSkip;
+    componentSetCacheKey = setCacheKey;
+    const result = useImperativeCacheValue(cache, [cacheKey], { skip });
 
     lastRenderedError = result.error;
     lastRenderedStatus = result.status;
@@ -49,7 +56,7 @@ describe("useImperativeCacheValue", () => {
       root.render(
         <>
           <ErrorBoundary>
-            <Component cacheKey="test" />
+            <Component />
           </ErrorBoundary>
         </>
       );
@@ -170,6 +177,43 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
+  });
+
+  it.only("should respect the `skip` option", async () => {
+    await mount();
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+    expect(lastRenderedValue).toBeUndefined();
+
+    expect(pendingDeferred.length).toBe(1);
+
+    // Fulfill the initial request
+    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedValue).toEqual({ key: "resolved" });
+
+    // Skip the next request and set a different cache key to confirm
+    // the record does not exist
+    await act(async () => {
+      componentSetSkip(true);
+      componentSetCacheKey("skipped-1");
+    });
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+    expect(lastRenderedValue).toBeUndefined();
+    // Should not have triggered a request
+    expect(pendingDeferred.length).toBe(1);
+
+    // Re-enable the request
+    await act(async () => {
+      componentSetSkip(false);
+    });
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+    expect(lastRenderedValue).toBeUndefined();
+    // Should have triggered a request
+    expect(pendingDeferred.length).toBe(2);
   });
 
   describe("getCache", () => {

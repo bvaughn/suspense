@@ -13,21 +13,29 @@ import {
 } from "../types";
 import { useCacheStatus } from "./useCacheStatus";
 
+export type UICVOptions = {
+  skip?: boolean;
+};
+
 export function useImperativeCacheValue<Params extends any[], Value>(
   cache: Cache<Params, Value>,
-  ...params: Params
+  params: Params,
+  options: UICVOptions = {}
 ):
   | ImperativeErrorResponse
   | ImperativePendingResponse
   | ImperativeResolvedResponse<Value> {
+  const { skip = false } = options;
   const status = useCacheStatus(cache, ...params);
 
   useEffect(() => {
     switch (status) {
       case STATUS_NOT_FOUND:
-        cache.prefetch(...params);
+        if (!skip) {
+          cache.prefetch(...params);
+        }
     }
-  }, [cache, status, ...params]);
+  }, [cache, status, skip, ...params]);
 
   switch (status) {
     case STATUS_REJECTED:
