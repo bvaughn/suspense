@@ -10,7 +10,7 @@ import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { useCacheStatus } from "./useCacheStatus";
 import { MutationApi, useCacheMutation } from "./useCacheMutation";
-import { Component, PropsWithChildren } from "react";
+import { Component, PropsWithChildren, ReactNode } from "react";
 
 type Props = { cacheKey: string };
 type Rendered = { status: Status; value: string };
@@ -57,11 +57,9 @@ describe("useCacheMutation", () => {
     };
   });
 
-  async function mount() {
-    container = document.createElement("div");
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(
+  async function mount(elements?: ReactNode) {
+    if (elements == null) {
+      elements = (
         <>
           <ErrorBoundary>
             <Component cacheKey="one" />
@@ -71,8 +69,97 @@ describe("useCacheMutation", () => {
           </ErrorBoundary>
         </>
       );
+    }
+
+    container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(elements);
     });
   }
+
+  describe("immutable caches", () => {
+    it("should throw if passed to useCacheMutation hook", async () => {
+      const immutableCache = createCache<[string], string>({
+        config: {
+          immutable: true,
+        },
+        getKey: ([cacheKey]) => cacheKey,
+        load: ([cacheKey]) => cacheKey,
+      });
+
+      function Test() {
+        useCacheMutation(immutableCache);
+        return null;
+      }
+
+      // Swallow expected error message
+      console.error = () => {};
+
+      let caught: Error | null = null;
+      try {
+        await act(async () => mount(<Test />));
+      } catch (error) {
+        caught = error as Error;
+      }
+      expect(caught).not.toBeNull();
+      expect(caught!.message).toBe("Cannot mutate an immutable cache");
+    });
+
+    it("should not re-render in response to a mutation", async () => {
+      const immutableCache = createCache<[string], string>({
+        config: {
+          immutable: true,
+        },
+        getKey: ([cacheKey]) => cacheKey,
+        load: ([cacheKey]) => cacheKey,
+      });
+
+      const mutableCache = createCache<[string], string>({
+        getKey: ([cacheKey]) => cacheKey,
+        load: ([cacheKey]) => cacheKey,
+      });
+
+      const ReadFromImmutableCache = jest.fn().mockImplementation(() => {
+        return immutableCache.read("key");
+      });
+
+      const ReadFromMutableCache = jest.fn().mockImplementation(() => {
+        return mutableCache.read("key");
+      });
+
+      const ReadFromMainCache = jest.fn().mockImplementation(() => {
+        mutationApi.key = useCacheMutation(cache);
+        return cache.read("key");
+      });
+
+      await act(async () =>
+        mount(
+          <>
+            <ReadFromImmutableCache />
+            <ReadFromMutableCache />
+            <ReadFromMainCache />
+          </>
+        )
+      );
+
+      ReadFromImmutableCache.mockReset();
+      ReadFromMutableCache.mockReset();
+      ReadFromMainCache.mockReset();
+
+      act(() => {
+        mutationApi.key.mutateSync(["key"], "new key");
+      });
+
+      // A mutation in any cache will trigger a re-render for all components that read from mutable caches.
+      // This is how React manages cache "subscriptions" (similar to the Context API).
+      expect(ReadFromMutableCache).toHaveBeenCalled();
+      expect(ReadFromMainCache).toHaveBeenCalled();
+
+      // But the component that read from the immutable should not re-render.
+      expect(ReadFromImmutableCache).not.toHaveBeenCalled();
+    });
+  });
 
   describe("mutateAsync", () => {
     it("should support mutating a value in a cache", async () => {
