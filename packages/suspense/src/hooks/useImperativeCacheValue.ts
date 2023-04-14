@@ -13,9 +13,13 @@ import {
 } from "../types";
 import { useCacheStatus } from "./useCacheStatus";
 
-export function useImperativeCacheValue<Params extends any[], Value>(
+export function useImperativeCacheValue<
+  Params extends any[],
+  Value,
+  TParams extends Params
+>(
   cache: Cache<Params, Value>,
-  ...params: Params
+  ...params: TParams
 ):
   | ImperativeErrorResponse
   | ImperativePendingResponse
