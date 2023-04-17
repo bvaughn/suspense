@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.33
+* README changes
+
 ## 0.0.32
 * Improved `useImperativeCacheValue` generics.
 
