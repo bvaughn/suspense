@@ -21,11 +21,30 @@ export default function Route() {
           </code>{" "}
           for caches that are externally managed.
         </p>
-        <Code code={createExternallyManagedCache.cache} />
-        <Note>
-          An "externally managed" cache is one that does not load its own data.
-        </Note>
+        <Code code={createExternallyManagedCache.createCache} />
       </Block>
+      <Block>
+        <p>
+          Store values in an externally managed cache with the{" "}
+          <code>cacheValue</code> method.
+        </p>
+        <Code code={createExternallyManagedCache.cacheValue} />
+      </Block>
+      <Block>
+        <p>
+          Store errors in an externally managed cache with the{" "}
+          <code>cacheError</code> method.
+        </p>
+        <Code code={createExternallyManagedCache.cacheError} />
+      </Block>
+      <Note type="warn">
+        <>
+          <p>
+            An externally managed cache is one that does not load its own data.
+          </p>
+          <p>Data must be explicitly written by external code.</p>
+        </>
+      </Note>
     </Container>
   );
 }

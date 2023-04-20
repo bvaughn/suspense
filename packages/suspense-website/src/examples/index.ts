@@ -73,9 +73,21 @@ const createDeferred = {
 };
 
 const createExternallyManagedCache = {
-  cache: processExample(
+  cacheError: processExample(
     readFileSync(
-      join(__dirname, "createExternallyManagedCache", "cache.ts"),
+      join(__dirname, "createExternallyManagedCache", "cacheError.ts"),
+      "utf8"
+    )
+  ),
+  cacheValue: processExample(
+    readFileSync(
+      join(__dirname, "createExternallyManagedCache", "cacheValue.ts"),
+      "utf8"
+    )
+  ),
+  createCache: processExample(
+    readFileSync(
+      join(__dirname, "createExternallyManagedCache", "createCache.ts"),
       "utf8"
     )
   ),

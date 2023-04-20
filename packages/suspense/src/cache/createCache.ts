@@ -33,6 +33,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
 > & {
   __createPendingMutationRecordMap: () => CacheMap<string, Record<Value>>;
   __getKey: (params: Params) => string;
+  __getOrCreateRecord: (...params: Params) => Record<Value>;
   __isImmutable: () => boolean;
   __mutationAbortControllerMap: Map<string, AbortController>;
   __notifySubscribers: (params: Params) => void;
@@ -432,6 +433,7 @@ export function createCache<Params extends Array<any>, Value>(
     // Internal API (used by useCacheMutation)
     __createPendingMutationRecordMap: createPendingMutationRecordMap,
     __getKey: getKey,
+    __getOrCreateRecord: getOrCreateRecord,
     __isImmutable: () => immutable,
     __mutationAbortControllerMap: mutationAbortControllerMap,
     __notifySubscribers: notifySubscribers,

@@ -163,6 +163,16 @@ export interface CacheMap<Key, Value> {
   set(key: Key, value: Value): this;
 }
 
+// Externally managed cache variant
+
+export type ExternallyManagedCache<Params extends any[], Value> = Omit<
+  Cache<Params, Value>,
+  "cache"
+> & {
+  cacheError(error: any, ...params: Params): void;
+  cacheValue(value: Value, ...params: Params): void;
+};
+
 // Hook types
 
 export type ImperativeErrorResponse = {

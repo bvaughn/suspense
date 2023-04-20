@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.34
+* `createExternallyManagedCache` cache updated to support caching errors (via `cacheError` method); `cache` method renamed to `cacheValue` to differentiate.
+
 ## 0.0.33
 * README changes
 
