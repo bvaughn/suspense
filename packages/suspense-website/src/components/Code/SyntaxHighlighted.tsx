@@ -1,39 +1,15 @@
-import { memo, Suspense, useMemo } from "react";
+import { useMemo } from "react";
 
 import {
   Language,
   highlightSyntaxSuspense,
   parsedTokensToHtml,
-} from "../suspense/SyntaxParsingCache";
-import { ParsedTokens } from "../suspense/SyntaxParsingCache";
+} from "../../suspense/SyntaxParsingCache";
+import { ParsedTokens } from "../../suspense/SyntaxParsingCache";
 
-import styles from "./Code.module.css";
-import Loader from "./Loader";
+import styles from "./shared.module.css";
 
-export default function Code({
-  className = "",
-  code,
-  language = "jsx",
-  showLineNumbers = false,
-}: {
-  className?: string;
-  code: string;
-  language?: Language;
-  showLineNumbers?: boolean;
-}) {
-  return (
-    <Suspense fallback={<Loader />}>
-      <Parser
-        className={className}
-        code={code}
-        language={language}
-        showLineNumbers={showLineNumbers}
-      />
-    </Suspense>
-  );
-}
-
-function Parser({
+export function SyntaxHighlighted({
   className,
   code,
   language,
@@ -54,12 +30,12 @@ function Parser({
   );
 }
 
-const TokenRenderer = memo(function TokenRenderer({
+function TokenRenderer({
   className,
   showLineNumbers,
   tokens,
 }: {
-  className?: string;
+  className: string;
   showLineNumbers: boolean;
   tokens: ParsedTokens[];
 }) {
@@ -91,4 +67,4 @@ const TokenRenderer = memo(function TokenRenderer({
       }}
     />
   );
-});
+}
