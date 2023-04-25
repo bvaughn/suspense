@@ -471,8 +471,6 @@ export function createIntervalCache<
         }
       }
 
-      let todoDebugStrings = [];
-
       // Merge in newly-loaded values; don't add duplicates though.
       // Duplicates may slip in at the edges (because of how intervals are split)
       // or they may be encountered as ranges of partial results are refined.
@@ -490,12 +488,6 @@ export function createIntervalCache<
           ) !== 0
         ) {
           metadata.sortedValues.splice(insertIndex, 0, value);
-          todoDebugStrings.push(
-            `${index}: "${value}" insert at ${insertIndex}`,
-            metadata.sortedValues
-          );
-        } else {
-          todoDebugStrings.push(`${index}: "${value}" duplicate`);
         }
       }
     } catch (error) {
