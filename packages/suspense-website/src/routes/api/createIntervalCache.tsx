@@ -16,10 +16,17 @@ export default function Route() {
       <Block>
         <p>
           An "interval cache" is a specialized cache that incrementally loads
-          and merges sets of values over time.
+          and merges sets of values over time. Values are loaded for "intervals"
+          which are a range of either numbers (or{" "}
+          <code>
+            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt">
+              BigInts
+            </ExternalLink>
+          </code>
+          )
         </p>
         <p>
-          An example of this is{" "}
+          An example of an interval cache can be found in{" "}
           <ExternalLink to="https://replay.io">Replay.io</ExternalLink> which
           fetches console logs for the region of a recording a user has
           "focused" on. If the user changes the focused region, additional logs
@@ -40,29 +47,6 @@ export default function Route() {
           source code for a range of lines.
         </p>
         <Code code={createIntervalCache.cache} />
-      </Block>
-      <Block>
-        <SubHeading title="Custom comparisons" />
-        <p>
-          Points in an interval are typically numbers (e.g. 1, 3.5) but they can
-          also be{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt">
-              BigInts
-            </ExternalLink>
-          </code>
-          . In that case a custom comparison function should be provided.
-        </p>
-        <p>
-          Here is an example using the NPM package{" "}
-          <code>
-            <ExternalLink to="https://www.npmjs.com/package/extra-bigint">
-              extra-bigint
-            </ExternalLink>
-          </code>
-          :
-        </p>
-        <Code code={createIntervalCache.cacheWithBigIntInterval} />
       </Block>
       <Block>
         <SubHeading title="Aborting requests" />

@@ -97,12 +97,6 @@ const createIntervalCache = {
   cache: processExample(
     readFileSync(join(__dirname, "createIntervalCache", "cache.ts"), "utf8")
   ),
-  cacheWithBigIntInterval: processExample(
-    readFileSync(
-      join(__dirname, "createIntervalCache", "cacheWithBigIntInterval.ts"),
-      "utf8"
-    )
-  ),
   cacheWithPartialResults: processExample(
     readFileSync(
       join(__dirname, "createIntervalCache", "cacheWithPartialResults.ts"),

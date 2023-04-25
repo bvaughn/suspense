@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.36
+* `createIntervalCache` removes `comparePoints` param (as it is no longer needed).
+
 ## 0.0.35
 * `createIntervalCache` supports partial results via new options parameter `options.returnAsPartial(resultsArray)`.
 * `createIntervalCache` methods `getValue` and `getStatus` better handle sub-regions of already-loaded intervals.
