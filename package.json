@@ -8,6 +8,7 @@
     "docs": "cd packages/suspense-website && pnpm build",
     "prerelease": "rm -rf ./.parcel-cache && pnpm -r run build",
     "prettier": "prettier --write \"**/*.{css,html,js,json,jsx,ts,tsx}\"",
+    "test": "pnpm -r run test",
     "typescript": "tsc --noEmit",
     "typescript:watch": "tsc --noEmit --watch"
   },
