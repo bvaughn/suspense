@@ -346,7 +346,7 @@ describe("createCache", () => {
     it("should start fetching a resource", async () => {
       cache.prefetch("sync-1");
 
-      load.mockReset();
+      load.mockClear();
 
       // Verify value already loaded
       cache.readAsync("sync-1");
@@ -357,7 +357,7 @@ describe("createCache", () => {
       load.mockImplementation(defaultLoad);
       cache.readAsync("sync-2");
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall?.[0]).toEqual(["sync-2"]);
+      expect(load).toHaveBeenCalledWith(["sync-2"], expect.anything());
       expect(cache.getValue("sync-2")).toEqual("sync-2");
     });
   });
@@ -450,8 +450,8 @@ describe("createCache", () => {
       cache.subscribeToStatus(callbackA, "sync-1");
       cache.subscribeToStatus(callbackB, "sync-2");
 
-      callbackA.mockReset();
-      callbackB.mockReset();
+      callbackA.mockClear();
+      callbackB.mockClear();
 
       cache.readAsync("sync-2");
 
@@ -463,8 +463,8 @@ describe("createCache", () => {
       const unsubscribeA = cache.subscribeToStatus(callbackA, "sync-1");
       cache.subscribeToStatus(callbackB, "sync-2");
 
-      callbackA.mockReset();
-      callbackB.mockReset();
+      callbackA.mockClear();
+      callbackB.mockClear();
 
       unsubscribeA();
 

@@ -7,9 +7,9 @@ import {
 } from "../constants";
 import {
   IntervalCache,
-  ImperativeErrorResponse,
-  ImperativePendingResponse,
-  ImperativeResolvedResponse,
+  ImperativeIntervalErrorResponse,
+  ImperativeIntervalPendingResponse,
+  ImperativeIntervalResolvedResponse,
 } from "../types";
 import { useIntervalCacheStatus } from "./useIntervalCacheStatus";
 
@@ -23,9 +23,9 @@ export function useImperativeIntervalCacheValues<
   end: Point,
   ...params: Params
 ):
-  | ImperativeErrorResponse
-  | ImperativePendingResponse
-  | ImperativeResolvedResponse<Value[]> {
+  | ImperativeIntervalErrorResponse
+  | ImperativeIntervalPendingResponse
+  | ImperativeIntervalResolvedResponse<Value[]> {
   const status = useIntervalCacheStatus(cache, start, end, ...params);
 
   useEffect(() => {
@@ -46,10 +46,13 @@ export function useImperativeIntervalCacheValues<
       return { error: caught, status: STATUS_REJECTED, value: undefined };
     case STATUS_RESOLVED:
       try {
+        const value = cache.getValue(start, end, ...params);
+        const isPartialResult = cache.isPartialResult(value);
         return {
           error: undefined,
+          isPartialResult,
           status: STATUS_RESOLVED,
-          value: cache.getValue(start, end, ...params),
+          value,
         };
       } catch (error) {}
     default:

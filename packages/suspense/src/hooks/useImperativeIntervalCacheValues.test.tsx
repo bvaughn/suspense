@@ -5,7 +5,6 @@
 import { Component, PropsWithChildren } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import { createCache } from "../cache/createCache";
 import { createIntervalCache } from "../cache/createIntervalCache";
 import {
   STATUS_NOT_FOUND,
@@ -14,19 +13,14 @@ import {
   STATUS_RESOLVED,
 } from "../constants";
 import {
-  CacheLoadOptions,
   Deferred,
   IntervalCache,
   IntervalCacheLoadOptions,
   Status,
 } from "../types";
 import { createDeferred } from "../utils/createDeferred";
-import { isPromiseLike } from "../utils/isPromiseLike";
-import { SimpleLRUCache } from "../utils/test";
 
 import { useImperativeIntervalCacheValues } from "./useImperativeIntervalCacheValues";
-
-type Value = { key: string };
 
 function createContiguousArray(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -40,15 +34,22 @@ describe("useImperativeIntervalCacheValues", () => {
   let cache: IntervalCache<number, [id: string], number>;
   let load: jest.Mock<
     number[] | PromiseLike<number[]>,
-    [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
+    [
+      start: number,
+      end: number,
+      id: string,
+      options: IntervalCacheLoadOptions<number>
+    ]
   >;
 
   let container: HTMLDivElement | null = null;
   let lastRenderedError: any = undefined;
+  let lastRenderedIsPartial: boolean | undefined = undefined;
   let lastRenderedStatus: Status | undefined = undefined;
   let lastRenderedValue: string | undefined = undefined;
 
   let pendingDeferred: Deferred<number[]>[] = [];
+  let pendingOptions: IntervalCacheLoadOptions<number>[] = [];
 
   function Component({
     cacheKey,
@@ -67,6 +68,8 @@ describe("useImperativeIntervalCacheValues", () => {
     );
 
     lastRenderedError = result.error;
+    lastRenderedIsPartial =
+      result.status === STATUS_RESOLVED ? result.isPartialResult : undefined;
     lastRenderedStatus = result.status;
     lastRenderedValue = result.value;
 
@@ -92,15 +95,14 @@ describe("useImperativeIntervalCacheValues", () => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
     load = jest.fn();
-    load.mockImplementation(
-      async (start: number, end: number, text: string) => {
-        const deferred = createDeferred<number[]>();
+    load.mockImplementation(async (start, end, text, options) => {
+      const deferred = createDeferred<number[]>();
 
-        pendingDeferred.push(deferred);
+      pendingDeferred.push(deferred);
+      pendingOptions.push(options);
 
-        return deferred.promise;
-      }
-    );
+      return deferred.promise;
+    });
 
     cache = createIntervalCache<number, [id: string], number>({
       getPointForValue,
@@ -108,10 +110,12 @@ describe("useImperativeIntervalCacheValues", () => {
     });
 
     lastRenderedStatus = undefined;
+    lastRenderedIsPartial = undefined;
     lastRenderedStatus = undefined;
     lastRenderedValue = undefined;
 
     pendingDeferred = [];
+    pendingOptions = [];
   });
 
   it("should return values that have already been loaded", async () => {
@@ -139,6 +143,7 @@ describe("useImperativeIntervalCacheValues", () => {
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedIsPartial).toBe(false);
     expect(lastRenderedValue).toEqual(createContiguousArray(1, 5));
   });
 
@@ -161,6 +166,7 @@ describe("useImperativeIntervalCacheValues", () => {
 
     expect(lastRenderedError?.message).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
+    expect(lastRenderedIsPartial).toBeUndefined();
     expect(lastRenderedValue).toBeUndefined();
   });
 
@@ -198,6 +204,79 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
+  });
+
+  it("should identify partial results", async () => {
+    await act(async () => {
+      await mount({ end: 10, start: 1 });
+    });
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith(1, 10, "test", expect.anything());
+    expect(pendingDeferred).toHaveLength(1);
+    expect(pendingOptions).toHaveLength(1);
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    await act(async () =>
+      pendingDeferred[0].resolve(
+        pendingOptions[0].returnAsPartial(createContiguousArray(1, 5))
+      )
+    );
+
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedIsPartial).toBe(true);
+    expect(lastRenderedValue).toEqual(createContiguousArray(1, 5));
+  });
+
+  it("should resolve when a containing range returns results", async () => {
+    cache.readAsync(1, 10, "test");
+    expect(pendingDeferred).toHaveLength(1);
+
+    await mount({ end: 4, start: 2 });
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith(1, 10, "test", expect.anything());
+    expect(pendingDeferred).toHaveLength(1);
+    expect(pendingOptions).toHaveLength(1);
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    await act(async () =>
+      pendingDeferred[0].resolve(createContiguousArray(1, 10))
+    );
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(pendingDeferred).toHaveLength(1);
+    expect(pendingOptions).toHaveLength(1);
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedValue).toEqual(createContiguousArray(2, 4));
+  });
+
+  it("should fetch a smaller range when the containing range returns partial results", async () => {
+    cache.readAsync(1, 10, "test");
+    expect(pendingDeferred).toHaveLength(1);
+
+    await mount({ end: 4, start: 2 });
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith(1, 10, "test", expect.anything());
+    expect(pendingDeferred).toHaveLength(1);
+    expect(pendingOptions).toHaveLength(1);
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    await act(async () =>
+      pendingDeferred[0].resolve(
+        pendingOptions[0].returnAsPartial(createContiguousArray(1, 5))
+      )
+    );
+
+    // At this point, since the interval we're waiting on is smaller than the partial range,
+    // a new request will have been started to fetch the smaller interval.
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(load).toHaveBeenCalledWith(2, 4, "test", expect.anything());
+    expect(pendingDeferred).toHaveLength(2);
+    expect(pendingOptions).toHaveLength(2);
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
   });
 });
 

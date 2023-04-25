@@ -25,6 +25,7 @@ export type PendingRecordData<Type> = {
   readonly status: StatusPending;
 };
 export type ResolvedRecordData<Type> = {
+  readonly metadata: unknown;
   readonly status: StatusResolved;
   readonly value: Type;
 };
@@ -107,6 +108,7 @@ export type IntervalCache<Point, Params extends any[], Value> = {
     end: Point,
     ...params: Params
   ): PromiseLike<Value[]> | Value[];
+  isPartialResult: (value: Value[]) => boolean;
   read(start: Point, end: Point, ...params: Params): Value[];
   subscribeToStatus(
     callback: StatusCallback,
@@ -116,7 +118,8 @@ export type IntervalCache<Point, Params extends any[], Value> = {
   ): UnsubscribeCallback;
 };
 
-export type IntervalCacheLoadOptions = {
+export type IntervalCacheLoadOptions<Value> = {
+  returnAsPartial: (values: Value[]) => Value[];
   signal: AbortSignal;
 };
 
@@ -190,3 +193,10 @@ export type ImperativeResolvedResponse<Value> = {
   status: StatusResolved;
   value: Value;
 };
+
+export type ImperativeIntervalErrorResponse = ImperativeErrorResponse;
+export type ImperativeIntervalPendingResponse = ImperativePendingResponse;
+export type ImperativeIntervalResolvedResponse<Value> =
+  ImperativeResolvedResponse<Value> & {
+    isPartialResult: boolean;
+  };

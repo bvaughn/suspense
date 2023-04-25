@@ -26,9 +26,11 @@ export function createRejectedRecordData(error: any): RejectedRecordData {
 }
 
 export function createResolvedRecordData<Type>(
-  value: Type
+  value: Type,
+  metadata: unknown = null
 ): ResolvedRecordData<Type> {
   return {
+    metadata,
     status: STATUS_RESOLVED,
     value,
   };

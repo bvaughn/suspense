@@ -44,33 +44,23 @@ export default function Route() {
       <Block>
         <SubHeading title="Custom comparisons" />
         <p>
-          Intervals are often numbers (e.g. 1, 3.5) but they can be other types–
-          like string or{" "}
+          Points in an interval are typically numbers (e.g. 1, 3.5) but they can
+          also be{" "}
           <code>
             <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt">
-              BigInt
+              BigInts
             </ExternalLink>
           </code>
           . In that case a custom comparison function should be provided.
         </p>
         <p>
-          For example, string intervals can be compared with{" "}
-          <code>
-            <ExternalLink to="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare">
-              String.prototype.localeCompare
-            </ExternalLink>
-          </code>
-          .
-        </p>
-        <Code code={createIntervalCache.cacheWithStringInterval} />
-        <p>
-          <code>BigInt</code> intervals can be compared with an NPM package like{" "}
+          Here is an example using the NPM package{" "}
           <code>
             <ExternalLink to="https://www.npmjs.com/package/extra-bigint">
               extra-bigint
             </ExternalLink>
           </code>
-          .
+          :
         </p>
         <Code code={createIntervalCache.cacheWithBigIntInterval} />
       </Block>
@@ -114,6 +104,19 @@ export default function Route() {
             not possible to evict a specific interval.
           </p>
         </Note>
+      </Block>
+      <Block>
+        <SubHeading title="Partial results" />
+        <p>
+          If data cannot be fully fetched for a given intervals, the value
+          returned can be flagged as <em>partial results</em> as shown below.
+        </p>
+        <Code code={createIntervalCache.cacheWithPartialResults} />
+        <p>
+          The <code>isPartialResult</code> method can be used to check if a
+          value only contains partial results.
+        </p>
+        <Code code={createIntervalCache.detectingPartialResults} />
       </Block>
     </Container>
   );

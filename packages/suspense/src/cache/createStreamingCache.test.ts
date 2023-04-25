@@ -39,7 +39,7 @@ describe("createStreamingCache", () => {
       const streaming = cache.stream("string");
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.lastCall?.[1]).toEqual("string");
+      expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
       const subscription = jest.fn();
       streaming.subscribe(subscription);
@@ -175,14 +175,14 @@ describe("createStreamingCache", () => {
         let streaming = cache.stream("string");
         expect(streaming.value).toEqual([1]);
 
-        fetch.mockReset();
+        fetch.mockClear();
 
         cache.evict("string");
 
         // Verify value is no longer cached
         streaming = cache.stream("string");
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
         expect(streaming.value).toBeUndefined();
       });
     });
@@ -206,7 +206,7 @@ describe("createStreamingCache", () => {
         streaming = cache.stream("string-b");
         expect(streaming.value).toEqual([1, 2]);
 
-        fetch.mockReset();
+        fetch.mockClear();
 
         cache.evictAll();
 
@@ -227,7 +227,7 @@ describe("createStreamingCache", () => {
         options.update([1], 1);
         options.resolve();
 
-        fetch.mockReset();
+        fetch.mockClear();
 
         // Verify value already loaded
         let streaming = cache.stream("string-1");
@@ -237,7 +237,7 @@ describe("createStreamingCache", () => {
         // Verify other values fetch independently
         streaming = cache.stream("string-2");
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string-2");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string-2");
         expect(streaming.value).toBeUndefined();
       });
     });
@@ -247,7 +247,7 @@ describe("createStreamingCache", () => {
         const streaming = cache.stream("string");
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -285,7 +285,7 @@ describe("createStreamingCache", () => {
         );
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -327,7 +327,7 @@ describe("createStreamingCache", () => {
         );
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
         expect(streaming.status).toBe(STATUS_REJECTED);
       });
@@ -359,7 +359,7 @@ describe("createStreamingCache", () => {
         options.resolve();
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
         const streaming = cache.stream("string");
 
@@ -410,7 +410,7 @@ describe("createStreamingCache", () => {
         const streaming = cache.stream("string");
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch.mock.lastCall?.[1]).toEqual("string");
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         const unsubscribe = streaming.subscribe(subscription);

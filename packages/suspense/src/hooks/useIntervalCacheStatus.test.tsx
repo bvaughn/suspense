@@ -33,7 +33,12 @@ describe("useIntervalCacheStatus", () => {
   let cache: IntervalCache<number, [id: string], number>;
   let load: jest.Mock<
     PromiseLike<number[]>,
-    [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
+    [
+      start: number,
+      end: number,
+      id: string,
+      options: IntervalCacheLoadOptions<number>
+    ]
   >;
   let lastRenderedStatus: Status | undefined = undefined;
 
@@ -171,5 +176,41 @@ describe("useIntervalCacheStatus", () => {
     expect(abortSignal?.aborted).toBe(true);
     await Promise.resolve();
     expect(lastRenderedStatus).toBe(STATUS_NOT_FOUND);
+  });
+
+  it("should support partial values that eventually resolve", async () => {
+    const promise = cache.readAsync(1, 5, "test");
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component start={2} end={4} string="test" />);
+    });
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    await act(async () => await promise);
+
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+  });
+
+  it("should support partial values that eventually fail", async () => {
+    const deferred = createDeferred<number[]>();
+    load.mockReturnValueOnce(deferred.promise);
+
+    const promise = cache.readAsync(1, 5, "test");
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component start={2} end={4} string="test" />);
+    });
+
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+
+    await act(async () => deferred.reject(new Error("Expected")));
+    await expect(() => promise).rejects.toThrow("Expected");
+
+    expect(lastRenderedStatus).toBe(STATUS_REJECTED);
   });
 });
