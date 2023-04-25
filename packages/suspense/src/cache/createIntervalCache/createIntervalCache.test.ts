@@ -126,37 +126,40 @@ describe("createIntervalCache", () => {
   });
 
   describe("configuration", () => {
-    it("should support bigint points via a custom comparePoints", async () => {
-      const comparePoints = jest.fn(compareBigInt);
-
+    it("should support bigint points", async () => {
       const load = jest.fn();
       load.mockImplementation((start: number, end: number, id: string) => [
         start,
       ]);
 
       const bigIntCache = createIntervalCache<bigint, [id: string], bigint>({
-        comparePoints,
         getPointForValue: (value) => value,
         load,
       });
 
-      await bigIntCache.readAsync(BigInt("2"), BigInt("4"), "test");
-
-      expect(comparePoints).toHaveBeenCalled();
+      await bigIntCache.readAsync(
+        BigInt("10000000000000000000000000000000002"),
+        BigInt("10000000000000000000000000000000004"),
+        "test"
+      );
 
       expect(load).toHaveBeenCalledTimes(1);
       expect(load).toHaveBeenCalledWith(
-        BigInt("2"),
-        BigInt("4"),
+        BigInt("10000000000000000000000000000000002"),
+        BigInt("10000000000000000000000000000000004"),
         "test",
         expect.anything()
       );
 
-      await bigIntCache.readAsync(BigInt("3"), BigInt("7"), "test");
+      await bigIntCache.readAsync(
+        BigInt("10000000000000000000000000000000003"),
+        BigInt("10000000000000000000000000000000007"),
+        "test"
+      );
       expect(load).toHaveBeenCalledTimes(2);
       expect(load).toHaveBeenCalledWith(
-        BigInt("4"),
-        BigInt("7"),
+        BigInt("10000000000000000000000000000000004"),
+        BigInt("10000000000000000000000000000000007"),
         "test",
         expect.anything()
       );

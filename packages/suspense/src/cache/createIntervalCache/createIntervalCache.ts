@@ -14,7 +14,6 @@ import {
 } from "../../constants";
 import {
   IntervalCacheLoadOptions,
-  ComparisonFunction,
   GetPointForValue,
   PendingRecord,
   IntervalCache,
@@ -72,7 +71,6 @@ export function createIntervalCache<
   Params extends Array<any>,
   Value
 >(options: {
-  comparePoints?: ComparisonFunction<Point>;
   debugLabel?: string;
   getKey?: (...params: Params) => string;
   getPointForValue: GetPointForValue<Point, Value>;
@@ -83,7 +81,6 @@ export function createIntervalCache<
   ) => PromiseLike<ValuesArray<Value>> | ValuesArray<Value>;
 }): IntervalCache<Point, Params, Value> {
   const {
-    comparePoints = defaultComparePoints,
     debugLabel,
     getKey = defaultGetKey,
     getPointForValue,
@@ -766,6 +763,6 @@ export function createIntervalCache<
   };
 }
 
-function defaultComparePoints(a: any, b: any): number {
-  return a - b;
+function comparePoints(a: any, b: any): number {
+  return Number(a - b);
 }
