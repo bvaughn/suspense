@@ -86,11 +86,11 @@ export function configure<Point>(
 
     const merged: Interval<Point>[] = [];
 
-    let prevInterval: Interval<Point> = sortedIntervals[0];
+    let prevInterval: Interval<Point> = sortedIntervals[0]!;
     let currentInterval: Interval<Point> | null = null;
 
     for (let index = 1; index < sortedIntervals.length; index++) {
-      currentInterval = sortedIntervals[index];
+      currentInterval = sortedIntervals[index]!;
 
       const tempMerged = merge(prevInterval, currentInterval);
       prevInterval = tempMerged.pop()!;

@@ -103,7 +103,7 @@ describe("useImperativeCacheValue", () => {
     expect(pendingDeferred).toHaveLength(1);
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+    await act(async () => pendingDeferred[0]!.resolve({ key: "resolved" }));
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
@@ -120,7 +120,7 @@ describe("useImperativeCacheValue", () => {
 
     await act(async () => {
       try {
-        const deferred = pendingDeferred[0];
+        const deferred = pendingDeferred[0]!;
         deferred.reject(new Error("rejected"));
 
         await deferred.promise;
@@ -140,7 +140,7 @@ describe("useImperativeCacheValue", () => {
 
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
-    await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+    await act(async () => pendingDeferred[0]!.resolve({ key: "resolved" }));
 
     expect(lastRenderedError).toBeUndefined();
     expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
@@ -163,7 +163,7 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () => {
-      const deferred = pendingDeferred[0];
+      const deferred = pendingDeferred[0]!;
       deferred.reject("rejected");
     });
 
@@ -188,7 +188,7 @@ describe("useImperativeCacheValue", () => {
       expect(lastRenderedValue).toBeUndefined();
 
       expect(pendingDeferred.length).toBe(1);
-      await act(async () => pendingDeferred[0].resolve({ key: "resolved" }));
+      await act(async () => pendingDeferred[0]!.resolve({ key: "resolved" }));
 
       expect(lastRenderedError).toBeUndefined();
       expect(lastRenderedStatus).toBe(STATUS_RESOLVED);

@@ -138,7 +138,7 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () =>
-      pendingDeferred[0].resolve(createContiguousArray(1, 5))
+      pendingDeferred[0]!.resolve(createContiguousArray(1, 5))
     );
 
     expect(lastRenderedError).toBeUndefined();
@@ -157,7 +157,7 @@ describe("useImperativeIntervalCacheValues", () => {
 
     await act(async () => {
       try {
-        const deferred = pendingDeferred[0];
+        const deferred = pendingDeferred[0]!;
         deferred.reject(new Error("rejected"));
 
         await deferred.promise;
@@ -179,7 +179,7 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () =>
-      pendingDeferred[0].resolve(createContiguousArray(5, 8))
+      pendingDeferred[0]!.resolve(createContiguousArray(5, 8))
     );
 
     expect(lastRenderedError).toBeUndefined();
@@ -197,7 +197,7 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () => {
-      const deferred = pendingDeferred[0];
+      const deferred = pendingDeferred[0]!;
       deferred.reject("rejected");
     });
 
@@ -218,8 +218,8 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () =>
-      pendingDeferred[0].resolve(
-        pendingOptions[0].returnAsPartial(createContiguousArray(1, 5))
+      pendingDeferred[0]!.resolve(
+        pendingOptions[0]!.returnAsPartial(createContiguousArray(1, 5))
       )
     );
 
@@ -242,7 +242,7 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () =>
-      pendingDeferred[0].resolve(createContiguousArray(1, 10))
+      pendingDeferred[0]!.resolve(createContiguousArray(1, 10))
     );
 
     expect(load).toHaveBeenCalledTimes(1);
@@ -265,8 +265,8 @@ describe("useImperativeIntervalCacheValues", () => {
     expect(lastRenderedStatus).toBe(STATUS_PENDING);
 
     await act(async () =>
-      pendingDeferred[0].resolve(
-        pendingOptions[0].returnAsPartial(createContiguousArray(1, 5))
+      pendingDeferred[0]!.resolve(
+        pendingOptions[0]!.returnAsPartial(createContiguousArray(1, 5))
       )
     );
 

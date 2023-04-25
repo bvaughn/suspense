@@ -19,7 +19,7 @@ export function configure<Point>(
     while (lowIndex <= highIndex) {
       middleIndex = (lowIndex + highIndex) >>> 1;
 
-      const currentPoint = sortedPoints[middleIndex];
+      const currentPoint = sortedPoints[middleIndex]!;
       const value = comparePoints(targetPoint, currentPoint);
       if (value === 0) {
         return middleIndex;
@@ -34,7 +34,7 @@ export function configure<Point>(
       return -1;
     }
 
-    const middlePoint = sortedPoints[middleIndex];
+    const middlePoint = sortedPoints[middleIndex]!;
     const value = comparePoints(targetPoint, middlePoint);
     if (value === 0) {
       return middleIndex;
@@ -48,8 +48,8 @@ export function configure<Point>(
         lowIndex = Math.max(0, middleIndex - 1);
       }
 
-      const lowPoint = sortedPoints[lowIndex];
-      const highPoint = sortedPoints[highIndex];
+      const lowPoint = sortedPoints[lowIndex]!;
+      const highPoint = sortedPoints[highIndex]!;
 
       return Math.abs(comparePoints(targetPoint, lowPoint)) <
         Math.abs(comparePoints(targetPoint, highPoint))
@@ -89,7 +89,7 @@ export function configure<Point>(
 
     const index = binarySearch(sortedPoints, targetPoint, false);
 
-    const foundPoint = sortedPoints[index];
+    const foundPoint = sortedPoints[index]!;
     const comparison = comparePoints(foundPoint, targetPoint);
 
     return comparison < 0 ? index + 1 : index;
@@ -105,7 +105,7 @@ export function configure<Point>(
 
     const index = binarySearch(sortedPoints, targetPoint, false);
 
-    const foundPoint = sortedPoints[index];
+    const foundPoint = sortedPoints[index]!;
     const comparison = comparePoints(foundPoint, targetPoint);
 
     return comparison > 0 ? index - 1 : index;
