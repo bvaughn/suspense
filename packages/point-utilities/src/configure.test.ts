@@ -1,7 +1,7 @@
 import { configure } from "./configure";
 import { Utilities } from "./types";
 
-describe("createPointUtils", () => {
+describe("point-utilities", () => {
   let utilities: Utilities<number>;
 
   beforeEach(() => {

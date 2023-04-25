@@ -43,7 +43,7 @@ describe("WeakRefMap", () => {
     map.set("foo", { foo: true });
     map.set("bar", { bar: true });
 
-    finalizer.mockReset();
+    finalizer.mockClear();
 
     await requestGC();
     await waitForGC(() => finalizer.mock.calls.length === 2);

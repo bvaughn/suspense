@@ -9,10 +9,32 @@ import {
 import { IntervalCacheLoadOptions, Deferred, IntervalCache } from "../../types";
 import { createDeferred } from "../../utils/createDeferred";
 import { isPromiseLike } from "../../utils/isPromiseLike";
-import { createIntervalCache } from "./createIntervalCache";
+import { PartialArray, createIntervalCache } from "./createIntervalCache";
 
-function createContiguousArray(start: number, end: number) {
-  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+function createConditionalLoad(maxResultsLength: number) {
+  return async (
+    start: number,
+    end: number,
+    id: string,
+    options: IntervalCacheLoadOptions<number>
+  ) => {
+    if (end - start >= maxResultsLength) {
+      return options.returnAsPartial(
+        createContiguousArray(start, end, maxResultsLength)
+      );
+    } else {
+      return createContiguousArray(start, end);
+    }
+  };
+}
+
+function createContiguousArray(
+  start: number,
+  end: number,
+  max: number = Number.MAX_SAFE_INTEGER
+) {
+  const length = Math.min(end - start + 1, max);
+  return Array.from({ length }, (_, index) => start + index);
 }
 
 function getPointForValue(value: number) {
@@ -22,13 +44,18 @@ function getPointForValue(value: number) {
 describe("createIntervalCache", () => {
   let cache: IntervalCache<number, [id: string], number>;
   let load: jest.Mock<
-    PromiseLike<number[]>,
-    [start: number, end: number, id: string, options: IntervalCacheLoadOptions]
+    PromiseLike<Array<number> | PartialArray<number>>,
+    [
+      start: number,
+      end: number,
+      id: string,
+      options: IntervalCacheLoadOptions<number>
+    ]
   >;
 
   beforeEach(() => {
     load = jest.fn();
-    load.mockImplementation(async (start: number, end: number, text: string) =>
+    load.mockImplementation(async (start: number, end: number, id: string) =>
       createContiguousArray(start, end)
     );
 
@@ -51,7 +78,7 @@ describe("createIntervalCache", () => {
           start: number,
           end: number,
           id: string,
-          options: IntervalCacheLoadOptions
+          options: IntervalCacheLoadOptions<number>
         ) => {
           abortSignals.push(options.signal);
 
@@ -103,7 +130,9 @@ describe("createIntervalCache", () => {
       const comparePoints = jest.fn(compareBigInt);
 
       const load = jest.fn();
-      load.mockImplementation((value) => [value]);
+      load.mockImplementation((start: number, end: number, id: string) => [
+        start,
+      ]);
 
       const bigIntCache = createIntervalCache<bigint, [id: string], bigint>({
         comparePoints,
@@ -120,7 +149,7 @@ describe("createIntervalCache", () => {
         BigInt("2"),
         BigInt("4"),
         "test",
-        expect.any(Object)
+        expect.anything()
       );
 
       await bigIntCache.readAsync(BigInt("3"), BigInt("7"), "test");
@@ -129,36 +158,8 @@ describe("createIntervalCache", () => {
         BigInt("4"),
         BigInt("7"),
         "test",
-        expect.any(Object)
+        expect.anything()
       );
-    });
-
-    it("should support string points via a custom comparePoints", async () => {
-      function compareStrings(a: string, b: string) {
-        return a.localeCompare(b);
-      }
-
-      const comparePoints = jest.fn(compareStrings);
-
-      const load = jest.fn();
-      load.mockImplementation((value) => [value]);
-
-      const bigIntCache = createIntervalCache<string, [id: string], string>({
-        comparePoints,
-        getPointForValue: (value) => value,
-        load,
-      });
-
-      await bigIntCache.readAsync("f", "l", "test");
-
-      expect(comparePoints).toHaveBeenCalled();
-
-      expect(load).toHaveBeenCalledTimes(1);
-      expect(load).toHaveBeenCalledWith("f", "l", "test", expect.any(Object));
-
-      await bigIntCache.readAsync("a", "g", "test");
-      expect(load).toHaveBeenCalledTimes(2);
-      expect(load).toHaveBeenCalledWith("a", "f", "test", expect.any(Object));
     });
   });
 
@@ -167,19 +168,19 @@ describe("createIntervalCache", () => {
       await cache.readAsync(1, 5, "one");
       await cache.readAsync(6, 10, "one");
 
-      const numCalls = load.mock.calls.length;
-
       // Verify values have been cached
       await cache.readAsync(1, 5, "one");
       await cache.readAsync(6, 10, "one");
-      expect(load).toHaveBeenCalledTimes(numCalls);
+      expect(load).toHaveBeenCalled();
+
+      load.mockClear();
 
       cache.evict("one");
 
       // Verify values in cache "one" have been evicted
       await cache.readAsync(1, 10, "one");
-      expect(load).toHaveBeenCalledTimes(numCalls + 1);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([1, 10, "one"]);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(1, 10, "one", expect.anything());
     });
 
     it("should only evict values for the requested parameters", async () => {
@@ -202,6 +203,24 @@ describe("createIntervalCache", () => {
       // Verify values in cache "two" are still cached
       await cache.readAsync(2, 2, "two");
       expect(load).toHaveBeenCalledTimes(numCalls + 1);
+    });
+
+    it("should also evict partial results for the requested parameters", async () => {
+      load.mockImplementation(createConditionalLoad(4));
+
+      await cache.readAsync(1, 10, "test");
+
+      load.mockClear();
+
+      // Verify values have been cached
+      await cache.readAsync(1, 10, "test");
+      expect(load).not.toHaveBeenCalled();
+
+      cache.evict("test");
+
+      // Verify values in cache "one" have been evicted
+      await cache.readAsync(1, 10, "test");
+      expect(load).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -271,6 +290,40 @@ describe("createIntervalCache", () => {
       } catch (error) {}
       expect(cache.getStatus(6, 10, "will-reject")).toBe(STATUS_REJECTED);
     });
+
+    it("should identify intervals contained by loaded intervals as pending or resolved", async () => {
+      await cache.readAsync(1, 5, "will-resolve");
+
+      expect(cache.getStatus(2, 4, "will-resolve")).toBe(STATUS_RESOLVED);
+    });
+
+    it("should identify intervals contained by failed intervals as pending or resolved", async () => {
+      const deferred = createDeferred<number[]>();
+      load.mockReturnValueOnce(deferred.promise);
+
+      const willReject = cache.readAsync(1, 5, "will-reject");
+
+      try {
+        deferred.reject("expected");
+        await willReject;
+      } catch (error) {}
+
+      expect(cache.getStatus(2, 4, "will-reject")).toBe(STATUS_REJECTED);
+
+      // Retrying a failed range should change this status though
+      cache.readAsync(2, 4, "will-reject");
+      expect(cache.getStatus(2, 4, "will-reject")).toBe(STATUS_PENDING);
+    });
+
+    it("should identify intervals contained by partially loaded intervals as not-found", async () => {
+      load.mockImplementation(createConditionalLoad(4));
+
+      await cache.readAsync(1, 10, "will-resolve-partial");
+
+      expect(cache.getStatus(2, 4, "will-resolve-partial")).toBe(
+        STATUS_NOT_FOUND
+      );
+    });
   });
 
   describe("getValue", () => {
@@ -300,6 +353,22 @@ describe("createIntervalCache", () => {
       } catch (error) {}
 
       expect(() => cache.getValue(6, 10, "will-reject")).toThrow("expected");
+    });
+
+    it("should return values for intervals contained by loaded intervals as resolved", async () => {
+      await cache.readAsync(1, 5, "will-resolve");
+
+      expect(cache.getValue(2, 4, "will-resolve")).toEqual(
+        createContiguousArray(2, 4)
+      );
+    });
+
+    it("should throw for intervals contained by partially loaded intervals", async () => {
+      load.mockImplementation(createConditionalLoad(4));
+
+      await cache.readAsync(1, 10, "will-resolve-partial");
+
+      expect(() => cache.getValue(6, 8, "test")).toThrow("No record found");
     });
   });
 
@@ -332,6 +401,22 @@ describe("createIntervalCache", () => {
 
       expect(cache.getValueIfCached(6, 10, "will-reject")).toBeUndefined();
     });
+
+    it("should return values for intervals contained by loaded intervals as resolved", async () => {
+      await cache.readAsync(1, 5, "will-resolve");
+
+      expect(cache.getValueIfCached(2, 4, "will-resolve")).toEqual(
+        createContiguousArray(2, 4)
+      );
+    });
+
+    it("should return a partial value for intervals contained by partially loaded intervals", async () => {
+      load.mockImplementation(createConditionalLoad(4));
+
+      await cache.readAsync(1, 10, "will-resolve-partial");
+
+      expect(cache.getValueIfCached(6, 8, "test")).toBe(undefined);
+    });
   });
 
   describe("readAsync", () => {
@@ -339,36 +424,51 @@ describe("createIntervalCache", () => {
       let values = await cache.readAsync(2, 4, "test");
       expect(values).toEqual(createContiguousArray(2, 4));
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([2, 4, "test"]);
+      expect(load).toHaveBeenCalledWith(2, 4, "test", expect.anything());
+
+      load.mockClear();
 
       values = await cache.readAsync(7, 8, "test");
       expect(values).toEqual(createContiguousArray(7, 8));
-      expect(load).toHaveBeenCalledTimes(2);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([7, 8, "test"]);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(7, 8, "test", expect.anything());
+
+      load.mockClear();
 
       values = await cache.readAsync(3, 8, "test");
       expect(values).toEqual(createContiguousArray(3, 8));
-      expect(load).toHaveBeenCalledTimes(3);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([4, 7, "test"]);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(4, 7, "test", expect.anything());
+
+      load.mockClear();
+
+      values = await cache.readAsync(2, 8, "test");
+      expect(values).toEqual(createContiguousArray(2, 8));
+      expect(load).not.toHaveBeenCalled();
     });
 
     it("should cache intervals separately based on parameters", async () => {
       await cache.readAsync(1, 10, "one");
       expect(load).toHaveBeenCalledTimes(1);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([1, 10, "one"]);
+      expect(load).toHaveBeenCalledWith(1, 10, "one", expect.anything());
+
+      load.mockClear();
 
       // These intervals have already been loaded for key "one",
       await cache.readAsync(2, 4, "one");
       await cache.readAsync(6, 9, "one");
-      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).not.toHaveBeenCalled();
 
       // But key "two" needs to load them for the first time
       await cache.readAsync(2, 4, "two");
-      expect(load).toHaveBeenCalledTimes(2);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([2, 4, "two"]);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(2, 4, "two", expect.anything());
+
+      load.mockClear();
+
       await cache.readAsync(6, 9, "two");
-      expect(load).toHaveBeenCalledTimes(3);
-      expect(load.mock.lastCall?.slice(0, 3)).toEqual([6, 9, "two"]);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(6, 9, "two", expect.anything());
     });
 
     describe("concurrent requests", () => {
@@ -378,7 +478,7 @@ describe("createIntervalCache", () => {
             start: number,
             end: number,
             id: string,
-            options: IntervalCacheLoadOptions
+            options: IntervalCacheLoadOptions<number>
           ) => Promise.resolve(createContiguousArray(start, end))
         );
       });
@@ -388,7 +488,7 @@ describe("createIntervalCache", () => {
         const promiseB = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
-        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.anything());
 
         await expect(promiseA).resolves.toEqual(createContiguousArray(1, 5));
         await expect(promiseB).resolves.toEqual(createContiguousArray(1, 5));
@@ -397,11 +497,11 @@ describe("createIntervalCache", () => {
       it("should request new intervals when pending requests only cover part of the requested interval", async () => {
         const promiseA = cache.readAsync(1, 4, "test");
         expect(load).toHaveBeenCalledTimes(1);
-        expect(load).toHaveBeenCalledWith(1, 4, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 4, "test", expect.anything());
 
         const promiseB = cache.readAsync(2, 5, "test");
         expect(load).toHaveBeenCalledTimes(2);
-        expect(load).toHaveBeenCalledWith(4, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(4, 5, "test", expect.anything());
 
         // Given the above requests, this interval is already pending
         const promiseC = cache.readAsync(3, 5, "test");
@@ -425,7 +525,7 @@ describe("createIntervalCache", () => {
         cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
-        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.anything());
 
         cache.abort("test");
 
@@ -435,7 +535,7 @@ describe("createIntervalCache", () => {
         const promise = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(2);
-        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.anything());
 
         await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
       });
@@ -444,14 +544,14 @@ describe("createIntervalCache", () => {
         cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(1);
-        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.anything());
 
         cache.abort("test");
 
         const promise = cache.readAsync(1, 5, "test");
 
         expect(load).toHaveBeenCalledTimes(2);
-        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(1, 5, "test", expect.anything());
 
         await expect(promise).resolves.toEqual(createContiguousArray(1, 5));
       });
@@ -492,7 +592,7 @@ describe("createIntervalCache", () => {
 
         const result = await cache.readAsync(2, 4, "test");
         expect(load).toHaveBeenCalledTimes(2);
-        expect(load).toHaveBeenCalledWith(2, 4, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(2, 4, "test", expect.anything());
         expect(result).toEqual(createContiguousArray(2, 4));
       });
 
@@ -510,7 +610,7 @@ describe("createIntervalCache", () => {
 
         const result = await cache.readAsync(2, 6, "test");
         expect(load).toHaveBeenCalledTimes(2);
-        expect(load).toHaveBeenCalledWith(2, 6, "test", expect.any(Object));
+        expect(load).toHaveBeenCalledWith(2, 6, "test", expect.anything());
         expect(result).toEqual(createContiguousArray(2, 6));
       });
 
@@ -556,6 +656,123 @@ describe("createIntervalCache", () => {
         values = await cache.readAsync(5, 9, "test");
         await expect(values).toEqual(createContiguousArray(5, 9));
       });
+    });
+
+    describe("partial results", () => {
+      const MAX_RESULTS_LENGTH = 4;
+
+      beforeEach(() => {
+        load.mockImplementation(createConditionalLoad(MAX_RESULTS_LENGTH));
+      });
+
+      it("should be cached", async () => {
+        const partialValuesA = await cache.readAsync(1, 10, "test");
+        expect(cache.isPartialResult(partialValuesA)).toBe(true);
+        expect([...partialValuesA]).toEqual(
+          createContiguousArray(1, 6, MAX_RESULTS_LENGTH)
+        );
+        expect(load).toHaveBeenCalledTimes(1);
+
+        load.mockClear();
+
+        const partialValuesB = await cache.readAsync(1, 10, "test");
+        expect(cache.isPartialResult(partialValuesB)).toBe(true);
+        expect(partialValuesA).toBe(partialValuesB);
+        expect(load).not.toHaveBeenCalled();
+      });
+
+      it("should only be cached for the exact range specified", async () => {
+        const partialValues = await cache.readAsync(1, 6, "test");
+        expect(cache.isPartialResult(partialValues)).toBe(true);
+        expect(load).toHaveBeenCalledTimes(1);
+
+        load.mockClear();
+
+        // Smaller ranges should generate completely new load requests
+        // because there's no way of knowing where the partial results were truncated
+        let values = await cache.readAsync(1, 3, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 3, "test", expect.anything());
+        expect(cache.isPartialResult(values)).toBe(false);
+        expect(values).toEqual(createContiguousArray(1, 3));
+
+        load.mockClear();
+
+        // Overlapping ranges should generate completely new load requests
+        // because there's no way of knowing where the partial results were truncated
+        values = await cache.readAsync(5, 8, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(5, 8, "test", expect.anything());
+        expect(cache.isPartialResult(values)).toBe(false);
+        expect(values).toEqual(createContiguousArray(5, 8));
+      });
+
+      it("should be replaced by smaller intervals when appropriate", async () => {
+        let values = await cache.readAsync(1, 10, "test");
+        expect(values).toEqual(createContiguousArray(1, 4));
+        expect(cache.isPartialResult(values)).toBe(true);
+
+        load.mockClear();
+
+        // Partial sub-ranges should be fetched and cached like normal
+        // but the overall partial range should remained cached
+        values = await cache.readAsync(1, 3, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(1, 3, "test", expect.anything());
+        expect(values).toEqual(createContiguousArray(1, 3));
+        expect(cache.isPartialResult(values)).toBe(false);
+
+        load.mockClear();
+
+        // At this point, the range 1-3 has been fully loaded
+        // and the previous partial range 1-10 has been reset,
+        // so the remaining range (3-10) can be attempted
+        values = await cache.readAsync(1, 10, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(3, 10, "test", expect.anything());
+        expect(values).toEqual(createContiguousArray(1, 6));
+        expect(cache.isPartialResult(values)).toBe(true);
+
+        load.mockClear();
+
+        // At this point, the range 1-6 contains a mix of fully and partially loaded data
+        values = await cache.readAsync(1, 6, "test");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(3, 6, "test", expect.anything());
+        expect(values).toEqual(createContiguousArray(1, 6));
+        expect(cache.isPartialResult(values)).toBe(false);
+
+        load.mockClear();
+
+        // Since it's fully loaded, it should not be requested again
+        values = await cache.readAsync(1, 6, "test");
+        expect(load).not.toHaveBeenCalled();
+        expect(cache.isPartialResult(values)).toBe(false);
+        expect(values).toEqual(createContiguousArray(1, 6));
+      });
+
+      it("should flag intervals containing partial sub-results as partial", async () => {
+        let values = await cache.readAsync(2, 4, "test");
+        expect(values).toEqual(createContiguousArray(2, 4));
+        expect(cache.isPartialResult(values)).toBe(false);
+
+        load.mockClear();
+
+        // If we load a range that's larger than what we have already loaded,
+        // and it contains a partial sub-range, the entire result should be flagged as partial
+        values = await cache.readAsync(1, 10, "test");
+        expect(load).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledWith(1, 2, "test", expect.anything());
+        expect(load).toHaveBeenCalledWith(4, 10, "test", expect.anything());
+        expect(values).toEqual(createContiguousArray(1, 7));
+        expect(cache.isPartialResult(values)).toBe(true);
+      });
+    });
+
+    it("should return a stable value for a given range", async () => {
+      const initialValue = await cache.readAsync(1, 3, "test");
+      expect(initialValue).toBe(cache.getValue(1, 3, "test"));
+      expect(initialValue).toBe(cache.read(1, 3, "test"));
     });
   });
 
@@ -658,8 +875,8 @@ describe("createIntervalCache", () => {
       cache.subscribeToStatus(callbackA, 1, 5, "test-1");
       cache.subscribeToStatus(callbackB, 1, 5, "test-2");
 
-      callbackA.mockReset();
-      callbackB.mockReset();
+      callbackA.mockClear();
+      callbackB.mockClear();
 
       await cache.readAsync(1, 5, "test-2");
 
@@ -671,8 +888,8 @@ describe("createIntervalCache", () => {
       const unsubscribeA = cache.subscribeToStatus(callbackA, 1, 5, "test-1");
       cache.subscribeToStatus(callbackB, 1, 5, "test-2");
 
-      callbackA.mockReset();
-      callbackB.mockReset();
+      callbackA.mockClear();
+      callbackB.mockClear();
 
       unsubscribeA();
 

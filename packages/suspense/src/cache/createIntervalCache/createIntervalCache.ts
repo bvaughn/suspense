@@ -1,7 +1,9 @@
+import { configure as configureArraySortingUtilities } from "array-sorting-utilities";
 import {
   configure as configureIntervalUtilities,
   Interval,
 } from "interval-utilities";
+import DataIntervalTree from "node-interval-tree";
 import { configure as configurePointUtilities } from "point-utilities";
 
 import {
@@ -34,24 +36,39 @@ import { isPromiseLike } from "../../utils/isPromiseLike";
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
 
-type SerializableToString = { toString(): string };
-
 type PendingMetadata<Point, Value> = {
+  containsPartialResults: () => void;
   interval: Interval<Point>;
   record: PendingRecord<Value[]>;
   value: PromiseLike<Value[]> | Value[];
 };
 
 type Metadata<Point, Value> = {
-  failedIntervals: Interval<Point>[];
-  loadedIntervals: Interval<Point>[];
+  intervals: {
+    failed: Interval<Point>[];
+    loaded: Interval<Point>[];
+    partial: Interval<Point>[];
+  };
   pendingMetadata: PendingMetadata<Point, Value>[];
   recordMap: Map<string, Record<Value[]>>;
   sortedValues: Value[];
 };
 
+type SubscriptionData<Point extends number | bigint, Params> = {
+  callbacks: Set<StatusCallback>;
+  end: Point;
+  params: Params;
+  start: Point;
+};
+
+export type PartialArray<Value> = Array<Value> & {
+  __partial: true;
+};
+
+type ValuesArray<Value> = Array<Value> | PartialArray<Value>;
+
 export function createIntervalCache<
-  Point extends SerializableToString,
+  Point extends number | bigint,
   Params extends Array<any>,
   Value
 >(options: {
@@ -62,8 +79,8 @@ export function createIntervalCache<
   load: (
     start: Point,
     end: Point,
-    ...params: [...Params, IntervalCacheLoadOptions]
-  ) => PromiseLike<Value[]> | Value[];
+    ...params: [...Params, IntervalCacheLoadOptions<Value>]
+  ) => PromiseLike<ValuesArray<Value>> | ValuesArray<Value>;
 }): IntervalCache<Point, Params, Value> {
   const {
     comparePoints = defaultComparePoints,
@@ -73,15 +90,22 @@ export function createIntervalCache<
     load,
   } = options;
 
+  const arraySortUtils = configureArraySortingUtilities<Value>(
+    (a: Value, b: Value) =>
+      comparePoints(getPointForValue(a), getPointForValue(b))
+  );
   const intervalUtils = configureIntervalUtilities<Point>(comparePoints);
   const pointUtils = configurePointUtilities<Point>(comparePoints);
 
   const metadataMap = new Map<string, Metadata<Point, Value>>();
 
-  // Subscribers are stored in a two-level Map:
-  // First a key constructed from the params Array (getKey) points to another Map,
-  // Then a key constructed from the interval Array points to a Set of subscribers
-  const subscriberMap = new Map<string, Map<string, Set<StatusCallback>>>();
+  // Subscribers are stored in a two-level data structure:
+  // A key constructed from the params Array (getKey) points to an interval tree.
+  // That interval tree maps an interval to a set of callbacks.
+  const subscriberMap: Map<
+    string,
+    DataIntervalTree<SubscriptionData<Point, Params>, Point>
+  > = new Map();
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
     if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
@@ -113,7 +137,11 @@ export function createIntervalCache<
       if (pendingMetadata.length > 0) {
         debugLogInDev("abort()", params);
 
-        for (let { interval, record } of pendingMetadata) {
+        const cloned = [...pendingMetadata];
+
+        pendingMetadata.splice(0);
+
+        for (let { interval, record } of cloned) {
           try {
             const [start, end] = interval;
 
@@ -128,8 +156,6 @@ export function createIntervalCache<
           }
         }
 
-        pendingMetadata.splice(0);
-
         if (caught !== undefined) {
           throw caught;
         }
@@ -141,17 +167,41 @@ export function createIntervalCache<
     return false;
   }
 
+  class PartialArray<Value> extends Array<Value> {
+    constructor(length: number) {
+      super(length);
+
+      Object.defineProperty(this, "__partial", {
+        value: true,
+        enumerable: false,
+      });
+    }
+  }
+
+  function asPartial<Value>(values: Value[]): PartialArray<Value> {
+    const partialArray = new PartialArray<Value>(values.length);
+    values.forEach((value, index) => {
+      partialArray[index] = value;
+    });
+
+    return partialArray;
+  }
+
+  function createCacheKey(start: Point, end: Point): string {
+    return `${start}–${end}`;
+  }
+
   function evict(...params: Params): boolean {
     debugLogInDev("evict()", params);
 
     const cacheKey = getKey(...params);
     const result = metadataMap.delete(cacheKey);
 
-    const map = subscriberMap.get(cacheKey);
-    if (map) {
-      map.forEach((subscribers) => {
-        subscribers.forEach((callback) => callback(STATUS_NOT_FOUND));
-      });
+    const tree = subscriberMap.get(cacheKey);
+    if (tree) {
+      for (let node of tree.inOrder()) {
+        node.data.callbacks.forEach((callback) => callback(STATUS_NOT_FOUND));
+      }
     }
 
     return result;
@@ -164,10 +214,10 @@ export function createIntervalCache<
 
     metadataMap.clear();
 
-    subscriberMap.forEach((map) => {
-      map.forEach((subscribers) => {
-        subscribers.forEach((callback) => callback(STATUS_NOT_FOUND));
-      });
+    subscriberMap.forEach((tree) => {
+      for (let node of tree.inOrder()) {
+        node.data.callbacks.forEach((callback) => callback(STATUS_NOT_FOUND));
+      }
     });
 
     return hadValues;
@@ -180,8 +230,11 @@ export function createIntervalCache<
     let metadata = metadataMap.get(cacheKey);
     if (metadata == null) {
       metadata = {
-        failedIntervals: [],
-        loadedIntervals: [],
+        intervals: {
+          failed: [],
+          loaded: [],
+          partial: [],
+        },
         pendingMetadata: [],
         recordMap: new Map(),
         sortedValues: [],
@@ -198,7 +251,7 @@ export function createIntervalCache<
     ...params: Params
   ): Record<Value[]> {
     const metadata = getOrCreateIntervalMetadata(...params);
-    const cacheKey = `${start}–${end}`;
+    const cacheKey = createCacheKey(start, end);
 
     let record = metadata.recordMap.get(cacheKey);
     if (record == null) {
@@ -233,25 +286,85 @@ export function createIntervalCache<
 
   function getStatus(start: Point, end: Point, ...params: Params) {
     const metadata = getOrCreateIntervalMetadata(...params);
-    const cacheKey = `${start}–${end}`;
+    const cacheKey = createCacheKey(start, end);
 
     let record = metadata.recordMap.get(cacheKey);
     if (!record) {
-      return STATUS_NOT_FOUND;
+      // If there is no exact match, we may also still be within a larger interval.
+      const { containsFailedResults, missing, pending } = findIntervals<Point>(
+        {
+          failed: metadata.intervals.failed,
+          loaded: metadata.intervals.loaded,
+          partial: metadata.intervals.partial,
+          pending: metadata.pendingMetadata.map(({ interval }) => interval),
+        },
+        [start, end],
+        intervalUtils
+      );
+
+      if (pending.length > 0) {
+        return STATUS_PENDING;
+      } else if (containsFailedResults) {
+        return STATUS_REJECTED;
+      } else if (missing.length > 0) {
+        return STATUS_NOT_FOUND;
+      } else {
+        return STATUS_RESOLVED;
+      }
     }
 
     return record.data.status;
+  }
+
+  function getAlreadyLoadedValues(
+    start: Point,
+    end: Point,
+    metadata: Metadata<Point, Value>
+  ): ValuesArray<Value> | undefined {
+    const { containsFailedResults, containsPartialResults, missing } =
+      findIntervals<Point>(
+        {
+          failed: metadata.intervals.failed,
+          loaded: metadata.intervals.loaded,
+          partial: metadata.intervals.partial,
+          pending: metadata.pendingMetadata.map(({ interval }) => interval),
+        },
+        [start, end],
+        intervalUtils
+      );
+
+    if (missing.length === 0) {
+      if (!containsFailedResults) {
+        const value = sliceValues<Point, Value>(
+          metadata.sortedValues,
+          start,
+          end,
+          getPointForValue,
+          pointUtils
+        );
+        if (containsPartialResults) {
+          return asPartial(value);
+        } else {
+          return value;
+        }
+      }
+    }
   }
 
   function getValue(start: Point, end: Point, ...params: Params): Value[] {
     debugLogInDev(`getValue(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
-    const cacheKey = `${start}–${end}`;
+    const cacheKey = createCacheKey(start, end);
 
     const record = metadata.recordMap.get(cacheKey);
     if (record == null) {
-      throw Error("No record found");
+      const value = getAlreadyLoadedValues(start, end, metadata);
+      if (value) {
+        return value;
+      } else {
+        throw Error("No record found");
+      }
     } else if (isRejectedRecord(record)) {
       throw record.data.error;
     } else if (isResolvedRecord(record)) {
@@ -269,12 +382,18 @@ export function createIntervalCache<
     debugLogInDev(`getValueIfCached(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
-    const cacheKey = `${start}–${end}`;
+    const cacheKey = createCacheKey(start, end);
 
     const record = metadata.recordMap.get(cacheKey);
-    if (record && isResolvedRecord(record)) {
+    if (record == null) {
+      return getAlreadyLoadedValues(start, end, metadata);
+    } else if (isResolvedRecord(record)) {
       return record.data.value;
     }
+  }
+
+  function isPartialResult<Value>(value: Value[]): boolean {
+    return value instanceof PartialArray;
   }
 
   function notifySubscribers(
@@ -283,16 +402,15 @@ export function createIntervalCache<
     ...params: Params
   ): void {
     const cacheKey = getKey(...params);
-    const map = subscriberMap.get(cacheKey);
-    if (map) {
-      const intervalKey = `${start}–${end}`;
-      const set = map.get(intervalKey);
-      if (set) {
-        const status = getStatus(start, end, ...params);
-        set.forEach((callback) => {
+    const tree = subscriberMap.get(cacheKey);
+    if (tree) {
+      const matches = tree.search(start, end);
+      matches.forEach((match: SubscriptionData<Point, Params>) => {
+        const status = getStatus(match.start, match.end, ...match.params);
+        match.callbacks.forEach((callback) => {
           callback(status);
         });
-      }
+      });
     }
   }
 
@@ -317,49 +435,77 @@ export function createIntervalCache<
         return;
       }
 
-      metadata.loadedIntervals = intervalUtils.mergeAll(
-        ...intervalUtils.sort(...metadata.loadedIntervals, [start, end])
-      );
+      // Store partially loaded intervals separately;
+      // Future requests that contain them should also be flagged as partial
+      if (isPartialResult(values)) {
+        pendingMetadata.containsPartialResults();
 
-      const sortedPoints = metadata.sortedValues.map(getPointForValue);
-
-      // Check for duplicate values near the edges because of how intervals are split
-      if (values.length > 0) {
-        const firstValue = values[0];
-        const index = pointUtils.findIndex(
-          sortedPoints,
-          getPointForValue(firstValue)
+        metadata.intervals.partial = intervalUtils.mergeAll(
+          ...intervalUtils.sort(...metadata.intervals.partial, [start, end])
         );
-        if (index >= 0) {
-          values.splice(0, 1);
+      } else {
+        metadata.intervals.loaded = intervalUtils.mergeAll(
+          ...intervalUtils.sort(...metadata.intervals.loaded, [start, end])
+        );
+
+        // Prune partials interval to remove ones that have been newly loaded
+        // note this intentionally includes intersections.
+        // The thinking behind this is as follows:
+        // 1. Loading part of a previously partial range
+        //    might reduce the range enough so that the remainder can be fully loaded
+        // 2. If we don't shrink partial intervals as we refine them,
+        //    it may become impossible to fully remove them in some cases.
+        for (
+          let index = metadata.intervals.partial.length - 1;
+          index >= 0;
+          index--
+        ) {
+          const partialInterval = metadata.intervals.partial[index];
+          if (intervalUtils.intersects([start, end], partialInterval)) {
+            metadata.intervals.partial.splice(index, 1);
+
+            const cacheKey = createCacheKey(
+              partialInterval[0],
+              partialInterval[1]
+            );
+
+            metadata.recordMap.delete(cacheKey);
+          }
         }
       }
-      if (values.length > 0) {
-        const lastValue = values[values.length - 1];
-        const index = pointUtils.findIndex(
-          sortedPoints,
-          getPointForValue(lastValue)
-        );
-        if (index >= 0) {
-          values.pop();
-        }
-      }
 
-      // Merge any remaining unique values
-      if (values.length > 0) {
-        const firstValue = values[0];
-        const index = pointUtils.findNearestIndexAfter(
-          sortedPoints,
-          getPointForValue(firstValue)
+      let todoDebugStrings = [];
+
+      // Merge in newly-loaded values; don't add duplicates though.
+      // Duplicates may slip in at the edges (because of how intervals are split)
+      // or they may be encountered as ranges of partial results are refined.
+      for (let index = 0; index < values.length; index++) {
+        const value = values[index];
+        const insertIndex = arraySortUtils.findInsertIndex(
+          metadata.sortedValues,
+          value
         );
-        metadata.sortedValues.splice(index, 0, ...values);
+        const itemAtIndex = metadata.sortedValues[insertIndex];
+        if (
+          comparePoints(
+            getPointForValue(itemAtIndex),
+            getPointForValue(value)
+          ) !== 0
+        ) {
+          metadata.sortedValues.splice(insertIndex, 0, value);
+          todoDebugStrings.push(
+            `${index}: "${value}" insert at ${insertIndex}`,
+            metadata.sortedValues
+          );
+        } else {
+          todoDebugStrings.push(`${index}: "${value}" duplicate`);
+        }
       }
     } catch (error) {
-      // Ignore the error here;
-      // the caller will handle it.
+      // Ignore the error here; the caller will handle it.
 
-      metadata.failedIntervals = intervalUtils.mergeAll(
-        ...intervalUtils.sort(...metadata.failedIntervals, [start, end])
+      metadata.intervals.failed = intervalUtils.mergeAll(
+        ...intervalUtils.sort(...metadata.intervals.failed, [start, end])
       );
     } finally {
       const index = metadata.pendingMetadata.indexOf(pendingMetadata);
@@ -382,7 +528,9 @@ export function createIntervalCache<
 
     const foundIntervals = findIntervals<Point>(
       {
-        loaded: metadata.loadedIntervals,
+        failed: metadata.intervals.failed,
+        loaded: metadata.intervals.loaded,
+        partial: metadata.intervals.partial,
         pending: metadata.pendingMetadata.map(({ interval }) => interval),
       },
       [start, end],
@@ -403,8 +551,8 @@ export function createIntervalCache<
     // This is admittedly somewhat arbitrary but matches Replay's functionality
     const previouslyFailedInterval = foundIntervals.missing.find(
       (missingInterval) =>
-        metadata.failedIntervals.find((failedInterval) =>
-          intervalUtils.contains(missingInterval, failedInterval)
+        metadata.intervals.failed.find((interval) =>
+          intervalUtils.contains(missingInterval, interval)
         )
     );
     if (previouslyFailedInterval != null) {
@@ -423,13 +571,23 @@ export function createIntervalCache<
       return;
     }
 
+    let containsPartialResults = false;
+
     const missingPromiseLikes: Array<Value[] | PromiseLike<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
-      const thenable = load(start, end, ...params, abortController);
+      const options: IntervalCacheLoadOptions<Value> = {
+        returnAsPartial: asPartial<Value>,
+        signal: abortController.signal,
+      };
+
+      const thenable = load(start, end, ...params, options);
 
       missingPromiseLikes.push(thenable);
 
       const pendingMetadata: PendingMetadata<Point, Value> = {
+        containsPartialResults: () => {
+          containsPartialResults = true;
+        },
         interval: [start, end],
         record: record as PendingRecord<Value[]>,
         value: thenable,
@@ -466,18 +624,27 @@ export function createIntervalCache<
       );
 
       if (!signal.aborted) {
+        let value = sliceValues<Point, Value>(
+          metadata.sortedValues,
+          start,
+          end,
+          getPointForValue,
+          pointUtils
+        );
+
+        if (containsPartialResults) {
+          value = asPartial(value);
+        }
+
         record.data = {
+          metadata: {
+            containsPartialResults,
+          },
           status: STATUS_RESOLVED,
-          value: sliceValues<Point, Value>(
-            metadata.sortedValues,
-            start,
-            end,
-            getPointForValue,
-            pointUtils
-          ),
+          value,
         };
 
-        deferred.resolve(record.data.value);
+        deferred.resolve(value);
 
         notifySubscribers(start, end, ...params);
       }
@@ -546,19 +713,27 @@ export function createIntervalCache<
     ...params: Params
   ) {
     const cacheKey = getKey(...params);
-    let map = subscriberMap.get(cacheKey);
-    if (!map) {
-      map = new Map();
-      subscriberMap.set(cacheKey, map);
+
+    let tree = subscriberMap.get(cacheKey);
+    if (tree == null) {
+      tree = new DataIntervalTree();
+      subscriberMap.set(cacheKey, tree);
     }
 
-    const intervalKey = `${start}–${end}`;
-    let set = map.get(intervalKey);
-    if (set) {
-      set.add(callback);
+    let match = tree
+      .search(start, end)
+      .find((match) => match.start === start && match.end === end);
+    if (match) {
+      match.callbacks.add(callback);
     } else {
-      set = new Set([callback]);
-      map.set(intervalKey, set);
+      match = {
+        callbacks: new Set([callback]),
+        end,
+        params,
+        start,
+      };
+
+      tree.insert(start, end, match);
     }
 
     try {
@@ -567,9 +742,11 @@ export function createIntervalCache<
       callback(status);
     } finally {
       return () => {
-        set!.delete(callback);
-        if (set!.size === 0) {
-          subscriberMap.delete(cacheKey);
+        if (tree && match) {
+          match.callbacks.delete(callback);
+          if (match.callbacks.size === 0) {
+            tree.remove(start, end, match);
+          }
         }
       };
     }
@@ -582,6 +759,7 @@ export function createIntervalCache<
     getStatus,
     getValue,
     getValueIfCached,
+    isPartialResult,
     readAsync,
     read,
     subscribeToStatus,

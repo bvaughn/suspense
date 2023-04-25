@@ -36,7 +36,9 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "array-sorting-utilities": "^0.0.1",
     "interval-utilities": "^0.0.1",
+    "node-interval-tree": "^2.1.2",
     "point-utilities": "^0.0.2"
   },
   "peerDependencies": {

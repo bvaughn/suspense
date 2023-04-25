@@ -143,9 +143,9 @@ describe("useCacheMutation", () => {
         )
       );
 
-      ReadFromImmutableCache.mockReset();
-      ReadFromMutableCache.mockReset();
-      ReadFromMainCache.mockReset();
+      ReadFromImmutableCache.mockClear();
+      ReadFromMutableCache.mockClear();
+      ReadFromMainCache.mockClear();
 
       act(() => {
         mutationApi.key.mutateSync(["key"], "new key");

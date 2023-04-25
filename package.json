@@ -29,6 +29,7 @@
   },
   "version": "0.0.0",
   "workspaces": [
+    "packages/array-sorting-utilities",
     "packages/point-utilities",
     "packages/interval-utilities",
     "packages/suspense",
