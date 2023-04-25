@@ -178,7 +178,7 @@ export function createIntervalCache<
     }
   }
 
-  function asPartial<Value>(values: Value[]): PartialArray<Value> {
+  function arrayToPartialArray<Value>(values: Value[]): PartialArray<Value> {
     const partialArray = new PartialArray<Value>(values.length);
     values.forEach((value, index) => {
       partialArray[index] = value;
@@ -343,7 +343,7 @@ export function createIntervalCache<
           pointUtils
         );
         if (containsPartialResults) {
-          return asPartial(value);
+          return arrayToPartialArray(value);
         } else {
           return value;
         }
@@ -576,7 +576,7 @@ export function createIntervalCache<
     const missingPromiseLikes: Array<Value[] | PromiseLike<Value[]>> = [];
     foundIntervals.missing.forEach(([start, end]) => {
       const options: IntervalCacheLoadOptions<Value> = {
-        returnAsPartial: asPartial<Value>,
+        returnAsPartial: arrayToPartialArray<Value>,
         signal: abortController.signal,
       };
 
@@ -633,7 +633,7 @@ export function createIntervalCache<
         );
 
         if (containsPartialResults) {
-          value = asPartial(value);
+          value = arrayToPartialArray(value);
         }
 
         record.data = {

@@ -103,15 +103,21 @@ const createIntervalCache = {
       "utf8"
     )
   ),
-  cacheWithStringInterval: processExample(
+  cacheWithPartialResults: processExample(
     readFileSync(
-      join(__dirname, "createIntervalCache", "cacheWithStringInterval.ts"),
+      join(__dirname, "createIntervalCache", "cacheWithPartialResults.ts"),
       "utf8"
     )
   ),
   callingAbort: processExample(
     readFileSync(
       join(__dirname, "createIntervalCache", "callingAbort.ts"),
+      "utf8"
+    )
+  ),
+  detectingPartialResults: processExample(
+    readFileSync(
+      join(__dirname, "createIntervalCache", "detectingPartialResults.ts"),
       "utf8"
     )
   ),

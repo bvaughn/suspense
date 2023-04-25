@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.35
+* `createIntervalCache` supports partial results via new options parameter `options.returnAsPartial(resultsArray)`.
+* `createIntervalCache` methods `getValue` and `getStatus` better handle sub-regions of already-loaded intervals.
+* ⚠️ `createIntervalCache` no longer supports string points, only `number` and `BigInt` types are supported.
+
 ## 0.0.34
 * `createExternallyManagedCache` cache updated to support caching errors (via `cacheError` method); `cache` method renamed to `cacheValue` to differentiate.
 

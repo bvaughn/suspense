@@ -38,7 +38,6 @@ export function findIntervals<Point>(
     intervalUtils.separateAll(cachedIntervals.partial, targetIntervals);
 
   // Find overlapping intervals containing failed results
-  // Don't re-request those intervals unless requesting smaller ranges
   const { ab: failedIntervals } = intervalUtils.separateAll(
     cachedIntervals.failed,
     targetIntervals
