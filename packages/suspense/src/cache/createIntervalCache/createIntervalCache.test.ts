@@ -120,8 +120,8 @@ describe("createIntervalCache", () => {
 
       expect(cache.abort("one")).toBe(true);
 
-      expect(abortSignals[0].aborted).toBe(true);
-      expect(abortSignals[1].aborted).toBe(false);
+      expect(abortSignals[0]!.aborted).toBe(true);
+      expect(abortSignals[1]!.aborted).toBe(false);
     });
   });
 

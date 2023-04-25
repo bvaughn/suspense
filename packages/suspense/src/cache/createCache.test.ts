@@ -670,7 +670,7 @@ describe("createCache", () => {
       // the cache creates two instances of the WeakRefMap
       // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
-      weakRefArray[0].collect();
+      weakRefArray[0]!.collect();
 
       expect(gcCache.getStatus("test")).toBe(STATUS_NOT_FOUND);
     });
@@ -682,7 +682,7 @@ describe("createCache", () => {
       // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
       // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
-      weakRefArray[0].collect();
+      weakRefArray[0]!.collect();
 
       expect(() => gcCache.getValue("test")).toThrow("No record found");
     });
@@ -694,7 +694,7 @@ describe("createCache", () => {
       // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
       // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
-      weakRefArray[0].collect();
+      weakRefArray[0]!.collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
     });
@@ -706,7 +706,7 @@ describe("createCache", () => {
       // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
       // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
-      weakRefArray[0].collect();
+      weakRefArray[0]!.collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
 
@@ -722,7 +722,7 @@ describe("createCache", () => {
       // the cache creates two instances of the WeakRefMap, which in turn make it so we have two weak refs
       // collecting the first one is enough to trigger the onEvict callback
       expect(weakRefArray.length).toBe(2);
-      weakRefArray[0].collect();
+      weakRefArray[0]!.collect();
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
 

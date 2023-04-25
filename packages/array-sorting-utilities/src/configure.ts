@@ -6,7 +6,7 @@ export function configure<Value>(
   function find(sortedItems: Value[], targetItem: Value): Value | null {
     const index = findIndex(sortedItems, targetItem, true);
     if (index >= 0) {
-      return sortedItems[index];
+      return sortedItems[index]!;
     } else {
       return null;
     }
@@ -26,7 +26,7 @@ export function configure<Value>(
     while (lowIndex <= highIndex) {
       middleIndex = (lowIndex + highIndex) >>> 1;
 
-      const currentItem = sortedItems[middleIndex];
+      const currentItem = sortedItems[middleIndex]!;
       const value = compareValues(targetItem, currentItem);
       if (value === 0) {
         return middleIndex;
@@ -47,7 +47,7 @@ export function configure<Value>(
           return 0;
       }
 
-      const value = compareValues(targetItem, sortedItems[middleIndex]);
+      const value = compareValues(targetItem, sortedItems[middleIndex]!);
       if (value === 0) {
         return middleIndex;
       } else {
@@ -60,8 +60,8 @@ export function configure<Value>(
           lowIndex = Math.max(0, middleIndex - 1);
         }
 
-        return Math.abs(compareValues(targetItem, sortedItems[lowIndex])) <
-          Math.abs(compareValues(targetItem, sortedItems[highIndex]))
+        return Math.abs(compareValues(targetItem, sortedItems[lowIndex]!)) <
+          Math.abs(compareValues(targetItem, sortedItems[highIndex]!))
           ? lowIndex
           : highIndex;
       }
@@ -73,7 +73,7 @@ export function configure<Value>(
     let highIndex = sortedItems.length;
     while (lowIndex < highIndex) {
       let middleIndex = (lowIndex + highIndex) >>> 1;
-      const currentItem = sortedItems[middleIndex];
+      const currentItem = sortedItems[middleIndex]!;
       if (compareValues(item, currentItem) > 0) {
         lowIndex = middleIndex + 1;
       } else {

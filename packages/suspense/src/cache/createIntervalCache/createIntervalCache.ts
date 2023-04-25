@@ -457,7 +457,7 @@ export function createIntervalCache<
           index >= 0;
           index--
         ) {
-          const partialInterval = metadata.intervals.partial[index];
+          const partialInterval = metadata.intervals.partial[index]!;
           if (intervalUtils.intersects([start, end], partialInterval)) {
             metadata.intervals.partial.splice(index, 1);
 
@@ -471,31 +471,24 @@ export function createIntervalCache<
         }
       }
 
-      let todoDebugStrings = [];
-
       // Merge in newly-loaded values; don't add duplicates though.
       // Duplicates may slip in at the edges (because of how intervals are split)
       // or they may be encountered as ranges of partial results are refined.
       for (let index = 0; index < values.length; index++) {
-        const value = values[index];
+        const value = values[index]!;
         const insertIndex = arraySortUtils.findInsertIndex(
           metadata.sortedValues,
           value
         );
         const itemAtIndex = metadata.sortedValues[insertIndex];
         if (
+          itemAtIndex == null ||
           comparePoints(
             getPointForValue(itemAtIndex),
             getPointForValue(value)
           ) !== 0
         ) {
           metadata.sortedValues.splice(insertIndex, 0, value);
-          todoDebugStrings.push(
-            `${index}: "${value}" insert at ${insertIndex}`,
-            metadata.sortedValues
-          );
-        } else {
-          todoDebugStrings.push(`${index}: "${value}" duplicate`);
         }
       }
     } catch (error) {

@@ -148,7 +148,7 @@ describe("useCacheMutation", () => {
       ReadFromMainCache.mockClear();
 
       act(() => {
-        mutationApi.key.mutateSync(["key"], "new key");
+        mutationApi.key!.mutateSync(["key"], "new key");
       });
 
       // A mutation in any cache will trigger a re-render for all components that read from mutable caches.
@@ -173,7 +173,7 @@ describe("useCacheMutation", () => {
 
       await act(async () => {
         // Don't wait for the mutation API to resolve; we want to test the in-between state too
-        mutationApi.two.mutateAsync(["two"], async () => {
+        mutationApi.two!.mutateAsync(["two"], async () => {
           pendingDeferred = createDeferred<string>();
           return pendingDeferred.promise;
         });
@@ -184,7 +184,7 @@ describe("useCacheMutation", () => {
       );
 
       await act(async () => {
-        pendingDeferred?.resolve("mutated-two");
+        pendingDeferred!.resolve("mutated-two");
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
@@ -203,7 +203,7 @@ describe("useCacheMutation", () => {
       console.error = () => {};
 
       await act(async () => {
-        await mutationApi.two.mutateAsync(["two"], async () => {
+        await mutationApi.two!.mutateAsync(["two"], async () => {
           throw "errored-two";
         });
       });
@@ -212,7 +212,7 @@ describe("useCacheMutation", () => {
         `"{"one":{"status":"resolved","value":"one"},"two":{"status":"rejected","value":"two"}}"`
       );
 
-      expect(container?.textContent).toBe("one" + "errored-two");
+      expect(container!.textContent).toBe("one" + "errored-two");
     });
 
     it("should support aborting an in-progress mutation", async () => {
@@ -225,7 +225,7 @@ describe("useCacheMutation", () => {
       let pendingDeferred = createDeferred<string>();
       await act(async () => {
         // Don't wait for the mutation API to resolve; we want to test the in-between state too
-        mutationApi.two.mutateAsync(["two"], async () => {
+        mutationApi.two!.mutateAsync(["two"], async () => {
           return pendingDeferred.promise;
         });
       });
@@ -251,7 +251,7 @@ describe("useCacheMutation", () => {
         `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
       );
 
-      expect(container?.textContent).toBe("one" + "two");
+      expect(container!.textContent).toBe("one" + "two");
     });
 
     it("should support concurrent mutations", async () => {
@@ -261,7 +261,7 @@ describe("useCacheMutation", () => {
       let pendingDeferredTwo: Deferred<string> | null = null;
 
       await act(async () => {
-        mutationApi.two.mutateAsync(["two"], async () => {
+        mutationApi.two!.mutateAsync(["two"], async () => {
           pendingDeferredTwo = createDeferred<string>();
           return pendingDeferredTwo.promise;
         });
@@ -272,7 +272,7 @@ describe("useCacheMutation", () => {
       );
 
       await act(async () => {
-        mutationApi.one.mutateAsync(["one"], async () => {
+        mutationApi.one!.mutateAsync(["one"], async () => {
           pendingDeferredOne = createDeferred<string>();
           return pendingDeferredOne.promise;
         });
@@ -282,13 +282,13 @@ describe("useCacheMutation", () => {
         `"{"one":{"status":"pending","value":"one"},"two":{"status":"pending","value":"two"}}"`
       );
 
-      await act(async () => pendingDeferredTwo?.resolve("mutated-two"));
+      await act(async () => pendingDeferredTwo!.resolve("mutated-two"));
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
         `"{"one":{"status":"pending","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
       );
 
-      await act(async () => pendingDeferredOne?.resolve("mutated-one"));
+      await act(async () => pendingDeferredOne!.resolve("mutated-one"));
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
         `"{"one":{"status":"resolved","value":"mutated-one"},"two":{"status":"resolved","value":"mutated-two"}}"`
@@ -302,7 +302,7 @@ describe("useCacheMutation", () => {
       let pendingDeferredTwo: Deferred<string> | null = null;
 
       await act(async () => {
-        mutationApi.two.mutateAsync(["two"], async () => {
+        mutationApi.two!.mutateAsync(["two"], async () => {
           pendingDeferredTwo = createDeferred<string>();
           return pendingDeferredTwo.promise;
         });
@@ -313,7 +313,7 @@ describe("useCacheMutation", () => {
       );
 
       await act(async () => {
-        mutationApi.one.mutateAsync(["one"], async () => {
+        mutationApi.one!.mutateAsync(["one"], async () => {
           pendingDeferredOne = createDeferred<string>();
           return pendingDeferredOne.promise;
         });
@@ -326,19 +326,19 @@ describe("useCacheMutation", () => {
       // Suppress uncaught error warning
       console.error = () => {};
 
-      await act(async () => pendingDeferredTwo?.reject("errored-two"));
+      await act(async () => pendingDeferredTwo!.reject("errored-two"));
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
         `"{"one":{"status":"pending","value":"one"},"two":{"status":"rejected","value":"two"}}"`
       );
 
-      await act(async () => pendingDeferredOne?.resolve("mutated-one"));
+      await act(async () => pendingDeferredOne!.resolve("mutated-one"));
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
         `"{"one":{"status":"resolved","value":"mutated-one"},"two":{"status":"rejected","value":"two"}}"`
       );
 
-      expect(container?.textContent).toBe("mutated-one" + "errored-two");
+      expect(container!.textContent).toBe("mutated-one" + "errored-two");
     });
 
     it("should support concurrent mutations on the same cache value", async () => {
@@ -353,19 +353,19 @@ describe("useCacheMutation", () => {
       let pendingDeferredB = createDeferred<string>();
       let pendingDeferredC = createDeferred<string>();
       await act(async () => {
-        mutationApi.one.mutateAsync(
+        mutationApi.one!.mutateAsync(
           ["one"],
           async () => pendingDeferredA.promise
         );
       });
       await act(async () => {
-        mutationApi.one.mutateAsync(
+        mutationApi.one!.mutateAsync(
           ["one"],
           async () => pendingDeferredB.promise
         );
       });
       await act(async () => {
-        mutationApi.one.mutateAsync(
+        mutationApi.one!.mutateAsync(
           ["one"],
           async () => pendingDeferredC.promise
         );
@@ -402,7 +402,7 @@ describe("useCacheMutation", () => {
         `"{"one":{"status":"resolved","value":"one-mutated"},"two":{"status":"resolved","value":"two"}}"`
       );
 
-      expect(container?.textContent).toBe("one-mutated" + "two");
+      expect(container!.textContent).toBe("one-mutated" + "two");
     });
 
     it("should ignore errors after an aborted mutation", async () => {
@@ -414,7 +414,7 @@ describe("useCacheMutation", () => {
 
       let pendingDeferred = createDeferred<string>();
       await act(async () => {
-        mutationApi.two.mutateAsync(["two"], async () => {
+        mutationApi.two!.mutateAsync(["two"], async () => {
           return pendingDeferred.promise;
         });
       });
@@ -440,7 +440,7 @@ describe("useCacheMutation", () => {
         `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
       );
 
-      expect(container?.textContent).toBe("one" + "two");
+      expect(container!.textContent).toBe("one" + "two");
     });
   });
 
@@ -453,7 +453,7 @@ describe("useCacheMutation", () => {
       );
 
       act(() => {
-        mutationApi.two.mutateSync(["two"], "mutated-two");
+        mutationApi.two!.mutateSync(["two"], "mutated-two");
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
@@ -469,8 +469,8 @@ describe("useCacheMutation", () => {
       );
 
       act(() => {
-        mutationApi.one.mutateSync(["one"], "mutated-one");
-        mutationApi.two.mutateSync(["two"], "mutated-two");
+        mutationApi.one!.mutateSync(["one"], "mutated-one");
+        mutationApi.two!.mutateSync(["two"], "mutated-two");
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
@@ -487,7 +487,7 @@ describe("useCacheMutation", () => {
 
       const pendingDeferred = createDeferred<string>();
       await act(async () => {
-        mutationApi.two.mutateAsync(
+        mutationApi.two!.mutateAsync(
           ["two"],
           async () => pendingDeferred.promise
         );
@@ -498,7 +498,7 @@ describe("useCacheMutation", () => {
       );
 
       await act(async () => {
-        mutationApi.two.mutateSync(["two"], "mutated-two");
+        mutationApi.two!.mutateSync(["two"], "mutated-two");
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
