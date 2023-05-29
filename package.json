@@ -1,4 +1,5 @@
 {
+  "name": "suspense-repo",
   "private": true,
   "scripts": {
     "clear": "npm run clear:parcel-cache & npm run clear:builds & npm run clear:node_modules",
@@ -6,23 +7,25 @@
     "clear:parcel-cache": "rm -rf ./.parcel-cache",
     "clear:node_modules": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
     "docs": "cd packages/suspense-website && pnpm build",
-    "prerelease": "rm -rf ./.parcel-cache && pnpm -r run build",
+    "prerelease": "preconstruct build",
     "prettier": "prettier --write \"**/*.{css,html,js,json,jsx,ts,tsx}\"",
     "test": "pnpm -r run test",
     "typescript": "tsc --noEmit",
     "typescript:watch": "tsc --noEmit --watch"
   },
   "devDependencies": {
-    "@parcel/core": "^2.8.3",
-    "@parcel/packager-ts": "^2.8.3",
-    "@parcel/transformer-inline-string": "^2.8.3",
-    "@parcel/transformer-typescript-types": "^2.8.3",
+    "@babel/preset-typescript": "^7.21.5",
+    "@parcel/config-default": "^2.9.1",
+    "@parcel/core": "^2.9.1",
+    "@parcel/transformer-js": "^2.9.1",
+    "@parcel/transformer-react-refresh-wrap": "^2.9.1",
+    "@preconstruct/cli": "^2.7.0",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.14.6",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.10",
     "@types/react-virtualized-auto-sizer": "^1.0.1",
-    "parcel": "^2.8.3",
+    "parcel": "^2.9.1",
     "path-browserify": "^1.0.0",
     "prettier": "latest",
     "process": "^0.11.10",
@@ -35,5 +38,16 @@
     "packages/interval-utilities",
     "packages/suspense",
     "packages/suspense-website"
-  ]
+  ],
+  "preconstruct": {
+    "packages": [
+      "packages/!(suspense-website)"
+    ],
+    "exports": {
+      "importConditionDefaultExport": "default"
+    },
+    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+      "importsConditions": true
+    }
+  }
 }

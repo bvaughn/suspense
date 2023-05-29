@@ -9,9 +9,21 @@
     "url": "git+https://github.com/bvaughn/suspense.git"
   },
   "source": "src/index.ts",
-  "main": "dist/point-utilities.js",
-  "module": "dist/point-utilities.module.js",
-  "types": "dist/point-utilities.d.ts",
+  "main": "dist/point-utilities.cjs.js",
+  "module": "dist/point-utilities.esm.js",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/point-utilities.cjs.mjs",
+        "default": "./dist/point-utilities.cjs.js"
+      },
+      "module": "./dist/point-utilities.esm.js",
+      "import": "./dist/point-utilities.cjs.mjs",
+      "default": "./dist/point-utilities.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/point-utilities.cjs.d.ts",
   "scripts": {
     "build": "parcel build",
     "test": "jest",
