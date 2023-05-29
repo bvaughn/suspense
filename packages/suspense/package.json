@@ -9,9 +9,21 @@
     "url": "git+https://github.com/bvaughn/suspense.git"
   },
   "source": "src/index.ts",
-  "main": "dist/suspense.js",
-  "module": "dist/suspense.module.js",
-  "types": "dist/suspense.d.ts",
+  "main": "dist/suspense.cjs.js",
+  "module": "dist/suspense.esm.js",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/suspense.cjs.mjs",
+        "default": "./dist/suspense.cjs.js"
+      },
+      "module": "./dist/suspense.esm.js",
+      "import": "./dist/suspense.cjs.mjs",
+      "default": "./dist/suspense.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/suspense.cjs.d.ts",
   "scripts": {
     "build": "parcel build",
     "test": "pnpm run test:browser & pnpm run test:node",

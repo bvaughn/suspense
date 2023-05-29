@@ -9,9 +9,21 @@
     "url": "git+https://github.com/bvaughn/suspense.git"
   },
   "source": "src/index.ts",
-  "main": "dist/interval-utilities.js",
-  "module": "dist/interval-utilities.module.js",
-  "types": "dist/interval-utilities.d.ts",
+  "main": "dist/interval-utilities.cjs.js",
+  "module": "dist/interval-utilities.esm.js",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/interval-utilities.cjs.mjs",
+        "default": "./dist/interval-utilities.cjs.js"
+      },
+      "module": "./dist/interval-utilities.esm.js",
+      "import": "./dist/interval-utilities.cjs.mjs",
+      "default": "./dist/interval-utilities.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/interval-utilities.cjs.d.ts",
   "scripts": {
     "build": "parcel build",
     "test": "jest",

@@ -9,9 +9,21 @@
     "url": "git+https://github.com/bvaughn/suspense.git"
   },
   "source": "src/index.ts",
-  "main": "dist/array-sorting-utilities.js",
-  "module": "dist/array-sorting-utilities.module.js",
-  "types": "dist/array-sorting-utilities.d.ts",
+  "main": "dist/array-sorting-utilities.cjs.js",
+  "module": "dist/array-sorting-utilities.esm.js",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/array-sorting-utilities.cjs.mjs",
+        "default": "./dist/array-sorting-utilities.cjs.js"
+      },
+      "module": "./dist/array-sorting-utilities.esm.js",
+      "import": "./dist/array-sorting-utilities.cjs.mjs",
+      "default": "./dist/array-sorting-utilities.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/array-sorting-utilities.cjs.d.ts",
   "scripts": {
     "build": "parcel build",
     "test": "jest",
