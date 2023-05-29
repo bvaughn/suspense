@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.38
+* [32](https://github.com/bvaughn/suspense/pull/32): Build release bundle with Preconstruct
+
 ## 0.0.37
 * `createIntervalCache` edge case bug fix caught by enabling TSC `--noUncheckedIndexedAccess` flag.
 
