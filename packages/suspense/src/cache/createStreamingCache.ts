@@ -13,7 +13,6 @@ import {
 } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { defaultGetKey } from "../utils/defaultGetKey";
-import { warnInDev } from "../utils/warnInDev";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -160,10 +159,13 @@ export function createStreamingCache<
           streamingValues.value = value;
 
           if (progress != null) {
-            warnInDev(
-              progress >= 0 && progress <= 1,
-              `Invalid progress: ${progress}; value must be between 0-1.`
-            );
+            if (isDevelopment) {
+              if (progress < 0 || progress > 1) {
+                console.warn(
+                  `Invalid progress: ${progress}; value must be between 0-1.`
+                );
+              }
+            }
 
             streamingValues.progress = progress;
           }
