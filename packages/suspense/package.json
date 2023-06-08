@@ -17,11 +17,22 @@
         "import": "./dist/suspense.cjs.mjs",
         "default": "./dist/suspense.cjs.js"
       },
+      "development": {
+        "module": "./dist/suspense.development.esm.js",
+        "import": "./dist/suspense.development.cjs.mjs",
+        "default": "./dist/suspense.development.cjs.js"
+      },
       "module": "./dist/suspense.esm.js",
       "import": "./dist/suspense.cjs.mjs",
       "default": "./dist/suspense.cjs.js"
     },
     "./package.json": "./package.json"
+  },
+  "imports": {
+    "#is-development": {
+      "development": "./src/env-conditions/development.ts",
+      "default": "./src/env-conditions/production.ts"
+    }
   },
   "types": "dist/suspense.cjs.d.ts",
   "scripts": {
@@ -45,7 +56,7 @@
     "react": "0.0.0-experimental-49f741046-20230305",
     "react-dom": "0.0.0-experimental-49f741046-20230305",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "array-sorting-utilities": "^0.0.1",

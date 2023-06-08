@@ -1,6 +1,6 @@
+import { isDevelopment } from "#is-development";
 import { unstable_getCacheForType as getCacheForTypeMutable } from "react";
 import { STATUS_NOT_FOUND, STATUS_PENDING } from "../constants";
-import { createDeferred } from "../utils/createDeferred";
 import {
   Cache,
   CacheLoadOptions,
@@ -11,21 +11,22 @@ import {
   StatusCallback,
   UnsubscribeCallback,
 } from "../types";
-import { assertPendingRecord } from "../utils/assertRecordStatus";
-import { isPromiseLike } from "../utils/isPromiseLike";
-import {
-  isPendingRecord,
-  isRejectedRecord,
-  isResolvedRecord,
-} from "../utils/isRecordStatus";
-import { defaultGetKey } from "../utils/defaultGetKey";
-import { defaultGetCache } from "../utils/defaultGetCache";
 import {
   createPendingRecord,
   createResolvedRecord,
   updateRecordToRejected,
   updateRecordToResolved,
 } from "../utils/Record";
+import { assertPendingRecord } from "../utils/assertRecordStatus";
+import { createDeferred } from "../utils/createDeferred";
+import { defaultGetCache } from "../utils/defaultGetCache";
+import { defaultGetKey } from "../utils/defaultGetKey";
+import { isPromiseLike } from "../utils/isPromiseLike";
+import {
+  isPendingRecord,
+  isRejectedRecord,
+  isResolvedRecord,
+} from "../utils/isRecordStatus";
 
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
@@ -61,11 +62,31 @@ const DEBUG_LOG_IN_DEV = false;
 export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
 ): Cache<Params, Value> {
-  const { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
+  let { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
   const { getCache = defaultGetCache, immutable = false } = config;
 
+  if (isDevelopment) {
+    let didLogWarning = false;
+    let decoratedGetKey = getKey;
+
+    getKey = (params: Params) => {
+      const key = decoratedGetKey(params);
+
+      if (!didLogWarning) {
+        if (key.includes("[object Object]")) {
+          didLogWarning = true;
+          console.warn(
+            `Warning: createCache() key "${key}" contains a stringified object and may not be unique`
+          );
+        }
+      }
+
+      return key;
+    };
+  }
+
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
+    if (DEBUG_LOG_IN_DEV && isDevelopment) {
       const cacheKey = params ? `"${getKey(params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 

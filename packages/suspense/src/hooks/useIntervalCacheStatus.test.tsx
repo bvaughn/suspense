@@ -5,20 +5,20 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
+import { createIntervalCache } from "../cache/createIntervalCache/createIntervalCache";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "../constants";
-import { createDeferred } from "../utils/createDeferred";
-import { createIntervalCache } from "../cache/createIntervalCache";
 import {
   Deferred,
   IntervalCache,
   IntervalCacheLoadOptions,
   Status,
 } from "../types";
+import { createDeferred } from "../utils/createDeferred";
 import { useIntervalCacheStatus } from "./useIntervalCacheStatus";
 
 function createContiguousArray(start: number, end: number) {

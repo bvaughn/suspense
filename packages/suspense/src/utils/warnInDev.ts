@@ -1,5 +1,7 @@
+import { isDevelopment } from "#is-development";
+
 export function warnInDev(expectedCondition: boolean, message: string) {
-  if (process.env.NODE_ENV !== "production") {
+  if (isDevelopment) {
     if (!expectedCondition) {
       console.warn(message);
     }

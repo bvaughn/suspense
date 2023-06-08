@@ -1,18 +1,19 @@
+import { isDevelopment } from "#is-development";
 import {
   STATUS_ABORTED,
   STATUS_PENDING,
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "../constants";
-import { createDeferred } from "../utils/createDeferred";
 import {
   StreamingCache,
   StreamingCacheLoadOptions,
   StreamingSubscribeCallback,
   StreamingValue,
 } from "../types";
-import { warnInDev } from "../utils/warnInDev";
+import { createDeferred } from "../utils/createDeferred";
 import { defaultGetKey } from "../utils/defaultGetKey";
+import { warnInDev } from "../utils/warnInDev";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -32,7 +33,7 @@ export function createStreamingCache<
   const { debugLabel, getKey = defaultGetKey, load } = options;
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
+    if (DEBUG_LOG_IN_DEV && isDevelopment) {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 

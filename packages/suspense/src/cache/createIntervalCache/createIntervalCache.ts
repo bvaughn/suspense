@@ -1,3 +1,4 @@
+import { isDevelopment } from "#is-development";
 import { configure as configureArraySortingUtilities } from "array-sorting-utilities";
 import {
   configure as configureIntervalUtilities,
@@ -5,7 +6,6 @@ import {
 } from "interval-utilities";
 import DataIntervalTree from "node-interval-tree";
 import { configure as configurePointUtilities } from "point-utilities";
-
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -13,16 +13,17 @@ import {
   STATUS_RESOLVED,
 } from "../../constants";
 import {
-  IntervalCacheLoadOptions,
   GetPointForValue,
-  PendingRecord,
   IntervalCache,
+  IntervalCacheLoadOptions,
+  PendingRecord,
   Record,
   StatusCallback,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
 import { defaultGetKey } from "../../utils/defaultGetKey";
+import { isPromiseLike } from "../../utils/isPromiseLike";
 import {
   isPendingRecord,
   isRejectedRecord,
@@ -30,7 +31,6 @@ import {
 } from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
-import { isPromiseLike } from "../../utils/isPromiseLike";
 
 // Enable to help with debugging in dev
 const DEBUG_LOG_IN_DEV = false;
@@ -105,7 +105,7 @@ export function createIntervalCache<
   > = new Map();
 
   const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && process.env.NODE_ENV !== "production") {
+    if (DEBUG_LOG_IN_DEV && isDevelopment) {
       const cacheKey = params ? `"${getKey(...params)}"` : "";
       const prefix = debugLabel
         ? `createIntervalCache[${debugLabel}]`
