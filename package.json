@@ -49,5 +49,8 @@
     "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
       "importsConditions": true
     }
+  },
+  "@parcel/resolver-default": {
+    "packageExports": true
   }
 }
