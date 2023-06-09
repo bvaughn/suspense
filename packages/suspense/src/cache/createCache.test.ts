@@ -741,11 +741,16 @@ describe("createCache", () => {
 
       jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      cache.read({}, "abc");
+      cache.read({}, "one");
 
+      expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringMatching("contains a stringified object")
       );
+
+      // Only warn once per cache though
+      cache.read({}, "two");
+      expect(console.warn).toHaveBeenCalledTimes(1);
     });
   });
 });
