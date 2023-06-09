@@ -29,7 +29,7 @@
     "path-browserify": "^1.0.0",
     "prettier": "latest",
     "process": "^0.11.10",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.4"
   },
   "version": "0.0.0",
   "workspaces": [
@@ -49,5 +49,8 @@
     "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
       "importsConditions": true
     }
+  },
+  "@parcel/resolver-default": {
+    "packageExports": true
   }
 }

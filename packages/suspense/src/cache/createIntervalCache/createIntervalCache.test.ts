@@ -1,4 +1,3 @@
-import { compare as compareBigInt } from "extra-bigint";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,

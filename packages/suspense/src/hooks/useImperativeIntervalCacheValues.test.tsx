@@ -5,7 +5,7 @@
 import { Component, PropsWithChildren } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import { createIntervalCache } from "../cache/createIntervalCache";
+import { createIntervalCache } from "../cache/createIntervalCache/createIntervalCache";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
