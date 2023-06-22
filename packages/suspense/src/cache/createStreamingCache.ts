@@ -12,10 +12,8 @@ import {
   StreamingValue,
 } from "../types";
 import { createDeferred } from "../utils/createDeferred";
+import { log } from "../utils/debugging";
 import { defaultGetKey } from "../utils/defaultGetKey";
-
-// Enable to help with debugging in dev
-const DEBUG_LOG_IN_DEV = false;
 
 export function createStreamingCache<
   Params extends Array<any>,
@@ -23,30 +21,34 @@ export function createStreamingCache<
   AdditionalData = undefined
 >(options: {
   debugLabel?: string;
+  enableDebugLogging?: boolean;
   getKey?: (...params: Params) => string;
   load: (
     options: StreamingCacheLoadOptions<Value, AdditionalData>,
     ...params: Params
   ) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
-  const { debugLabel, getKey = defaultGetKey, load } = options;
+  const {
+    debugLabel,
+    enableDebugLogging,
+    getKey = defaultGetKey,
+    load,
+  } = options;
 
-  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && isDevelopment) {
-      const cacheKey = params ? `"${getKey(...params)}"` : "";
-      const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+  const debugLog = (message: string, params?: Params, ...args: any[]) => {
+    const cacheKey = params ? `"${getKey(...params)}"` : "";
+    const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
-    }
+    log(enableDebugLogging, [
+      `%c${prefix}`,
+      "font-weight: bold; color: yellow;",
+      message,
+      cacheKey,
+      ...args,
+    ]);
   };
 
-  debugLogInDev("Creating cache ...");
+  debugLog("Creating cache ...");
 
   const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
@@ -55,7 +57,7 @@ export function createStreamingCache<
   >();
 
   function abort(...params: Params): boolean {
-    debugLogInDev("abort()", params);
+    debugLog("abort()", params);
 
     const cacheKey = getKey(...params);
     let abortController = abortControllerMap.get(cacheKey);
@@ -68,7 +70,7 @@ export function createStreamingCache<
   }
 
   function evict(...params: Params) {
-    debugLogInDev("evict()", params);
+    debugLog("evict()", params);
 
     const cacheKey = getKey(...params);
 
@@ -76,11 +78,7 @@ export function createStreamingCache<
   }
 
   function evictAll(): boolean {
-    debugLogInDev(
-      `evictAll()`,
-      undefined,
-      `${streamingValuesMap.size} records`
-    );
+    debugLog(`evictAll()`, undefined, `${streamingValuesMap.size} records`);
 
     const hadValues = streamingValuesMap.size > 0;
 
@@ -207,7 +205,7 @@ export function createStreamingCache<
   }
 
   function prefetch(...params: Params): void {
-    debugLogInDev(`prefetch()`, params);
+    debugLog(`prefetch()`, params);
 
     getOrCreateStreamingValue(...params);
   }

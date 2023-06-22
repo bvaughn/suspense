@@ -19,6 +19,7 @@ import {
 } from "../utils/Record";
 import { assertPendingRecord } from "../utils/assertRecordStatus";
 import { createDeferred } from "../utils/createDeferred";
+import { log } from "../utils/debugging";
 import { defaultGetCache } from "../utils/defaultGetCache";
 import { defaultGetKey } from "../utils/defaultGetKey";
 import { isPromiseLike } from "../utils/isPromiseLike";
@@ -49,6 +50,7 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
     immutable?: boolean;
   };
   debugLabel?: string;
+  enableDebugLogging?: boolean;
   getKey?: (params: Params) => string;
   load: (
     params: Params,
@@ -56,13 +58,16 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
   ) => PromiseLike<Value> | Value;
 };
 
-// Enable to help with debugging in dev
-const DEBUG_LOG_IN_DEV = false;
-
 export function createCache<Params extends Array<any>, Value>(
   options: CreateCacheOptions<Params, Value>
 ): Cache<Params, Value> {
-  let { config = {}, debugLabel, getKey = defaultGetKey, load } = options;
+  let {
+    config = {},
+    debugLabel,
+    enableDebugLogging,
+    getKey = defaultGetKey,
+    load,
+  } = options;
   const { getCache = defaultGetCache, immutable = false } = config;
 
   if (isDevelopment) {
@@ -85,22 +90,20 @@ export function createCache<Params extends Array<any>, Value>(
     };
   }
 
-  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && isDevelopment) {
-      const cacheKey = params ? `"${getKey(params)}"` : "";
-      const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+  const debugLog = (message: string, params?: Params, ...args: any[]) => {
+    const cacheKey = params ? `"${getKey(params)}"` : "";
+    const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
-    }
+    log(enableDebugLogging, [
+      `%c${prefix}`,
+      "font-weight: bold; color: yellow;",
+      message,
+      cacheKey,
+      ...args,
+    ]);
   };
 
-  debugLogInDev("Creating cache ...");
+  debugLog("Creating cache ...");
 
   // This map enables selective mutations to be scheduled with React
   // (one record can be invalidated without affecting others)
@@ -132,7 +135,7 @@ export function createCache<Params extends Array<any>, Value>(
     // So we check the mutationAbortControllerMap to infer this.
     const abortController = mutationAbortControllerMap.get(cacheKey);
     if (abortController) {
-      debugLogInDev("abort()", params);
+      debugLog("abort()", params);
 
       abortController.abort();
 
@@ -143,7 +146,7 @@ export function createCache<Params extends Array<any>, Value>(
       const record =
         pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
       if (record && isPendingRecord(record)) {
-        debugLogInDev("abort()", params);
+        debugLog("abort()", params);
 
         pendingMutationRecordMap.delete(cacheKey);
 
@@ -173,7 +176,7 @@ export function createCache<Params extends Array<any>, Value>(
     let record: Record<Value> | undefined = getRecord(...params);
     if (record != null) {
       if (isPendingRecord(record)) {
-        debugLogInDev("cache()", params, "Update pending record to:", value);
+        debugLog("cache()", params, "Update pending record to:", value);
 
         const { abortController, deferred } = record.data;
 
@@ -188,7 +191,7 @@ export function createCache<Params extends Array<any>, Value>(
       }
     }
 
-    debugLogInDev("cache()", params, "Create new resolved record with:", value);
+    debugLog("cache()", params, "Create new resolved record with:", value);
 
     record = createResolvedRecord<Value>(value);
 
@@ -198,10 +201,11 @@ export function createCache<Params extends Array<any>, Value>(
 
   function createPendingMutationRecordMap(): CacheMap<string, Record<Value>> {
     return getCache((key) => {
-      // we don't really need to do anything here, this map will almost always be a subset of the recordMap
+      // We don't really need to do anything here
+      // This map will almost always be a subset of the recordMap
       // but we also don't want it to bypass the getCache() eviction logic (if any)
-      // leave a debug log here in case we need to revisit this
-      debugLogInDev(`createRecordMap() -> eviction: ${key}`);
+      // Leave a debug log here in case we need to revisit this
+      debugLog(`getCache() ${key}`);
     });
   }
 
@@ -211,7 +215,7 @@ export function createCache<Params extends Array<any>, Value>(
       createPendingMutationRecordMap
     );
 
-    debugLogInDev(`evict()`, params);
+    debugLog(`evict()`, params);
 
     const didDelete = recordMap.delete(cacheKey);
     pendingMutationRecordMap.delete(cacheKey);
@@ -226,7 +230,7 @@ export function createCache<Params extends Array<any>, Value>(
       createPendingMutationRecordMap
     );
 
-    debugLogInDev(`evictAll()`, undefined);
+    debugLog(`evictAll()`, undefined);
 
     recordMap.clear();
     pendingMutationRecordMap.clear();
@@ -256,7 +260,7 @@ export function createCache<Params extends Array<any>, Value>(
 
     let record = getRecord(...params);
     if (record == null) {
-      debugLogInDev(
+      debugLog(
         "getOrCreateRecord(): record not found. creating record...",
         params
       );
@@ -273,7 +277,7 @@ export function createCache<Params extends Array<any>, Value>(
 
       processPendingRecord(abortController.signal, record, ...params);
     }
-    debugLogInDev(
+    debugLog(
       "getOrCreateRecord(): record found. returning record",
       params,
       record
@@ -326,7 +330,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function onExternalCacheEviction(key: string): void {
-    debugLogInDev(`onExternalCacheEviction(${key})`);
+    debugLog(`onExternalCacheEviction(${key})`);
 
     const set = subscriberMap.get(key);
     if (set) {
@@ -337,7 +341,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function prefetch(...params: Params): void {
-    debugLogInDev(`prefetch()`, params);
+    debugLog(`prefetch()`, params);
 
     const promiseOrValue = readAsync(...params);
     if (isPromiseLike(promiseOrValue)) {
@@ -399,7 +403,7 @@ export function createCache<Params extends Array<any>, Value>(
         : valueOrPromiseLike;
 
       if (!abortSignal.aborted) {
-        debugLogInDev(
+        debugLog(
           "processPendingRecord(): resolved",
           params,
           "resolved value: ",
@@ -411,7 +415,7 @@ export function createCache<Params extends Array<any>, Value>(
       }
     } catch (error) {
       if (!abortSignal.aborted) {
-        debugLogInDev("processPendingRecord(): rejected", params, error);
+        debugLog("processPendingRecord(): rejected", params, error);
         updateRecordToRejected(record, error);
 
         deferred.reject(error);

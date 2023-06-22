@@ -1,4 +1,3 @@
-import { isDevelopment } from "#is-development";
 import { configure as configureArraySortingUtilities } from "array-sorting-utilities";
 import {
   configure as configureIntervalUtilities,
@@ -22,6 +21,7 @@ import {
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
+import { log } from "../../utils/debugging";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPromiseLike } from "../../utils/isPromiseLike";
 import {
@@ -31,9 +31,6 @@ import {
 } from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
-
-// Enable to help with debugging in dev
-const DEBUG_LOG_IN_DEV = false;
 
 type PendingMetadata<Point, Value> = {
   containsPartialResults: () => void;
@@ -72,6 +69,7 @@ export function createIntervalCache<
   Value
 >(options: {
   debugLabel?: string;
+  enableDebugLogging?: boolean;
   getKey?: (...params: Params) => string;
   getPointForValue: GetPointForValue<Point, Value>;
   load: (
@@ -82,6 +80,7 @@ export function createIntervalCache<
 }): IntervalCache<Point, Params, Value> {
   const {
     debugLabel,
+    enableDebugLogging,
     getKey = defaultGetKey,
     getPointForValue,
     load,
@@ -104,24 +103,22 @@ export function createIntervalCache<
     DataIntervalTree<SubscriptionData<Point, Params>, Point>
   > = new Map();
 
-  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && isDevelopment) {
-      const cacheKey = params ? `"${getKey(...params)}"` : "";
-      const prefix = debugLabel
-        ? `createIntervalCache[${debugLabel}]`
-        : "createIntervalCache";
+  const debugLog = (message: string, params?: Params, ...args: any[]) => {
+    const cacheKey = params ? `"${getKey(...params)}"` : "";
+    const prefix = debugLabel
+      ? `createIntervalCache[${debugLabel}]`
+      : "createIntervalCache";
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
-    }
+    log(enableDebugLogging, [
+      `%c${prefix}`,
+      "font-weight: bold; color: yellow;",
+      message,
+      cacheKey,
+      ...args,
+    ]);
   };
 
-  debugLogInDev("Creating cache ...");
+  debugLog("Creating cache ...");
 
   function abort(...params: Params): boolean {
     const metadataMapKey = getKey(...params);
@@ -132,7 +129,7 @@ export function createIntervalCache<
     if (metadata) {
       const { pendingMetadata } = metadata;
       if (pendingMetadata.length > 0) {
-        debugLogInDev("abort()", params);
+        debugLog("abort()", params);
 
         const cloned = [...pendingMetadata];
 
@@ -189,7 +186,7 @@ export function createIntervalCache<
   }
 
   function evict(...params: Params): boolean {
-    debugLogInDev("evict()", params);
+    debugLog("evict()", params);
 
     const cacheKey = getKey(...params);
     const result = metadataMap.delete(cacheKey);
@@ -205,7 +202,7 @@ export function createIntervalCache<
   }
 
   function evictAll(): boolean {
-    debugLogInDev(`evictAll()`, undefined, `${metadataMap.size} records`);
+    debugLog(`evictAll()`, undefined, `${metadataMap.size} records`);
 
     const hadValues = metadataMap.size > 0;
 
@@ -349,7 +346,7 @@ export function createIntervalCache<
   }
 
   function getValue(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`getValue(${start}, ${end})`, params);
+    debugLog(`getValue(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
@@ -376,7 +373,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): Value[] | undefined {
-    debugLogInDev(`getValueIfCached(${start}, ${end})`, params);
+    debugLog(`getValueIfCached(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
@@ -527,7 +524,7 @@ export function createIntervalCache<
       intervalUtils
     );
 
-    debugLogInDev(
+    debugLog(
       `processPendingRecord(${start}, ${end})`,
       params,
       "\n-> metadata:",
@@ -607,7 +604,7 @@ export function createIntervalCache<
         ...pendingPromiseLikes,
       ]);
 
-      debugLogInDev(
+      debugLog(
         `processPendingRecord(${start}, ${end}): resolved`,
         params,
         values
@@ -646,7 +643,7 @@ export function createIntervalCache<
         errorMessage = error.message;
       }
 
-      debugLogInDev(
+      debugLog(
         `processPendingRecord(${start}, ${end}): failed`,
         params,
         errorMessage
@@ -666,7 +663,7 @@ export function createIntervalCache<
   }
 
   function read(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`read(${start}, ${end})`, params);
+    debugLog(`read(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     if (record.data.status === STATUS_RESOLVED) {
@@ -683,7 +680,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): PromiseLike<Value[]> | Value[] {
-    debugLogInDev(`readAsync(${start}, ${end})`, params);
+    debugLog(`readAsync(${start}, ${end})`, params);
 
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.data.status) {
