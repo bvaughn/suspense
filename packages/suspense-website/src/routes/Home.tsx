@@ -13,6 +13,7 @@ import {
   CREATE_SINGLE_ENTRY_CACHE,
   CREATE_STREAMING_CACHE,
   GUIDE_ABORT_A_REQUEST,
+  GUIDE_DEBUG_LOGGING,
   GUIDE_FETCH_WITH_STATUS,
   GUIDE_MEMORY_MANAGEMENT,
   GUIDE_MUTATING_A_CACHE_VALUE,
@@ -174,6 +175,11 @@ export default function Route() {
           <LinkListItem
             children="Optimizing immutable caches"
             to={GUIDE_OPTIMIZING_IMMUTABLE_CACHES}
+            type="plaintext"
+          />
+          <LinkListItem
+            children="Debugging slow requests"
+            to={GUIDE_DEBUG_LOGGING}
             type="plaintext"
           />
         </ul>

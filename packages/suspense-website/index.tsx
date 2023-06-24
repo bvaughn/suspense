@@ -22,6 +22,7 @@ import {
   USE_IMPERATIVE_INTERVAL_CACHE_VALUES,
   USE_STREAMING_CACHE,
   GUIDE_OPTIMIZING_IMMUTABLE_CACHES,
+  GUIDE_DEBUG_LOGGING,
 } from "./src/routes/config";
 
 import CreateCacheRoute from "./src/routes/api/createCache";
@@ -41,6 +42,7 @@ import UseImperativeIntervalCacheValuesRoute from "./src/routes/api/useImperativ
 import UseIntervalCacheStatusRoute from "./src/routes/api/useIntervalCacheStatus";
 import UseStreamingValueRoute from "./src/routes/api/useStreamingValue";
 import AbortingRequestRoute from "./src/routes/examples/aborting-a-request";
+import DebugLoggingRoute from "./src/routes/examples/debug-logging";
 import MemoryManagementRoute from "./src/routes/examples/memory-management";
 import MutatingCacheValueRoute from "./src/routes/examples/mutating-cache-values";
 import RenderingStatusWhileFetchingRoute from "./src/routes/examples/rendering-status-while-fetching";
@@ -80,6 +82,7 @@ root.render(
           path={GUIDE_ABORT_A_REQUEST}
           element={<AbortingRequestRoute />}
         />
+        <Route path={GUIDE_DEBUG_LOGGING} element={<DebugLoggingRoute />} />
         <Route
           path={GUIDE_FETCH_WITH_STATUS}
           element={<RenderingStatusWhileFetchingRoute />}

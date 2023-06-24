@@ -17,6 +17,7 @@ export const USE_STREAMING_CACHE = "/useStreamingValue";
 
 // Guides
 export const GUIDE_ABORT_A_REQUEST = "/guide/abort-a-request";
+export const GUIDE_DEBUG_LOGGING = "/guide/debugging-slow-requests";
 export const GUIDE_FETCH_WITH_STATUS = "/guide/rendering-cache-status";
 export const GUIDE_MEMORY_MANAGEMENT = "/guide/memory-management";
 export const GUIDE_MUTATING_A_CACHE_VALUE = "/guide/mutating-cache-values";

@@ -171,6 +171,15 @@ const createStreamingCache = {
   ),
 };
 
+const debugLogging = {
+  global: processExample(
+    readFileSync(join(__dirname, "debugLogging", "global.ts"), "utf8")
+  ),
+  perCache: processExample(
+    readFileSync(join(__dirname, "debugLogging", "per-cache.ts"), "utf8")
+  ),
+};
+
 const demos = {
   abortRequest: {
     abort: processExample(
@@ -314,6 +323,7 @@ export {
   createIntervalCache,
   createSingleEntryCache,
   createStreamingCache,
+  debugLogging,
   demos,
   isPromiseLike,
   recordUtils,
