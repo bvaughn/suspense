@@ -70,7 +70,7 @@ export function createIntervalCache<
   Value
 >(options: {
   debugLabel?: string;
-  enableDebugLogging?: boolean;
+  debugLogging?: boolean;
   getKey?: (...params: Params) => string;
   getPointForValue: GetPointForValue<Point, Value>;
   load: (
@@ -81,7 +81,7 @@ export function createIntervalCache<
 }): IntervalCache<Point, Params, Value> {
   let {
     debugLabel,
-    enableDebugLogging,
+    debugLogging,
     getKey = defaultGetKey,
     getPointForValue,
     load,
@@ -130,7 +130,7 @@ export function createIntervalCache<
       ? `createIntervalCache[${debugLabel}]`
       : "createIntervalCache";
 
-    log(enableDebugLogging, [
+    log(debugLogging, [
       `%c${prefix}`,
       "font-weight: bold; color: yellow;",
       message,
@@ -204,6 +204,14 @@ export function createIntervalCache<
 
   function createCacheKey(start: Point, end: Point): string {
     return `${start}–${end}`;
+  }
+
+  function disableDebugLogging() {
+    debugLogging = false;
+  }
+
+  function enableDebugLogging() {
+    debugLogging = true;
   }
 
   function evict(...params: Params): boolean {
@@ -762,6 +770,8 @@ export function createIntervalCache<
 
   return {
     abort,
+    disableDebugLogging,
+    enableDebugLogging,
     evict,
     evictAll,
     getStatus,

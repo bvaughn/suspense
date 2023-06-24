@@ -21,19 +21,14 @@ export function createStreamingCache<
   AdditionalData = undefined
 >(options: {
   debugLabel?: string;
-  enableDebugLogging?: boolean;
+  debugLogging?: boolean;
   getKey?: (...params: Params) => string;
   load: (
     options: StreamingCacheLoadOptions<Value, AdditionalData>,
     ...params: Params
   ) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
-  let {
-    debugLabel,
-    enableDebugLogging,
-    getKey = defaultGetKey,
-    load,
-  } = options;
+  let { debugLabel, debugLogging, getKey = defaultGetKey, load } = options;
 
   if (isDevelopment) {
     let didLogWarning = false;
@@ -59,7 +54,7 @@ export function createStreamingCache<
     const cacheKey = params ? `"${getKey(...params)}"` : "";
     const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
-    log(enableDebugLogging, [
+    log(debugLogging, [
       `%c${prefix}`,
       "font-weight: bold; color: yellow;",
       message,
@@ -89,6 +84,14 @@ export function createStreamingCache<
     return false;
   }
 
+  function disableDebugLogging() {
+    debugLogging = false;
+  }
+
+  function enableDebugLogging() {
+    debugLogging = true;
+  }
+
   function evict(...params: Params) {
     debugLog("evict()", params);
 
@@ -115,7 +118,7 @@ export function createStreamingCache<
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
       debugLog(
-        "getOrCreateStreamingValue(): cache miss. creating streaming value...",
+        "getOrCreateStreamingValue(): Cache miss. Creating streaming value...",
         params
       );
 
@@ -236,6 +239,8 @@ export function createStreamingCache<
   }
 
   function stream(...params: Params) {
+    debugLog(`stream()`, params);
+
     return getOrCreateStreamingValue(...params);
   }
 
@@ -258,6 +263,8 @@ export function createStreamingCache<
 
   return {
     abort,
+    disableDebugLogging,
+    enableDebugLogging,
     evict,
     evictAll,
     prefetch,

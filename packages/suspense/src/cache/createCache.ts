@@ -29,8 +29,6 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 
-console.log("[createCache] isDevelopment:", isDevelopment);
-console.log("[createCache] NODE_ENV:", process.env.NODE_ENV);
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
   Value
@@ -52,7 +50,7 @@ export type CreateCacheOptions<Params extends Array<any>, Value> = {
     immutable?: boolean;
   };
   debugLabel?: string;
-  enableDebugLogging?: boolean;
+  debugLogging?: boolean;
   getKey?: (params: Params) => string;
   load: (
     params: Params,
@@ -66,7 +64,7 @@ export function createCache<Params extends Array<any>, Value>(
   let {
     config = {},
     debugLabel,
-    enableDebugLogging,
+    debugLogging,
     getKey = defaultGetKey,
     load,
   } = options;
@@ -96,7 +94,7 @@ export function createCache<Params extends Array<any>, Value>(
     const cacheKey = params ? `"${getKey(params)}"` : "";
     const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
 
-    log(enableDebugLogging, [
+    log(debugLogging, [
       `%c${prefix}`,
       "font-weight: bold; color: yellow;",
       message,
@@ -211,6 +209,14 @@ export function createCache<Params extends Array<any>, Value>(
     });
   }
 
+  function disableDebugLogging() {
+    debugLogging = false;
+  }
+
+  function enableDebugLogging() {
+    debugLogging = true;
+  }
+
   function evict(...params: Params): boolean {
     const cacheKey = getKey(params);
     const pendingMutationRecordMap = getCacheForType(
@@ -262,10 +268,7 @@ export function createCache<Params extends Array<any>, Value>(
 
     let record = getRecord(...params);
     if (record == null) {
-      debugLog(
-        "getOrCreateRecord(): record not found. creating record...",
-        params
-      );
+      debugLog("getOrCreateRecord(): Cache miss. Creating record...", params);
       const abortController = new AbortController();
       const deferred = createDeferred<Value>(
         debugLabel ? `${debugLabel} ${cacheKey}` : cacheKey
@@ -279,8 +282,9 @@ export function createCache<Params extends Array<any>, Value>(
 
       processPendingRecord(abortController.signal, record, ...params);
     }
+
     debugLog(
-      "getOrCreateRecord(): record found. returning record",
+      "getOrCreateRecord(): Cache hit. Returning record",
       params,
       record
     );
@@ -357,6 +361,8 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function readAsync(...params: Params): PromiseLike<Value> | Value {
+    debugLog(`readAsync()`, params);
+
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
       return record.data.deferred.promise;
@@ -368,6 +374,8 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function read(...params: Params): Value {
+    debugLog(`read()`, params);
+
     const record = getOrCreateRecord(...params);
     if (isPendingRecord(record)) {
       throw record.data.deferred.promise;
@@ -469,6 +477,8 @@ export function createCache<Params extends Array<any>, Value>(
     // Public API
     abort,
     cache,
+    disableDebugLogging,
+    enableDebugLogging,
     evict,
     evictAll,
     getStatus,

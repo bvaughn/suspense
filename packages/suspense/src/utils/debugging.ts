@@ -10,7 +10,7 @@ export function enableDebugLogging(): void {
   enabled = true;
 }
 
-export function log(enableDebugLogging = enabled, args: string[]) {
+export function log(enableDebugLogging = enabled, args: any[]) {
   if (isDevelopment) {
     if (enableDebugLogging) {
       console.log(...args);

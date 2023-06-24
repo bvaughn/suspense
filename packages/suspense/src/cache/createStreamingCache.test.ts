@@ -4,12 +4,16 @@ import {
   STATUS_REJECTED,
   STATUS_RESOLVED,
 } from "../constants";
-import { createStreamingCache } from "./createStreamingCache";
 import { StreamingCache, StreamingCacheLoadOptions } from "../types";
+import { createStreamingCache } from "./createStreamingCache";
 
 describe("createStreamingCache", () => {
   type Metadata = { length: number };
   type Value = string;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   describe("single value (string)", () => {
     let cache: StreamingCache<[string], Value, Metadata>;
@@ -332,30 +336,11 @@ describe("createStreamingCache", () => {
         expect(streaming.status).toBe(STATUS_REJECTED);
       });
 
-      it("warns about invalid progress values", () => {
-        jest.spyOn(console, "warn").mockImplementation(() => {});
-
-        cache.stream("string");
-
-        const options = optionsMap.get("string")!;
-        options.update([], -1);
-        expect(console.warn).toHaveBeenCalledTimes(1);
-        expect(console.warn).toHaveBeenCalledWith(
-          "Invalid progress: -1; value must be between 0-1."
-        );
-
-        options.update([], 2);
-        expect(console.warn).toHaveBeenCalledTimes(2);
-        expect(console.warn).toHaveBeenCalledWith(
-          "Invalid progress: 2; value must be between 0-1."
-        );
-      });
-
       it("caches values so they are only streamed once", () => {
         cache.stream("string");
 
         const options = optionsMap.get("string")!;
-        options.update([1, 2], -1);
+        options.update([1, 2], 1);
         options.resolve();
 
         expect(fetch).toHaveBeenCalledTimes(1);
@@ -440,17 +425,43 @@ describe("createStreamingCache", () => {
     });
   });
 
-  describe("development warnings", () => {
-    it("should warn if a key contains a stringified object", async () => {
-      const cache = createStreamingCache<[Object, string], boolean, any>({
-        debugLabel: "cache",
-        getKey: (object, id) => `${object}-${id}`,
-        load: () => true,
-      });
+  describe("development mode", () => {
+    type Value = number[];
 
+    let cache: StreamingCache<[string], Value>;
+    let fetch: jest.Mock<
+      void,
+      [options: StreamingCacheLoadOptions<Value>, key: string]
+    >;
+    let getKey: jest.Mock<string, [string]>;
+    let optionsMap: Map<string, StreamingCacheLoadOptions<Value, any>>;
+
+    beforeEach(() => {
+      optionsMap = new Map();
+
+      getKey = jest.fn();
+      getKey.mockImplementation((string) => string);
+
+      fetch = jest.fn();
+      fetch.mockImplementation(
+        (options: StreamingCacheLoadOptions<Value>, key: string) => {
+          optionsMap.set(key, options);
+        }
+      );
+
+      cache = createStreamingCache<[string], Value, any>({
+        debugLabel: "cache",
+        getKey,
+        load: fetch,
+      });
+    });
+
+    it("should warn if a key contains a stringified object", async () => {
       jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      cache.stream({}, "one");
+      getKey.mockImplementation((string) => `${{ string }}`);
+
+      cache.stream("one");
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
@@ -458,8 +469,75 @@ describe("createStreamingCache", () => {
       );
 
       // Only warn once per cache though
-      cache.stream({}, "two");
+      cache.stream("two");
       expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("warns about invalid progress values", () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      cache.stream("string");
+
+      const options = optionsMap.get("string")!;
+      options.update([], -1);
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        "Invalid progress: -1; value must be between 0-1."
+      );
+
+      options.update([], 2);
+      expect(console.warn).toHaveBeenCalledTimes(2);
+      expect(console.warn).toHaveBeenCalledWith(
+        "Invalid progress: 2; value must be between 0-1."
+      );
+    });
+
+    it("logs debug messages to console", () => {
+      const consoleMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      cache = createStreamingCache<[string], Value, any>({
+        debugLabel: "test-cache",
+        debugLogging: true,
+        getKey,
+        load: fetch,
+      });
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("Creating cache"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.stream("one");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("stream"),
+          expect.stringContaining("one"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.disableDebugLogging();
+      cache.stream("two");
+      expect(consoleMock).not.toHaveBeenCalled();
+
+      consoleMock.mockClear();
+      cache.enableDebugLogging();
+      cache.stream("three");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("stream"),
+          expect.stringContaining("three"),
+        ])
+      );
     });
   });
 });

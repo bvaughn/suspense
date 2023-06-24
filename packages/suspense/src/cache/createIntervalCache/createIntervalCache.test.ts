@@ -42,6 +42,7 @@ function getPointForValue(value: number) {
 
 describe("createIntervalCache", () => {
   let cache: IntervalCache<number, [id: string], number>;
+  let getCacheKey: jest.Mock<string, [string]>;
   let load: jest.Mock<
     PromiseLike<Array<number> | PartialArray<number>>,
     [
@@ -53,12 +54,16 @@ describe("createIntervalCache", () => {
   >;
 
   beforeEach(() => {
+    getCacheKey = jest.fn();
+    getCacheKey.mockImplementation((key) => key);
+
     load = jest.fn();
     load.mockImplementation(async (start: number, end: number, id: string) =>
       createContiguousArray(start, end)
     );
 
     cache = createIntervalCache<number, [id: string], number>({
+      getKey: getCacheKey,
       getPointForValue,
       load,
     });
@@ -990,21 +995,13 @@ describe("createIntervalCache", () => {
     });
   });
 
-  describe("development warnings", () => {
+  describe("development mode", () => {
     it("should warn if a key contains a stringified object", async () => {
-      const cache = createIntervalCache<
-        number,
-        [object: Object, string: string],
-        boolean
-      >({
-        getKey: (object, string) => `${object}:${string}`,
-        getPointForValue: () => 1,
-        load: () => [true],
-      });
-
       jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      cache.readAsync(0, 10, {}, "one");
+      getCacheKey.mockImplementation((string) => `${{ string }}`);
+
+      cache.readAsync(0, 10, "one");
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
@@ -1012,8 +1009,57 @@ describe("createIntervalCache", () => {
       );
 
       // Only warn once per cache though
-      cache.readAsync(0, 10, {}, "two");
+      cache.readAsync(0, 10, "two");
       expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("logs debug messages to console", () => {
+      const consoleMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      cache = createIntervalCache<number, [id: string], number>({
+        debugLabel: "test-cache",
+        debugLogging: true,
+        getPointForValue,
+        load,
+      });
+      console.log(consoleMock.mock.calls);
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("Creating cache"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.readAsync(0, 10, "one");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("readAsync"),
+          expect.stringContaining("one"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.disableDebugLogging();
+      cache.readAsync(0, 10, "two");
+      expect(consoleMock).not.toHaveBeenCalled();
+
+      consoleMock.mockClear();
+      cache.enableDebugLogging();
+      cache.readAsync(0, 10, "three");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("readAsync"),
+          expect.stringContaining("three"),
+        ])
+      );
     });
   });
 });

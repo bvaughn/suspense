@@ -26,8 +26,8 @@ function defaultLoad(
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
-  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
   let getCacheKey: jest.Mock<string, [[string]]>;
+  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
 
   beforeEach(() => {
     load = jest.fn();
@@ -41,6 +41,10 @@ describe("createCache", () => {
       getKey: getCacheKey,
       load,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   async function fakeSuspend(read: () => any) {
@@ -732,16 +736,13 @@ describe("createCache", () => {
     });
   });
 
-  describe("development warnings", () => {
+  describe("development mode", () => {
     it("should warn if a key contains a stringified object", async () => {
-      const cache = createCache<[Object, string], boolean>({
-        getKey: ([object, id]) => `${object}-${id}`,
-        load: ([object, id]) => true,
-      });
-
       jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      cache.readAsync({}, "one");
+      getCacheKey.mockImplementation((string) => `${{ string }}`);
+
+      cache.readAsync("one");
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
@@ -749,8 +750,57 @@ describe("createCache", () => {
       );
 
       // Only warn once per cache though
-      cache.readAsync({}, "two");
+      cache.readAsync("two");
       expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("logs debug messages to console", () => {
+      const consoleMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      cache = createCache<[string], string>({
+        debugLabel: "test-cache",
+        debugLogging: true,
+        getKey: getCacheKey,
+        load,
+      });
+      console.log(consoleMock.mock.calls);
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("Creating cache"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.readAsync("one");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("readAsync"),
+          expect.stringContaining("one"),
+        ])
+      );
+
+      consoleMock.mockClear();
+      cache.disableDebugLogging();
+      cache.readAsync("two");
+      expect(consoleMock).not.toHaveBeenCalled();
+
+      consoleMock.mockClear();
+      cache.enableDebugLogging();
+      cache.readAsync("three");
+      expect(consoleMock).toHaveBeenCalled();
+      expect(consoleMock.mock.calls[0]).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("test-cache"),
+          expect.stringContaining("readAsync"),
+          expect.stringContaining("three"),
+        ])
+      );
     });
   });
 });

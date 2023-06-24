@@ -21,7 +21,7 @@ export type Metadata = {
 };
 
 const streamingCache = createStreamingCache<[Post[]], Post[], Metadata>({
-  enableDebugLogging: true,
+  getKey: (posts) => `${posts.map((post) => post.id).join(":")}`,
   load: async (
     options: StreamingCacheLoadOptions<Post[], Metadata>,
     posts: Post[]
