@@ -1,3 +1,4 @@
+import { isDevelopment } from "#is-development";
 import { configure as configureArraySortingUtilities } from "array-sorting-utilities";
 import {
   configure as configureIntervalUtilities,
@@ -78,13 +79,33 @@ export function createIntervalCache<
     ...params: [...Params, IntervalCacheLoadOptions<Value>]
   ) => PromiseLike<ValuesArray<Value>> | ValuesArray<Value>;
 }): IntervalCache<Point, Params, Value> {
-  const {
+  let {
     debugLabel,
     enableDebugLogging,
     getKey = defaultGetKey,
     getPointForValue,
     load,
   } = options;
+
+  if (isDevelopment) {
+    let didLogWarning = false;
+    let decoratedGetKey = getKey;
+
+    getKey = (...params: Params) => {
+      const key = decoratedGetKey(...params);
+
+      if (!didLogWarning) {
+        if (key.includes("[object Object]")) {
+          didLogWarning = true;
+          console.warn(
+            `Warning: createCache() key "${key}" contains a stringified object and may not be unique`
+          );
+        }
+      }
+
+      return key;
+    };
+  }
 
   const arraySortUtils = configureArraySortingUtilities<Value>(
     (a: Value, b: Value) =>

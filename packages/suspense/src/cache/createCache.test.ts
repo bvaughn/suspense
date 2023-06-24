@@ -741,7 +741,7 @@ describe("createCache", () => {
 
       jest.spyOn(console, "warn").mockImplementation(() => {});
 
-      cache.read({}, "one");
+      cache.readAsync({}, "one");
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
@@ -749,7 +749,7 @@ describe("createCache", () => {
       );
 
       // Only warn once per cache though
-      cache.read({}, "two");
+      cache.readAsync({}, "two");
       expect(console.warn).toHaveBeenCalledTimes(1);
     });
   });

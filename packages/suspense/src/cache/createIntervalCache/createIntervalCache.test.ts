@@ -989,4 +989,31 @@ describe("createIntervalCache", () => {
       expect(cache.getStatus(2, 4, "test")).toBe(STATUS_RESOLVED);
     });
   });
+
+  describe("development warnings", () => {
+    it("should warn if a key contains a stringified object", async () => {
+      const cache = createIntervalCache<
+        number,
+        [object: Object, string: string],
+        boolean
+      >({
+        getKey: (object, string) => `${object}:${string}`,
+        getPointForValue: () => 1,
+        load: () => [true],
+      });
+
+      jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      cache.readAsync(0, 10, {}, "one");
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringMatching("contains a stringified object")
+      );
+
+      // Only warn once per cache though
+      cache.readAsync(0, 10, {}, "two");
+      expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+  });
 });

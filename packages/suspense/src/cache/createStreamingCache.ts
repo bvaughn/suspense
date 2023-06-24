@@ -28,12 +28,32 @@ export function createStreamingCache<
     ...params: Params
   ) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
-  const {
+  let {
     debugLabel,
     enableDebugLogging,
     getKey = defaultGetKey,
     load,
   } = options;
+
+  if (isDevelopment) {
+    let didLogWarning = false;
+    let decoratedGetKey = getKey;
+
+    getKey = (...params: Params) => {
+      const key = decoratedGetKey(...params);
+
+      if (!didLogWarning) {
+        if (key.includes("[object Object]")) {
+          didLogWarning = true;
+          console.warn(
+            `Warning: createCache() key "${key}" contains a stringified object and may not be unique`
+          );
+        }
+      }
+
+      return key;
+    };
+  }
 
   const debugLog = (message: string, params?: Params, ...args: any[]) => {
     const cacheKey = params ? `"${getKey(...params)}"` : "";
@@ -94,6 +114,11 @@ export function createStreamingCache<
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
+      debugLog(
+        "getOrCreateStreamingValue(): cache miss. creating streaming value...",
+        params
+      );
+
       const deferred = createDeferred<StreamingValue<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
       );
