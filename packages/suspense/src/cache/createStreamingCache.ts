@@ -63,7 +63,7 @@ export function createStreamingCache<
     ]);
   };
 
-  debugLog("Creating cache ...");
+  debugLog("Cache created");
 
   const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
@@ -101,7 +101,7 @@ export function createStreamingCache<
   }
 
   function evictAll(): boolean {
-    debugLog(`evictAll()`, undefined, `${streamingValuesMap.size} records`);
+    debugLog("evictAll()");
 
     const hadValues = streamingValuesMap.size > 0;
 
@@ -117,10 +117,7 @@ export function createStreamingCache<
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
-      debugLog(
-        "getOrCreateStreamingValue(): Cache miss. Creating streaming value...",
-        params
-      );
+      debugLog("stream() Cache miss", params);
 
       const deferred = createDeferred<StreamingValue<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
@@ -165,6 +162,8 @@ export function createStreamingCache<
           return false;
         }
 
+        debugLog(`stream() Pending request aborted`, params);
+
         streamingValues.status = STATUS_ABORTED;
 
         streamingValuesMap.delete(cacheKey);
@@ -199,6 +198,8 @@ export function createStreamingCache<
           notifySubscribers();
         },
         resolve: () => {
+          debugLog(`stream() Pending request resolved`, params);
+
           assertPending();
 
           streamingValues.complete = true;
@@ -210,6 +211,8 @@ export function createStreamingCache<
           deferred.resolve(streamingValues);
         },
         reject: (error: Error) => {
+          debugLog(`stream() Pending request rejected`, params);
+
           assertPending();
 
           streamingValues.complete = true;
@@ -229,18 +232,19 @@ export function createStreamingCache<
       return streamingValues;
     }
 
+    debugLog("stream() Cache hit", params);
+
     return cached;
   }
 
   function prefetch(...params: Params): void {
-    debugLog(`prefetch()`, params);
+    debugLog("prefetch()", params);
 
     getOrCreateStreamingValue(...params);
   }
 
   function stream(...params: Params) {
-    debugLog(`stream()`, params);
-
+    // getOrCreateStreamingValue() will call debugLog (cache hit or miss)
     return getOrCreateStreamingValue(...params);
   }
 

@@ -507,7 +507,7 @@ describe("createStreamingCache", () => {
       expect(consoleMock.mock.calls[0]).toEqual(
         expect.arrayContaining([
           expect.stringContaining("test-cache"),
-          expect.stringContaining("Creating cache"),
+          expect.stringContaining("Cache created"),
         ])
       );
 

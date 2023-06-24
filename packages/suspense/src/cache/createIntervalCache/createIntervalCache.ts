@@ -139,9 +139,11 @@ export function createIntervalCache<
     ]);
   };
 
-  debugLog("Creating cache ...");
+  debugLog("Cache created");
 
   function abort(...params: Params): boolean {
+    debugLog("abort()", params);
+
     const metadataMapKey = getKey(...params);
 
     let caught;
@@ -150,8 +152,6 @@ export function createIntervalCache<
     if (metadata) {
       const { pendingMetadata } = metadata;
       if (pendingMetadata.length > 0) {
-        debugLog("abort()", params);
-
         const cloned = [...pendingMetadata];
 
         pendingMetadata.splice(0);
@@ -231,7 +231,7 @@ export function createIntervalCache<
   }
 
   function evictAll(): boolean {
-    debugLog(`evictAll()`, undefined, `${metadataMap.size} records`);
+    debugLog("evictAll()");
 
     const hadValues = metadataMap.size > 0;
 
@@ -278,6 +278,8 @@ export function createIntervalCache<
 
     let record = metadata.recordMap.get(cacheKey);
     if (record == null) {
+      debugLog(`read(${start}, ${end}) Cache miss`, params);
+
       const abortController = new AbortController();
       const deferred = createDeferred<Value[]>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : `${cacheKey}`
@@ -302,12 +304,16 @@ export function createIntervalCache<
         end,
         ...params
       );
+    } else {
+      debugLog(`read(${start}, ${end}) Cache hit`, params);
     }
 
     return record;
   }
 
   function getStatus(start: Point, end: Point, ...params: Params) {
+    debugLog(`getStatus(${start}, ${end})`, params);
+
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
 
@@ -553,15 +559,6 @@ export function createIntervalCache<
       intervalUtils
     );
 
-    debugLog(
-      `processPendingRecord(${start}, ${end})`,
-      params,
-      "\n-> metadata:",
-      metadata,
-      "\n-> found:",
-      foundIntervals
-    );
-
     // If any of the unloaded intervals contain a failed request,
     // we shouldn't try loading them again
     // This is admittedly somewhat arbitrary but matches Replay's functionality
@@ -573,7 +570,7 @@ export function createIntervalCache<
     );
     if (previouslyFailedInterval != null) {
       const error = Error(
-        `Cannot load interval that contains previously failed interval`
+        "Cannot load interval that contains previously failed interval"
       );
       record.data = {
         error,
@@ -633,12 +630,6 @@ export function createIntervalCache<
         ...pendingPromiseLikes,
       ]);
 
-      debugLog(
-        `processPendingRecord(${start}, ${end}): resolved`,
-        params,
-        values
-      );
-
       if (!signal.aborted) {
         let value = sliceValues<Point, Value>(
           metadata.sortedValues,
@@ -660,6 +651,12 @@ export function createIntervalCache<
           value,
         };
 
+        debugLog(
+          `read() Pending request resolved (${start}, ${end})`,
+          params,
+          values
+        );
+
         deferred.resolve(value);
 
         notifySubscribers(start, end, ...params);
@@ -673,7 +670,7 @@ export function createIntervalCache<
       }
 
       debugLog(
-        `processPendingRecord(${start}, ${end}): failed`,
+        `read() Pending request rejected (${start}, ${end})`,
         params,
         errorMessage
       );
@@ -692,8 +689,7 @@ export function createIntervalCache<
   }
 
   function read(start: Point, end: Point, ...params: Params): Value[] {
-    debugLog(`read(${start}, ${end})`, params);
-
+    // getOrCreateRecord() will call debugLog (cache hit or miss)
     const record = getOrCreateRecord(start, end, ...params);
     if (record.data.status === STATUS_RESOLVED) {
       return record.data.value as Value[];
@@ -709,8 +705,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): PromiseLike<Value[]> | Value[] {
-    debugLog(`readAsync(${start}, ${end})`, params);
-
+    // getOrCreateRecord() will call debugLog (cache hit or miss)
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.data.status) {
       case STATUS_PENDING:
@@ -728,6 +723,8 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ) {
+    debugLog(`subscribeToStatus(${start}, ${end})`, params);
+
     const cacheKey = getKey(...params);
 
     let tree = subscriberMap.get(cacheKey);

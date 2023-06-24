@@ -1029,7 +1029,7 @@ describe("createIntervalCache", () => {
       expect(consoleMock.mock.calls[0]).toEqual(
         expect.arrayContaining([
           expect.stringContaining("test-cache"),
-          expect.stringContaining("Creating cache"),
+          expect.stringContaining("Cache created"),
         ])
       );
 
@@ -1039,7 +1039,7 @@ describe("createIntervalCache", () => {
       expect(consoleMock.mock.calls[0]).toEqual(
         expect.arrayContaining([
           expect.stringContaining("test-cache"),
-          expect.stringContaining("readAsync"),
+          expect.stringContaining("read"),
           expect.stringContaining("one"),
         ])
       );
@@ -1056,7 +1056,7 @@ describe("createIntervalCache", () => {
       expect(consoleMock.mock.calls[0]).toEqual(
         expect.arrayContaining([
           expect.stringContaining("test-cache"),
-          expect.stringContaining("readAsync"),
+          expect.stringContaining("read"),
           expect.stringContaining("three"),
         ])
       );
