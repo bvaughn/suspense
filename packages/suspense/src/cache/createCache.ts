@@ -29,6 +29,8 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 
+console.log("[createCache] isDevelopment:", isDevelopment);
+console.log("[createCache] NODE_ENV:", process.env.NODE_ENV);
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
   Value
