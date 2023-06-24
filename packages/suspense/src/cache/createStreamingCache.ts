@@ -12,10 +12,8 @@ import {
   StreamingValue,
 } from "../types";
 import { createDeferred } from "../utils/createDeferred";
+import { log } from "../utils/debugging";
 import { defaultGetKey } from "../utils/defaultGetKey";
-
-// Enable to help with debugging in dev
-const DEBUG_LOG_IN_DEV = false;
 
 export function createStreamingCache<
   Params extends Array<any>,
@@ -23,30 +21,49 @@ export function createStreamingCache<
   AdditionalData = undefined
 >(options: {
   debugLabel?: string;
+  debugLogging?: boolean;
   getKey?: (...params: Params) => string;
   load: (
     options: StreamingCacheLoadOptions<Value, AdditionalData>,
     ...params: Params
   ) => void;
 }): StreamingCache<Params, Value, AdditionalData> {
-  const { debugLabel, getKey = defaultGetKey, load } = options;
+  let { debugLabel, debugLogging, getKey = defaultGetKey, load } = options;
 
-  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && isDevelopment) {
-      const cacheKey = params ? `"${getKey(...params)}"` : "";
-      const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+  if (isDevelopment) {
+    let didLogWarning = false;
+    let decoratedGetKey = getKey;
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
-    }
+    getKey = (...params: Params) => {
+      const key = decoratedGetKey(...params);
+
+      if (!didLogWarning) {
+        if (key.includes("[object Object]")) {
+          didLogWarning = true;
+          console.warn(
+            `Warning: createCache() key "${key}" contains a stringified object and may not be unique`
+          );
+        }
+      }
+
+      return key;
+    };
+  }
+
+  const debugLog = (message: string, params?: Params, ...args: any[]) => {
+    const cacheKey = params ? `"${getKey(...params)}"` : "";
+    const prefix = debugLabel ? `createCache[${debugLabel}]` : "createCache";
+
+    log(debugLogging, [
+      `%c${prefix}`,
+      "font-weight: bold; color: yellow;",
+      message,
+      cacheKey,
+      ...args,
+    ]);
   };
 
-  debugLogInDev("Creating cache ...");
+  debugLog("Cache created");
 
   const abortControllerMap = new Map<string, AbortController>();
   const streamingValuesMap = new Map<
@@ -55,7 +72,7 @@ export function createStreamingCache<
   >();
 
   function abort(...params: Params): boolean {
-    debugLogInDev("abort()", params);
+    debugLog("abort()", params);
 
     const cacheKey = getKey(...params);
     let abortController = abortControllerMap.get(cacheKey);
@@ -67,8 +84,16 @@ export function createStreamingCache<
     return false;
   }
 
+  function disableDebugLogging() {
+    debugLogging = false;
+  }
+
+  function enableDebugLogging() {
+    debugLogging = true;
+  }
+
   function evict(...params: Params) {
-    debugLogInDev("evict()", params);
+    debugLog("evict()", params);
 
     const cacheKey = getKey(...params);
 
@@ -76,11 +101,7 @@ export function createStreamingCache<
   }
 
   function evictAll(): boolean {
-    debugLogInDev(
-      `evictAll()`,
-      undefined,
-      `${streamingValuesMap.size} records`
-    );
+    debugLog("evictAll()");
 
     const hadValues = streamingValuesMap.size > 0;
 
@@ -96,6 +117,8 @@ export function createStreamingCache<
 
     let cached = streamingValuesMap.get(cacheKey);
     if (cached == null) {
+      debugLog("stream() Cache miss", params);
+
       const deferred = createDeferred<StreamingValue<Value, AdditionalData>>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : cacheKey
       );
@@ -139,6 +162,8 @@ export function createStreamingCache<
           return false;
         }
 
+        debugLog(`stream() Pending request aborted`, params);
+
         streamingValues.status = STATUS_ABORTED;
 
         streamingValuesMap.delete(cacheKey);
@@ -173,6 +198,8 @@ export function createStreamingCache<
           notifySubscribers();
         },
         resolve: () => {
+          debugLog(`stream() Pending request resolved`, params);
+
           assertPending();
 
           streamingValues.complete = true;
@@ -184,6 +211,8 @@ export function createStreamingCache<
           deferred.resolve(streamingValues);
         },
         reject: (error: Error) => {
+          debugLog(`stream() Pending request rejected`, params);
+
           assertPending();
 
           streamingValues.complete = true;
@@ -203,16 +232,19 @@ export function createStreamingCache<
       return streamingValues;
     }
 
+    debugLog("stream() Cache hit", params);
+
     return cached;
   }
 
   function prefetch(...params: Params): void {
-    debugLogInDev(`prefetch()`, params);
+    debugLog("prefetch()", params);
 
     getOrCreateStreamingValue(...params);
   }
 
   function stream(...params: Params) {
+    // getOrCreateStreamingValue() will call debugLog (cache hit or miss)
     return getOrCreateStreamingValue(...params);
   }
 
@@ -235,6 +267,8 @@ export function createStreamingCache<
 
   return {
     abort,
+    disableDebugLogging,
+    enableDebugLogging,
     evict,
     evictAll,
     prefetch,

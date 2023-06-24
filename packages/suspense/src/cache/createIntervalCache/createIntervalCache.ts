@@ -22,6 +22,7 @@ import {
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
+import { log } from "../../utils/debugging";
 import { defaultGetKey } from "../../utils/defaultGetKey";
 import { isPromiseLike } from "../../utils/isPromiseLike";
 import {
@@ -31,9 +32,6 @@ import {
 } from "../../utils/isRecordStatus";
 import { findIntervals } from "./findIntervals";
 import { sliceValues } from "./sliceValues";
-
-// Enable to help with debugging in dev
-const DEBUG_LOG_IN_DEV = false;
 
 type PendingMetadata<Point, Value> = {
   containsPartialResults: () => void;
@@ -72,6 +70,7 @@ export function createIntervalCache<
   Value
 >(options: {
   debugLabel?: string;
+  debugLogging?: boolean;
   getKey?: (...params: Params) => string;
   getPointForValue: GetPointForValue<Point, Value>;
   load: (
@@ -80,12 +79,33 @@ export function createIntervalCache<
     ...params: [...Params, IntervalCacheLoadOptions<Value>]
   ) => PromiseLike<ValuesArray<Value>> | ValuesArray<Value>;
 }): IntervalCache<Point, Params, Value> {
-  const {
+  let {
     debugLabel,
+    debugLogging,
     getKey = defaultGetKey,
     getPointForValue,
     load,
   } = options;
+
+  if (isDevelopment) {
+    let didLogWarning = false;
+    let decoratedGetKey = getKey;
+
+    getKey = (...params: Params) => {
+      const key = decoratedGetKey(...params);
+
+      if (!didLogWarning) {
+        if (key.includes("[object Object]")) {
+          didLogWarning = true;
+          console.warn(
+            `Warning: createCache() key "${key}" contains a stringified object and may not be unique`
+          );
+        }
+      }
+
+      return key;
+    };
+  }
 
   const arraySortUtils = configureArraySortingUtilities<Value>(
     (a: Value, b: Value) =>
@@ -104,26 +124,26 @@ export function createIntervalCache<
     DataIntervalTree<SubscriptionData<Point, Params>, Point>
   > = new Map();
 
-  const debugLogInDev = (debug: string, params?: Params, ...args: any[]) => {
-    if (DEBUG_LOG_IN_DEV && isDevelopment) {
-      const cacheKey = params ? `"${getKey(...params)}"` : "";
-      const prefix = debugLabel
-        ? `createIntervalCache[${debugLabel}]`
-        : "createIntervalCache";
+  const debugLog = (message: string, params?: Params, ...args: any[]) => {
+    const cacheKey = params ? `"${getKey(...params)}"` : "";
+    const prefix = debugLabel
+      ? `createIntervalCache[${debugLabel}]`
+      : "createIntervalCache";
 
-      console.log(
-        `%c${prefix}`,
-        "font-weight: bold; color: yellow;",
-        debug,
-        cacheKey,
-        ...args
-      );
-    }
+    log(debugLogging, [
+      `%c${prefix}`,
+      "font-weight: bold; color: yellow;",
+      message,
+      cacheKey,
+      ...args,
+    ]);
   };
 
-  debugLogInDev("Creating cache ...");
+  debugLog("Cache created");
 
   function abort(...params: Params): boolean {
+    debugLog("abort()", params);
+
     const metadataMapKey = getKey(...params);
 
     let caught;
@@ -132,8 +152,6 @@ export function createIntervalCache<
     if (metadata) {
       const { pendingMetadata } = metadata;
       if (pendingMetadata.length > 0) {
-        debugLogInDev("abort()", params);
-
         const cloned = [...pendingMetadata];
 
         pendingMetadata.splice(0);
@@ -188,8 +206,16 @@ export function createIntervalCache<
     return `${start}–${end}`;
   }
 
+  function disableDebugLogging() {
+    debugLogging = false;
+  }
+
+  function enableDebugLogging() {
+    debugLogging = true;
+  }
+
   function evict(...params: Params): boolean {
-    debugLogInDev("evict()", params);
+    debugLog("evict()", params);
 
     const cacheKey = getKey(...params);
     const result = metadataMap.delete(cacheKey);
@@ -205,7 +231,7 @@ export function createIntervalCache<
   }
 
   function evictAll(): boolean {
-    debugLogInDev(`evictAll()`, undefined, `${metadataMap.size} records`);
+    debugLog("evictAll()");
 
     const hadValues = metadataMap.size > 0;
 
@@ -252,6 +278,8 @@ export function createIntervalCache<
 
     let record = metadata.recordMap.get(cacheKey);
     if (record == null) {
+      debugLog(`read(${start}, ${end}) Cache miss`, params);
+
       const abortController = new AbortController();
       const deferred = createDeferred<Value[]>(
         debugLabel ? `${debugLabel}: ${cacheKey}` : `${cacheKey}`
@@ -276,12 +304,16 @@ export function createIntervalCache<
         end,
         ...params
       );
+    } else {
+      debugLog(`read(${start}, ${end}) Cache hit`, params);
     }
 
     return record;
   }
 
   function getStatus(start: Point, end: Point, ...params: Params) {
+    debugLog(`getStatus(${start}, ${end})`, params);
+
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
 
@@ -349,7 +381,7 @@ export function createIntervalCache<
   }
 
   function getValue(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`getValue(${start}, ${end})`, params);
+    debugLog(`getValue(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
@@ -376,7 +408,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): Value[] | undefined {
-    debugLogInDev(`getValueIfCached(${start}, ${end})`, params);
+    debugLog(`getValueIfCached(${start}, ${end})`, params);
 
     const metadata = getOrCreateIntervalMetadata(...params);
     const cacheKey = createCacheKey(start, end);
@@ -527,15 +559,6 @@ export function createIntervalCache<
       intervalUtils
     );
 
-    debugLogInDev(
-      `processPendingRecord(${start}, ${end})`,
-      params,
-      "\n-> metadata:",
-      metadata,
-      "\n-> found:",
-      foundIntervals
-    );
-
     // If any of the unloaded intervals contain a failed request,
     // we shouldn't try loading them again
     // This is admittedly somewhat arbitrary but matches Replay's functionality
@@ -547,7 +570,7 @@ export function createIntervalCache<
     );
     if (previouslyFailedInterval != null) {
       const error = Error(
-        `Cannot load interval that contains previously failed interval`
+        "Cannot load interval that contains previously failed interval"
       );
       record.data = {
         error,
@@ -607,12 +630,6 @@ export function createIntervalCache<
         ...pendingPromiseLikes,
       ]);
 
-      debugLogInDev(
-        `processPendingRecord(${start}, ${end}): resolved`,
-        params,
-        values
-      );
-
       if (!signal.aborted) {
         let value = sliceValues<Point, Value>(
           metadata.sortedValues,
@@ -634,6 +651,12 @@ export function createIntervalCache<
           value,
         };
 
+        debugLog(
+          `read() Pending request resolved (${start}, ${end})`,
+          params,
+          values
+        );
+
         deferred.resolve(value);
 
         notifySubscribers(start, end, ...params);
@@ -646,8 +669,8 @@ export function createIntervalCache<
         errorMessage = error.message;
       }
 
-      debugLogInDev(
-        `processPendingRecord(${start}, ${end}): failed`,
+      debugLog(
+        `read() Pending request rejected (${start}, ${end})`,
         params,
         errorMessage
       );
@@ -666,8 +689,7 @@ export function createIntervalCache<
   }
 
   function read(start: Point, end: Point, ...params: Params): Value[] {
-    debugLogInDev(`read(${start}, ${end})`, params);
-
+    // getOrCreateRecord() will call debugLog (cache hit or miss)
     const record = getOrCreateRecord(start, end, ...params);
     if (record.data.status === STATUS_RESOLVED) {
       return record.data.value as Value[];
@@ -683,8 +705,7 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ): PromiseLike<Value[]> | Value[] {
-    debugLogInDev(`readAsync(${start}, ${end})`, params);
-
+    // getOrCreateRecord() will call debugLog (cache hit or miss)
     const record = getOrCreateRecord(start, end, ...params);
     switch (record.data.status) {
       case STATUS_PENDING:
@@ -702,6 +723,8 @@ export function createIntervalCache<
     end: Point,
     ...params: Params
   ) {
+    debugLog(`subscribeToStatus(${start}, ${end})`, params);
+
     const cacheKey = getKey(...params);
 
     let tree = subscriberMap.get(cacheKey);
@@ -744,6 +767,8 @@ export function createIntervalCache<
 
   return {
     abort,
+    disableDebugLogging,
+    enableDebugLogging,
     evict,
     evictAll,
     getStatus,

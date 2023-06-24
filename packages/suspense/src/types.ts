@@ -72,6 +72,8 @@ export interface Deferred<Type> {
 export interface Cache<Params extends any[], Value> {
   abort(...params: Params): boolean;
   cache(value: Value, ...params: Params): void;
+  disableDebugLogging(): void;
+  enableDebugLogging(): void;
   evict(...params: Params): boolean;
   evictAll(): void;
   getStatus(...params: Params): Status;
@@ -94,6 +96,8 @@ export type CacheLoadOptions = {
 
 export type IntervalCache<Point, Params extends any[], Value> = {
   abort(...params: Params): boolean;
+  disableDebugLogging(): void;
+  enableDebugLogging(): void;
   evict(...params: Params): boolean;
   evictAll(): boolean;
   getStatus(start: Point, end: Point, ...params: Params): Status;
@@ -152,6 +156,8 @@ export interface StreamingCache<
   AdditionalData = undefined
 > {
   abort(...params: Params): boolean;
+  disableDebugLogging(): void;
+  enableDebugLogging(): void;
   evict(...params: Params): boolean;
   evictAll(): boolean;
   prefetch(...params: Params): void;

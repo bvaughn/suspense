@@ -13,6 +13,7 @@ export * from "./hooks/useStreamingValue";
 export * from "./utils/assertRecordStatus";
 export * from "./utils/createDeferred";
 export * from "./utils/createInfallibleCache";
+export * from "./utils/debugging";
 export * from "./utils/isPromiseLike";
 export * from "./utils/isRecordStatus";
 export * from "./utils/parallelize";
