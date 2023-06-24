@@ -1,7 +1,11 @@
 # Changelog
 
+## 0.0.40
+* Added opt-in debug logging per cache (`enableDebugLogging` config) as well as globally (`enableDebugLogging` export) for development builds.
+* Add (DEV-only) warning to `createIntervalCache` and `createStreamingCache` for non-unique cache keys– specifically warning about the key containing an `Object` case as a string.
+
 ## 0.0.39
-* Add (DEV-only) warning for non-unique cache keys– specifically warning about the key containing an `Object` case as a string.
+* Add (DEV-only) warning to `createCache` for non-unique cache keys– specifically warning about the key containing an `Object` case as a string.
 
 ## 0.0.38
 * [32](https://github.com/bvaughn/suspense/pull/32): Build release bundle with Preconstruct
