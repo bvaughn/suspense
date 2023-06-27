@@ -37,7 +37,13 @@ export function useImperativeCacheValue<
       }
       case STATUS_RESOLVED: {
         // Cache most recently resolved value in case of a mutation
-        setPrevParams(params);
+        setPrevParams((prevParams) => {
+          if (didParamsChange(prevParams, params)) {
+            return params;
+          } else {
+            return prevParams;
+          }
+        });
         setPrevValue(cache.getValue(...params));
         break;
       }
@@ -66,23 +72,30 @@ export function useImperativeCacheValue<
     }
   }
 
-  let paramsHaveChanged = prevParams === undefined;
-  if (prevParams) {
-    if (prevParams.length !== params.length) {
-      paramsHaveChanged = true;
+  return {
+    error: undefined,
+    status: STATUS_PENDING,
+    value: didParamsChange(prevParams, params) ? undefined : prevValue,
+  };
+}
+
+function didParamsChange(
+  prevParams: any[] | undefined,
+  nextParams: any[]
+): boolean {
+  if (prevParams === undefined) {
+    return true;
+  } else {
+    if (prevParams.length !== nextParams.length) {
+      return true;
     } else {
-      for (let index = 0; index < params.length; index++) {
-        if (prevParams[index] !== params[index]) {
-          paramsHaveChanged = true;
-          break;
+      for (let index = 0; index < nextParams.length; index++) {
+        if (prevParams[index] !== nextParams[index]) {
+          return true;
         }
       }
     }
   }
 
-  return {
-    error: undefined,
-    status: STATUS_PENDING,
-    value: paramsHaveChanged ? undefined : prevValue,
-  };
+  return false;
 }
