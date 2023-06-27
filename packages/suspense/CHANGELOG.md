@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.43
+* Fix potential update loop in `useImperativeCacheValue` from nested object properties
+
 ## 0.0.42
 * Fix potential update loop in `useImperativeCacheValue`
 
