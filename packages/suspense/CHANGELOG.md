@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.41
+* `useImperativeCacheValue` supports async mutations made with `useCacheMutation`; (specifically, it returns a previously resolved value when status is _pending_ due to a mutation).
+
 ## 0.0.40
 * Added opt-in debug logging per cache (`enableDebugLogging` config) as well as globally (`enableDebugLogging` export) for development builds.
 * Add (DEV-only) warning to `createIntervalCache` and `createStreamingCache` for non-unique cache keys– specifically warning about the key containing an `Object` case as a string.
