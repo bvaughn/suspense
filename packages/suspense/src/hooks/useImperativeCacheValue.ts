@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import equal from "deep-equal";
+
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -29,6 +31,9 @@ export function useImperativeCacheValue<
   const [prevParams, setPrevParams] = useState<TParams | undefined>(undefined);
   const [prevValue, setPrevValue] = useState<Value | undefined>(undefined);
 
+  let error: unknown | undefined = undefined;
+  let value: Value | undefined = undefined;
+
   useEffect(() => {
     switch (status) {
       case STATUS_NOT_FOUND: {
@@ -38,13 +43,22 @@ export function useImperativeCacheValue<
       case STATUS_RESOLVED: {
         // Cache most recently resolved value in case of a mutation
         setPrevParams((prevParams) => {
-          if (didParamsChange(prevParams, params)) {
-            return params;
-          } else {
+          if (prevParams == params || equal(prevParams, params)) {
             return prevParams;
+          } else {
+            return params;
           }
         });
-        setPrevValue(cache.getValue(...params));
+
+        const value = cache.getValue(...params);
+
+        setPrevValue((prevValue) => {
+          if (prevValue == value || equal(prevValue, value)) {
+            return prevValue;
+          } else {
+            return value;
+          }
+        });
         break;
       }
     }
@@ -52,50 +66,36 @@ export function useImperativeCacheValue<
 
   switch (status) {
     case STATUS_REJECTED: {
-      let caught;
       try {
         cache.getValue(...params);
-      } catch (error) {
-        caught = error;
+      } catch (caught) {
+        error = caught;
       }
-      return { error: caught, status: STATUS_REJECTED, value: undefined };
+      break;
     }
     case STATUS_RESOLVED: {
-      try {
-        return {
-          error: undefined,
-          status: STATUS_RESOLVED,
-          value: cache.getValue(...params),
-        };
-      } catch (error) {}
+      value = cache.getValue(...params);
+      break;
+    }
+    case STATUS_PENDING: {
+      value =
+        prevParams == params || equal(prevParams, params)
+          ? prevValue
+          : undefined;
       break;
     }
   }
 
-  return {
-    error: undefined,
-    status: STATUS_PENDING,
-    value: didParamsChange(prevParams, params) ? undefined : prevValue,
-  };
-}
-
-function didParamsChange(
-  prevParams: any[] | undefined,
-  nextParams: any[]
-): boolean {
-  if (prevParams === undefined) {
-    return true;
-  } else {
-    if (prevParams.length !== nextParams.length) {
-      return true;
-    } else {
-      for (let index = 0; index < nextParams.length; index++) {
-        if (prevParams[index] !== nextParams[index]) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
+  return useMemo(
+    () =>
+      ({
+        error,
+        status,
+        value,
+      } as
+        | ImperativeErrorResponse
+        | ImperativePendingResponse<Value>
+        | ImperativeResolvedResponse<Value>),
+    [error, status, value]
+  );
 }

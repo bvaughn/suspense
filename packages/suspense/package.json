@@ -59,7 +59,9 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@types/deep-equal": "^1.0.1",
     "array-sorting-utilities": "^0.0.1",
+    "deep-equal": "^2.2.1",
     "interval-utilities": "^0.0.1",
     "node-interval-tree": "^2.1.2",
     "point-utilities": "^0.0.2"
