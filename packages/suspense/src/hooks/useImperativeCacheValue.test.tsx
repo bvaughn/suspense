@@ -3,7 +3,7 @@
  */
 
 import { Component, PropsWithChildren } from "react";
-import { createRoot } from "react-dom/client";
+import { Root, createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createCache } from "../cache/createCache";
 import {
@@ -29,6 +29,7 @@ describe("useImperativeCacheValue", () => {
   let lastRenderedError: any = undefined;
   let lastRenderedStatus: Status | undefined = undefined;
   let lastRenderedValue: string | undefined = undefined;
+  let root: Root | null = null;
 
   let pendingDeferred: Deferred<Value>[] = [];
 
@@ -42,14 +43,26 @@ describe("useImperativeCacheValue", () => {
     return null;
   }
 
-  async function mount() {
+  async function mount(cacheKey = "test") {
     container = document.createElement("div");
-    const root = createRoot(container);
+    root = createRoot(container);
     await act(async () => {
-      root.render(
+      root!.render(
         <>
           <ErrorBoundary>
-            <Component cacheKey="test" />
+            <Component cacheKey={cacheKey} />
+          </ErrorBoundary>
+        </>
+      );
+    });
+  }
+
+  async function update(cacheKey = "test") {
+    await act(async () => {
+      root!.render(
+        <>
+          <ErrorBoundary>
+            <Component cacheKey={cacheKey} />
           </ErrorBoundary>
         </>
       );
@@ -70,6 +83,7 @@ describe("useImperativeCacheValue", () => {
     });
 
     container = null;
+    root = null;
 
     cache = createCache<[string], Value>({
       load: fetch,
@@ -170,6 +184,38 @@ describe("useImperativeCacheValue", () => {
     expect(lastRenderedError).toBe("rejected");
     expect(lastRenderedStatus).toBe(STATUS_REJECTED);
     expect(lastRenderedValue).toBeUndefined();
+  });
+
+  it("should support changed cache params", async () => {
+    expect(cache.getStatus("test")).toBe(STATUS_NOT_FOUND);
+
+    await mount("one");
+
+    expect(lastRenderedError).toBeUndefined();
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+    expect(lastRenderedValue).toBeUndefined();
+
+    expect(pendingDeferred).toHaveLength(1);
+
+    await act(async () => pendingDeferred[0]!.resolve({ key: "resolved-one" }));
+
+    expect(lastRenderedError).toBeUndefined();
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedValue).toEqual({ key: "resolved-one" });
+
+    await update("two");
+
+    expect(lastRenderedError).toBeUndefined();
+    expect(lastRenderedStatus).toBe(STATUS_PENDING);
+    expect(lastRenderedValue).toBeUndefined();
+
+    expect(pendingDeferred).toHaveLength(2);
+
+    await act(async () => pendingDeferred[1]!.resolve({ key: "resolved-two" }));
+
+    expect(lastRenderedError).toBeUndefined();
+    expect(lastRenderedStatus).toBe(STATUS_RESOLVED);
+    expect(lastRenderedValue).toEqual({ key: "resolved-two" });
   });
 
   describe("getCache", () => {

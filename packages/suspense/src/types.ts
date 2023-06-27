@@ -189,10 +189,10 @@ export type ImperativeErrorResponse = {
   status: StatusRejected;
   value: any;
 };
-export type ImperativePendingResponse = {
+export type ImperativePendingResponse<Value> = {
   error: undefined;
   status: StatusPending;
-  value: undefined;
+  value: Value | undefined;
 };
 export type ImperativeResolvedResponse<Value> = {
   error: undefined;
@@ -201,7 +201,8 @@ export type ImperativeResolvedResponse<Value> = {
 };
 
 export type ImperativeIntervalErrorResponse = ImperativeErrorResponse;
-export type ImperativeIntervalPendingResponse = ImperativePendingResponse;
+export type ImperativeIntervalPendingResponse<Value> =
+  ImperativePendingResponse<Value>;
 export type ImperativeIntervalResolvedResponse<Value> =
   ImperativeResolvedResponse<Value> & {
     isPartialResult: boolean;

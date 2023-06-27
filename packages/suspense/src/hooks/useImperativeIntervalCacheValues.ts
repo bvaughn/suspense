@@ -24,7 +24,7 @@ export function useImperativeIntervalCacheValues<
   ...params: Params
 ):
   | ImperativeIntervalErrorResponse
-  | ImperativeIntervalPendingResponse
+  | ImperativeIntervalPendingResponse<Value[]>
   | ImperativeIntervalResolvedResponse<Value[]> {
   const status = useIntervalCacheStatus(cache, start, end, ...params);
 

@@ -5,12 +5,13 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
+import { Component, PropsWithChildren, ReactNode } from "react";
+import { useImperativeCacheValue } from "..";
 import { createCache } from "../cache/createCache";
 import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
 import { createDeferred } from "../utils/createDeferred";
-import { useCacheStatus } from "./useCacheStatus";
 import { MutationApi, useCacheMutation } from "./useCacheMutation";
-import { Component, PropsWithChildren, ReactNode } from "react";
+import { useCacheStatus } from "./useCacheStatus";
 
 type Props = { cacheKey: string };
 type Rendered = { status: Status; value: string };
@@ -508,6 +509,69 @@ describe("useCacheMutation", () => {
       // Any response/rejection to the initial async mutation should be ignored now
       await act(async () => {
         pendingDeferred.reject("unexpected");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+    });
+  });
+
+  describe("useImperativeCacheValue", () => {
+    beforeEach(() => {
+      Component = ({ cacheKey }: Props) => {
+        mutationApi[cacheKey] = useCacheMutation(cache);
+
+        const { status, value } = useImperativeCacheValue(cache, cacheKey);
+
+        mostRecentRenders[cacheKey] = {
+          status,
+          value,
+        };
+
+        return value;
+      };
+    });
+
+    it("should refetch values after a sync mutation", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      act(() => {
+        mutationApi.two!.mutateSync(["two"], "mutated-two");
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
+      );
+    });
+
+    it("should refetch values after an async mutation", async () => {
+      await mount();
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"two"}}"`
+      );
+
+      let pendingDeferred: Deferred<string> | null = null;
+
+      await act(async () => {
+        // Don't wait for the mutation API to resolve; we want to test the in-between state too
+        mutationApi.two!.mutateAsync(["two"], async () => {
+          pendingDeferred = createDeferred<string>();
+          return pendingDeferred.promise;
+        });
+      });
+
+      expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
+        `"{"one":{"status":"resolved","value":"one"},"two":{"status":"pending","value":"two"}}"`
+      );
+
+      await act(async () => {
+        pendingDeferred!.resolve("mutated-two");
       });
 
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
