@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.42
+* Fix potential update loop in `useImperativeCacheValue`
+
 ## 0.0.41
 * `useImperativeCacheValue` supports async mutations made with `useCacheMutation`; (specifically, it returns a previously resolved value when status is _pending_ due to a mutation).
 
