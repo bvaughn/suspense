@@ -5,6 +5,8 @@
 * `createCache` subscribers notified after value explicitly cached via `cache`
 * `useCacheMutation` sync mutation notifies subscribers after mutation
 
+The change in subscription APIs was made to simplify interop with imperative code.
+
 ## 0.0.43
 * Fix potential update loop in `useImperativeCacheValue` from nested object properties
 
