@@ -7,7 +7,7 @@ export function useCacheStatus<Params extends Array<any>>(
   ...params: Params
 ): Status {
   return useSyncExternalStore<Status>(
-    (callback) => cache.subscribeToStatus(callback, ...params),
+    (callback) => cache.subscribe(callback, ...params),
     () => cache.getStatus(...params),
     () => cache.getStatus(...params)
   );

@@ -1,6 +1,11 @@
 import { isDevelopment } from "#is-development";
 import { unstable_getCacheForType as getCacheForTypeMutable } from "react";
-import { STATUS_NOT_FOUND, STATUS_PENDING } from "../constants";
+import {
+  STATUS_NOT_FOUND,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import {
   Cache,
   CacheLoadOptions,
@@ -8,7 +13,11 @@ import {
   PendingRecord,
   Record,
   Status,
-  StatusCallback,
+  StatusAborted,
+  StatusNotFound,
+  StatusPending,
+  SubscriptionCallback,
+  SubscriptionData,
   UnsubscribeCallback,
 } from "../types";
 import {
@@ -38,7 +47,7 @@ export type InternalCache<Params extends Array<any>, Value> = Cache<
   __getOrCreateRecord: (...params: Params) => Record<Value>;
   __isImmutable: () => boolean;
   __mutationAbortControllerMap: Map<string, AbortController>;
-  __notifySubscribers: (params: Params) => void;
+  __notifySubscribers: (params: Params, data?: SubscriptionData<Value>) => void;
   __recordMap: CacheMap<string, Record<Value>>;
 };
 
@@ -118,7 +127,7 @@ export function createCache<Params extends Array<any>, Value>(
   const mutationAbortControllerMap = new Map<string, AbortController>();
 
   // Stores a set of callbacks (by key) for status subscribers.
-  const subscriberMap = new Map<string, Set<StatusCallback>>();
+  const subscriberMap = new Map<string, Set<SubscriptionCallback<Value>>>();
 
   // Immutable caches should read from backing cache directly.
   // Only mutable caches should use React-managed cache
@@ -195,6 +204,8 @@ export function createCache<Params extends Array<any>, Value>(
 
     recordMap.set(cacheKey, record);
     pendingMutationRecordMap.set(cacheKey, record);
+
+    notifySubscribers(params);
   }
 
   function createPendingMutationRecordMap(): CacheMap<string, Record<Value>> {
@@ -241,7 +252,9 @@ export function createCache<Params extends Array<any>, Value>(
 
     subscriberMap.forEach((set) => {
       set.forEach((callback) => {
-        callback(STATUS_NOT_FOUND);
+        callback({
+          status: STATUS_NOT_FOUND,
+        });
       });
     });
     subscriberMap.clear();
@@ -338,7 +351,9 @@ export function createCache<Params extends Array<any>, Value>(
     const set = subscriberMap.get(key);
     if (set) {
       set.forEach((callback) => {
-        callback(STATUS_NOT_FOUND);
+        callback({
+          status: STATUS_NOT_FOUND,
+        });
       });
     }
   }
@@ -381,13 +396,48 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function notifySubscribers(params: Params): void {
+  function getSubscriptionData(params: Params): SubscriptionData<Value> {
+    const status = getStatus(...params);
+    const record = getRecord(...params);
+
+    if (status === STATUS_PENDING) {
+      // Special case pending, async mutation
+      return { status };
+    }
+
+    if (record) {
+      if (isResolvedRecord(record)) {
+        return {
+          status: STATUS_RESOLVED,
+          value: record.data.value,
+        };
+      } else if (isRejectedRecord(record)) {
+        return {
+          error: record.data.error,
+          status: STATUS_REJECTED,
+        };
+      }
+    }
+
+    return {
+      status: status as StatusNotFound | StatusPending | StatusAborted,
+    };
+  }
+
+  function notifySubscribers(
+    params: Params,
+    data?: SubscriptionData<Value>
+  ): void {
     const cacheKey = getKey(params);
+
     const set = subscriberMap.get(cacheKey);
     if (set) {
-      const status = getStatus(...params);
+      if (data === undefined) {
+        data = getSubscriptionData(params);
+      }
+
       set.forEach((callback) => {
-        callback(status);
+        callback(data!);
       });
     }
   }
@@ -427,11 +477,11 @@ export function createCache<Params extends Array<any>, Value>(
     }
   }
 
-  function subscribeToStatus(
-    callback: StatusCallback,
+  function subscribe(
+    callback: SubscriptionCallback<Value>,
     ...params: Params
   ): UnsubscribeCallback {
-    debugLog("subscribeToStatus()", params);
+    debugLog("subscribe()", params);
 
     const cacheKey = getKey(params);
     let set = subscriberMap.get(cacheKey);
@@ -443,9 +493,9 @@ export function createCache<Params extends Array<any>, Value>(
     }
 
     try {
-      const status = getStatus(...params);
+      const data = getSubscriptionData(params);
 
-      callback(status);
+      callback(data);
     } finally {
       return () => {
         set!.delete(callback);
@@ -479,7 +529,7 @@ export function createCache<Params extends Array<any>, Value>(
     readAsync,
     read,
     prefetch,
-    subscribeToStatus,
+    subscribe: subscribe,
   };
 
   return value;

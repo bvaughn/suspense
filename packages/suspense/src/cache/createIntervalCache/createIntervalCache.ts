@@ -18,7 +18,11 @@ import {
   IntervalCacheLoadOptions,
   PendingRecord,
   Record,
-  StatusCallback,
+  StatusAborted,
+  StatusNotFound,
+  StatusPending,
+  SubscriptionCallback,
+  SubscriptionData,
 } from "../../types";
 import { assertPendingRecord } from "../../utils/assertRecordStatus";
 import { createDeferred } from "../../utils/createDeferred";
@@ -51,8 +55,8 @@ type Metadata<Point, Value> = {
   sortedValues: Value[];
 };
 
-type SubscriptionData<Point extends number | bigint, Params> = {
-  callbacks: Set<StatusCallback>;
+type SubscribersSetMetadata<Point extends number | bigint, Params, Value> = {
+  callbacks: Set<SubscriptionCallback<Value[]>>;
   end: Point;
   params: Params;
   start: Point;
@@ -121,7 +125,7 @@ export function createIntervalCache<
   // That interval tree maps an interval to a set of callbacks.
   const subscriberMap: Map<
     string,
-    DataIntervalTree<SubscriptionData<Point, Params>, Point>
+    DataIntervalTree<SubscribersSetMetadata<Point, Params, Value>, Point>
   > = new Map();
 
   const debugLog = (message: string, params?: Params, ...args: any[]) => {
@@ -165,7 +169,7 @@ export function createIntervalCache<
 
             record.data.abortController.abort();
 
-            notifySubscribers(start, end, ...params);
+            notifySubscribers(start, end, params);
           } catch (error) {
             caught = error;
           }
@@ -223,7 +227,9 @@ export function createIntervalCache<
     const tree = subscriberMap.get(cacheKey);
     if (tree) {
       for (let node of tree.inOrder()) {
-        node.data.callbacks.forEach((callback) => callback(STATUS_NOT_FOUND));
+        node.data.callbacks.forEach((callback) =>
+          callback({ status: STATUS_NOT_FOUND })
+        );
       }
     }
 
@@ -239,7 +245,9 @@ export function createIntervalCache<
 
     subscriberMap.forEach((tree) => {
       for (let node of tree.inOrder()) {
-        node.data.callbacks.forEach((callback) => callback(STATUS_NOT_FOUND));
+        node.data.callbacks.forEach((callback) =>
+          callback({ status: STATUS_NOT_FOUND })
+        );
       }
     });
 
@@ -295,7 +303,7 @@ export function createIntervalCache<
 
       metadata.recordMap.set(cacheKey, record);
 
-      notifySubscribers(start, end, ...params);
+      notifySubscribers(start, end, params);
 
       processPendingRecord(
         metadata,
@@ -425,19 +433,46 @@ export function createIntervalCache<
     return value instanceof PartialArray;
   }
 
-  function notifySubscribers(
+  function getSubscriptionData(
     start: Point,
     end: Point,
-    ...params: Params
-  ): void {
+    params: Params
+  ): SubscriptionData<Value[]> {
+    const metadata = getOrCreateIntervalMetadata(...params);
+    const cacheKey = createCacheKey(start, end);
+
+    let record = metadata.recordMap.get(cacheKey);
+    if (record) {
+      if (isResolvedRecord(record)) {
+        return {
+          status: STATUS_RESOLVED,
+          value: record.data.value,
+        };
+      } else if (isRejectedRecord(record)) {
+        return {
+          error: record.data.error,
+          status: STATUS_REJECTED,
+        };
+      }
+    }
+
+    const status = getStatus(start, end, ...params);
+
+    return {
+      status: status as StatusNotFound | StatusPending | StatusAborted,
+    };
+  }
+
+  function notifySubscribers(start: Point, end: Point, params: Params): void {
     const cacheKey = getKey(...params);
     const tree = subscriberMap.get(cacheKey);
     if (tree) {
       const matches = tree.search(start, end);
-      matches.forEach((match: SubscriptionData<Point, Params>) => {
-        const status = getStatus(match.start, match.end, ...match.params);
+      matches.forEach((match: SubscribersSetMetadata<Point, Params, Value>) => {
+        const data = getSubscriptionData(match.start, match.end, match.params);
+
         match.callbacks.forEach((callback) => {
-          callback(status);
+          callback(data!);
         });
       });
     }
@@ -579,7 +614,7 @@ export function createIntervalCache<
 
       deferred.reject(error);
 
-      notifySubscribers(start, end, ...params);
+      notifySubscribers(start, end, params);
 
       return;
     }
@@ -659,7 +694,7 @@ export function createIntervalCache<
 
         deferred.resolve(value);
 
-        notifySubscribers(start, end, ...params);
+        notifySubscribers(start, end, params);
       }
     } catch (error) {
       let errorMessage = "Unknown Error";
@@ -683,7 +718,7 @@ export function createIntervalCache<
 
         deferred.reject(error);
 
-        notifySubscribers(start, end, ...params);
+        notifySubscribers(start, end, params);
       }
     }
   }
@@ -717,13 +752,13 @@ export function createIntervalCache<
     }
   }
 
-  function subscribeToStatus(
-    callback: StatusCallback,
+  function subscribe(
+    callback: SubscriptionCallback<Value[]>,
     start: Point,
     end: Point,
     ...params: Params
   ) {
-    debugLog(`subscribeToStatus(${start}, ${end})`, params);
+    debugLog(`subscribe(${start}, ${end})`, params);
 
     const cacheKey = getKey(...params);
 
@@ -750,9 +785,9 @@ export function createIntervalCache<
     }
 
     try {
-      const status = getStatus(start, end, ...params);
+      const data = getSubscriptionData(match.start, match.end, match.params);
 
-      callback(status);
+      callback(data);
     } finally {
       return () => {
         if (tree && match) {
@@ -777,7 +812,7 @@ export function createIntervalCache<
     isPartialResult,
     readAsync,
     read,
-    subscribeToStatus,
+    subscribe,
   };
 }
 

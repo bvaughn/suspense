@@ -4,7 +4,7 @@ import {
   useTransition,
 } from "react";
 import { InternalCache } from "../cache/createCache";
-import { STATUS_PENDING, STATUS_REJECTED } from "../constants";
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "../constants";
 import { Cache, Record } from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { createResolvedRecord, updateRecordToResolved } from "../utils/Record";
@@ -67,6 +67,8 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       startTransition(() => {
         refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
       });
+
+      notifySubscribers(params);
     },
     [refresh, startTransition]
   );
@@ -102,9 +104,10 @@ export function useCacheMutation<Params extends Array<any>, Value>(
       mutationAbortControllerMap.set(cacheKey, abortController);
 
       startTransition(() => {
-        notifySubscribers(params);
         refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
       });
+
+      notifySubscribers(params, { status: STATUS_PENDING });
 
       try {
         // Wait until the mutation finishes or is aborted
@@ -135,8 +138,12 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         }
 
         startTransition(() => {
-          notifySubscribers(params);
           refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
+        });
+
+        notifySubscribers(params, {
+          status: STATUS_RESOLVED,
+          value: newValue as Value,
         });
       } catch (error) {
         (record as Record<Value>).data = {
@@ -154,8 +161,12 @@ export function useCacheMutation<Params extends Array<any>, Value>(
         recordMap.set(cacheKey, record);
 
         startTransition(() => {
-          notifySubscribers(params);
           refresh(createPendingMutationRecordMap, pendingMutationRecordMap);
+        });
+
+        notifySubscribers(params, {
+          error,
+          status: STATUS_REJECTED,
         });
       } finally {
         // Cleanup after mutation by deleting the abort controller

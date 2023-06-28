@@ -9,7 +9,7 @@ export function useIntervalCacheStatus<Point, Params extends Array<any>>(
   ...params: Params
 ): Status {
   return useSyncExternalStore<Status>(
-    (callback) => cache.subscribeToStatus(callback, start, end, ...params),
+    (callback) => cache.subscribe(callback, start, end, ...params),
     () => cache.getStatus(start, end, ...params),
     () => cache.getStatus(start, end, ...params)
   );

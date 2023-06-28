@@ -35,7 +35,7 @@ describe("createExternallyManagedCache", () => {
     expect(() => cache.getValue("test")).toThrow("expected error");
   });
 
-  describe("subscribeToStatus", () => {
+  describe("subscribe", () => {
     let callback: jest.Mock;
 
     beforeEach(() => {
@@ -43,33 +43,39 @@ describe("createExternallyManagedCache", () => {
     });
 
     it("should update when resolved", async () => {
-      cache.subscribeToStatus(callback, "test");
+      cache.subscribe(callback, "test");
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+      expect(callback).toHaveBeenCalledWith({ status: STATUS_NOT_FOUND });
 
       cache.cacheValue("value", "test");
 
       await Promise.resolve();
 
       expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback).toHaveBeenCalledWith(STATUS_PENDING);
-      expect(callback).toHaveBeenCalledWith(STATUS_RESOLVED);
+      expect(callback).toHaveBeenCalledWith({ status: STATUS_PENDING });
+      expect(callback).toHaveBeenCalledWith({
+        status: STATUS_RESOLVED,
+        value: "value",
+      });
     });
 
     it("should update when rejected", async () => {
-      cache.subscribeToStatus(callback, "test");
+      cache.subscribe(callback, "test");
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith(STATUS_NOT_FOUND);
+      expect(callback).toHaveBeenCalledWith({ status: STATUS_NOT_FOUND });
 
-      cache.cacheError("expected error", "test");
+      const error = new Error("expected error");
+
+      cache.cacheError(error, "test");
 
       await Promise.resolve();
 
       expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback).toHaveBeenCalledWith(STATUS_PENDING);
-      expect(callback).toHaveBeenCalledWith(STATUS_REJECTED);
+      expect(callback).toHaveBeenCalledWith({ status: STATUS_PENDING });
+      expect(callback).toHaveBeenCalledWith({ status: STATUS_REJECTED, error });
+      expect(callback.mock.lastCall[0].error).toBe(error);
     });
   });
 

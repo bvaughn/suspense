@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.44
+* `createCache` and `createIntervalCache`  methods `subscribeToStatus` renamed to `subscribe` and parameters changed to also include value or error
+* `createCache` subscribers notified after value explicitly cached via `cache`
+* `useCacheMutation` sync mutation notifies subscribers after mutation
+
 ## 0.0.43
 * Fix potential update loop in `useImperativeCacheValue` from nested object properties
 

@@ -6,14 +6,14 @@ import {
   STATUS_RESOLVED,
 } from "./constants";
 
-export type StatusNotStarted = typeof STATUS_NOT_FOUND;
+export type StatusNotFound = typeof STATUS_NOT_FOUND;
 export type StatusPending = typeof STATUS_PENDING;
 export type StatusAborted = typeof STATUS_ABORTED;
 export type StatusRejected = typeof STATUS_REJECTED;
 export type StatusResolved = typeof STATUS_RESOLVED;
 
 export type Status =
-  | StatusNotStarted
+  | StatusNotFound
   | StatusPending
   | StatusAborted
   | StatusRejected
@@ -54,8 +54,35 @@ export type RecordData<Type> =
   | ResolvedRecordData<Type>
   | RejectedRecordData;
 
+export interface SubscriptionDataNotFound {
+  readonly status: StatusNotFound;
+}
+export interface SubscriptionDataPending {
+  readonly status: StatusPending;
+}
+export interface SubscriptionDataAborted {
+  readonly status: StatusAborted;
+}
+export interface SubscriptionDataRejected {
+  readonly error: any;
+  readonly status: StatusRejected;
+}
+export interface SubscriptionDataResolved<Type> {
+  readonly status: StatusResolved;
+  readonly value: Type;
+}
+
+export type SubscriptionData<Type> =
+  | SubscriptionDataNotFound
+  | SubscriptionDataPending
+  | SubscriptionDataAborted
+  | SubscriptionDataRejected
+  | SubscriptionDataResolved<Type>;
+
 export type StreamingSubscribeCallback = () => void;
-export type StatusCallback = (status: Status) => void;
+export type SubscriptionCallback<Value> = (
+  data: SubscriptionData<Value>
+) => void;
 export type UnsubscribeCallback = () => void;
 
 // Convenience type used by Suspense caches.
@@ -82,8 +109,8 @@ export interface Cache<Params extends any[], Value> {
   prefetch(...params: Params): void;
   read(...params: Params): Value;
   readAsync(...params: Params): PromiseLike<Value> | Value;
-  subscribeToStatus(
-    callback: StatusCallback,
+  subscribe(
+    callback: SubscriptionCallback<Value>,
     ...params: Params
   ): UnsubscribeCallback;
 }
@@ -114,8 +141,8 @@ export type IntervalCache<Point, Params extends any[], Value> = {
   ): PromiseLike<Value[]> | Value[];
   isPartialResult: (value: Value[]) => boolean;
   read(start: Point, end: Point, ...params: Params): Value[];
-  subscribeToStatus(
-    callback: StatusCallback,
+  subscribe(
+    callback: SubscriptionCallback<Value[]>,
     start: Point,
     end: Point,
     ...params: Params

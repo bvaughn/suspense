@@ -5,10 +5,21 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
-import { Component, PropsWithChildren, ReactNode } from "react";
-import { useImperativeCacheValue } from "..";
+import {
+  Component,
+  PropsWithChildren,
+  ReactNode,
+  useLayoutEffect,
+} from "react";
+import { STATUS_PENDING, STATUS_RESOLVED, useImperativeCacheValue } from "..";
 import { createCache } from "../cache/createCache";
-import { Cache, CacheLoadOptions, Deferred, Status } from "../types";
+import {
+  Cache,
+  CacheLoadOptions,
+  Deferred,
+  Status,
+  SubscriptionData,
+} from "../types";
 import { createDeferred } from "../utils/createDeferred";
 import { MutationApi, useCacheMutation } from "./useCacheMutation";
 import { useCacheStatus } from "./useCacheStatus";
@@ -577,6 +588,99 @@ describe("useCacheMutation", () => {
       expect(JSON.stringify(mostRecentRenders)).toMatchInlineSnapshot(
         `"{"one":{"status":"resolved","value":"one"},"two":{"status":"resolved","value":"mutated-two"}}"`
       );
+    });
+  });
+
+  describe("cache subscriptions", () => {
+    let subscriptionMocks: {
+      [cacheKey: string]: jest.Mock<SubscriptionData<string>[]>;
+    };
+
+    beforeEach(() => {
+      subscriptionMocks = {};
+
+      Component = ({ cacheKey }: Props) => {
+        mutationApi[cacheKey] = useCacheMutation(cache);
+
+        useLayoutEffect(() => {
+          const mock = jest.fn();
+          subscriptionMocks[cacheKey] = mock;
+          return cache.subscribe(mock, cacheKey);
+        }, [cacheKey]);
+
+        return cache.read(cacheKey);
+      };
+    });
+
+    it("should be notified after a sync mutation", async () => {
+      await mount();
+
+      const mockOne = subscriptionMocks.one!;
+      const mockTwo = subscriptionMocks.two!;
+
+      expect(mockOne).toBeCalledTimes(1);
+      expect(mockOne).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "one",
+      });
+      expect(mockTwo).toBeCalledTimes(1);
+      expect(mockTwo).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "two",
+      });
+
+      act(() => {
+        mutationApi.two!.mutateSync(["two"], "mutated-two");
+      });
+
+      expect(mockOne).toBeCalledTimes(1);
+      expect(mockTwo).toBeCalledTimes(2);
+      expect(mockTwo).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "mutated-two",
+      });
+    });
+
+    it("should be notified after an async mutation", async () => {
+      await mount();
+
+      const mockOne = subscriptionMocks.one!;
+      const mockTwo = subscriptionMocks.two!;
+
+      expect(mockOne).toBeCalledTimes(1);
+      expect(mockOne).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "one",
+      });
+      expect(mockTwo).toBeCalledTimes(1);
+      expect(mockTwo).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "two",
+      });
+
+      let pendingDeferred: Deferred<string> | null = null;
+      await act(async () => {
+        // Don't wait for the mutation API to resolve; we want to test the in-between state too
+        mutationApi.two!.mutateAsync(["two"], async () => {
+          pendingDeferred = createDeferred<string>();
+          return pendingDeferred.promise;
+        });
+      });
+
+      expect(mockOne).toBeCalledTimes(1);
+      expect(mockTwo).toBeCalledTimes(2);
+      expect(mockTwo).toBeCalledWith({ status: STATUS_PENDING });
+
+      await act(async () => {
+        pendingDeferred!.resolve("mutated-two");
+      });
+
+      expect(mockOne).toBeCalledTimes(1);
+      expect(mockTwo).toBeCalledTimes(3);
+      expect(mockTwo).toBeCalledWith({
+        status: STATUS_RESOLVED,
+        value: "mutated-two",
+      });
     });
   });
 });
