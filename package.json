@@ -21,7 +21,7 @@
     "@parcel/transformer-js": "^2.9.3",
     "@parcel/transformer-react-refresh-wrap": "^2.9.3",
     "@parcel/transformer-typescript-types": "^2.9.3",
-    "@preconstruct/cli": "^2.7.0",
+    "@preconstruct/cli": "^2.8.1",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.14.6",
     "@types/react": "^18.0.26",
