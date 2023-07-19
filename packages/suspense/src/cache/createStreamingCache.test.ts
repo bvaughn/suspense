@@ -246,6 +246,104 @@ describe("createStreamingCache", () => {
       });
     });
 
+    describe("readAsync", () => {
+      it("notifies subscriber(s) of progress and completion", async () => {
+        const promise = cache.readAsync("string");
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+
+        const options = optionsMap.get("string")!;
+        options.update([1, 2], 0.66);
+        options.update([1, 2, 3, 4], 1);
+        options.resolve();
+
+        const { status, value } = await promise;
+
+        expect(status).toEqual(STATUS_RESOLVED);
+        expect(value).toEqual([1, 2, 3, 4]);
+      });
+
+      it("notifies subscriber(s) of progress and rejection", async () => {
+        const promise = cache.readAsync("string");
+
+        // Prevent Jest from failing due to unhandled promise rejection
+        promise.then(
+          () => {},
+          () => {}
+        );
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+
+        const options = optionsMap.get("string")!;
+        options.update([1]);
+        options.reject("Expected");
+
+        let didCatch = false;
+        try {
+          await promise;
+        } catch (error) {
+          didCatch = true;
+        }
+
+        expect(didCatch).toBe(true);
+      });
+
+      it("automatically reject the stream if the loading function throws", async () => {
+        fetch.mockImplementation(() => {
+          throw Error("Expected");
+        });
+
+        const promise = cache.readAsync("string");
+
+        // Prevent Jest from failing due to unhandled promise rejection
+        promise.then(
+          () => {},
+          () => {}
+        );
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+
+        let didCatch = false;
+        try {
+          await promise;
+        } catch (error) {
+          didCatch = true;
+        }
+
+        expect(didCatch).toBe(true);
+      });
+
+      it("caches values so they are only streamed once", async () => {
+        const promise = cache.readAsync("string");
+
+        const options = optionsMap.get("string")!;
+        options.update([1, 2], 1);
+        options.resolve();
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+
+        await promise;
+        await cache.readAsync("string");
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+      });
+
+      it("should support additional data passed by the fetcher", () => {
+        const streaming = cache.stream("string");
+        const options = optionsMap.get("string")!;
+
+        options.update([1], 0.5, { data: 1 });
+        expect(streaming.data).toEqual({ data: 1 });
+
+        options.update([1], 1, { data: 2 });
+        expect(streaming.data).toEqual({ data: 2 });
+      });
+    });
+
     describe("stream", () => {
       it("notifies subscriber(s) of progress and completion", async () => {
         const streaming = cache.stream("string");

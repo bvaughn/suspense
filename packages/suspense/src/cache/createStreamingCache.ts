@@ -243,6 +243,12 @@ export function createStreamingCache<
     getOrCreateStreamingValue(...params);
   }
 
+  async function readAsync(...params: Params) {
+    const { resolver } = stream(...params);
+    const { data, status, value } = await resolver;
+    return { data, status, value };
+  }
+
   function stream(...params: Params) {
     // getOrCreateStreamingValue() will call debugLog (cache hit or miss)
     return getOrCreateStreamingValue(...params);
@@ -272,6 +278,7 @@ export function createStreamingCache<
     evict,
     evictAll,
     prefetch,
+    readAsync,
     stream,
   };
 }

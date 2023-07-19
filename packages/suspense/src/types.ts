@@ -188,6 +188,11 @@ export interface StreamingCache<
   evict(...params: Params): boolean;
   evictAll(): boolean;
   prefetch(...params: Params): void;
+  readAsync(
+    ...params: Params
+  ): PromiseLike<
+    Pick<StreamingValue<Value, AdditionalData>, "data" | "status" | "value">
+  >;
   stream(...params: Params): StreamingValue<Value, AdditionalData>;
 }
 
