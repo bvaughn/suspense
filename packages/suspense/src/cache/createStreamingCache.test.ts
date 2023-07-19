@@ -17,7 +17,7 @@ describe("createStreamingCache", () => {
 
   describe("single value (string)", () => {
     let cache: StreamingCache<[string], Value, Metadata>;
-    let fetch: jest.Mock<
+    let load: jest.Mock<
       void,
       [options: StreamingCacheLoadOptions<Value, Metadata>, key: string]
     >;
@@ -26,8 +26,8 @@ describe("createStreamingCache", () => {
     beforeEach(() => {
       optionsMap = new Map();
 
-      fetch = jest.fn();
-      fetch.mockImplementation(
+      load = jest.fn();
+      load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value, Metadata>, key: string) => {
           optionsMap.set(key, options);
         }
@@ -35,15 +35,15 @@ describe("createStreamingCache", () => {
 
       cache = createStreamingCache<[string], string, any>({
         debugLabel: "cache",
-        load: fetch,
+        load,
       });
     });
 
     it("should update as data streams in", () => {
       const streaming = cache.stream("string");
 
-      expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
       const subscription = jest.fn();
       streaming.subscribe(subscription);
@@ -78,7 +78,7 @@ describe("createStreamingCache", () => {
     type Value = number[];
 
     let cache: StreamingCache<[string], Value>;
-    let fetch: jest.Mock<
+    let load: jest.Mock<
       void,
       [options: StreamingCacheLoadOptions<Value>, key: string]
     >;
@@ -87,8 +87,8 @@ describe("createStreamingCache", () => {
     beforeEach(() => {
       optionsMap = new Map();
 
-      fetch = jest.fn();
-      fetch.mockImplementation(
+      load = jest.fn();
+      load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value>, key: string) => {
           optionsMap.set(key, options);
         }
@@ -96,25 +96,25 @@ describe("createStreamingCache", () => {
 
       cache = createStreamingCache<[string], Value, any>({
         debugLabel: "cache",
-        load: fetch,
+        load,
       });
     });
 
     it("should supply a working default getCacheKey if none is provided", () => {
-      const fetch = jest.fn();
+      const load = jest.fn();
       const cache = createStreamingCache<[string, number, boolean], string>({
-        load: fetch,
+        load,
       });
 
       cache.stream("string", 123, true);
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(load).toHaveBeenCalledTimes(1);
 
       cache.stream("other string", 456, false);
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledTimes(2);
 
       cache.stream("string", 123, true);
       cache.stream("other string", 456, false);
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(load).toHaveBeenCalledTimes(2);
     });
 
     describe("abort", () => {
@@ -149,10 +149,10 @@ describe("createStreamingCache", () => {
 
         const streamingB = cache.stream("string");
         expect(streamingB.status).toBe(STATUS_PENDING);
-        expect(fetch).toHaveBeenCalled();
+        expect(load).toHaveBeenCalled();
       });
 
-      it("should gracefully handle an abort request for a completed fetch", async () => {
+      it("should gracefully handle an abort request for a completed load", async () => {
         const streaming = cache.stream("string");
 
         const options = optionsMap.get("string")!;
@@ -179,14 +179,14 @@ describe("createStreamingCache", () => {
         let streaming = cache.stream("string");
         expect(streaming.value).toEqual([1]);
 
-        fetch.mockClear();
+        load.mockClear();
 
         cache.evict("string");
 
         // Verify value is no longer cached
         streaming = cache.stream("string");
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
         expect(streaming.value).toBeUndefined();
       });
     });
@@ -210,39 +210,109 @@ describe("createStreamingCache", () => {
         streaming = cache.stream("string-b");
         expect(streaming.value).toEqual([1, 2]);
 
-        fetch.mockClear();
+        load.mockClear();
 
         cache.evictAll();
 
         // Verify value is no longer cached
         const streamingA = cache.stream("string-a");
         const streamingB = cache.stream("string-b");
-        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(load).toHaveBeenCalledTimes(2);
         expect(streamingA.value).toBeUndefined();
         expect(streamingB.value).toBeUndefined();
       });
     });
 
     describe("prefetch", () => {
-      it("should start fetching a resource", async () => {
+      it("should start loading a resource", async () => {
         cache.prefetch("string-1");
 
         const options = optionsMap.get("string-1")!;
         options.update([1], 1);
         options.resolve();
 
-        fetch.mockClear();
+        load.mockClear();
 
         // Verify value already loaded
         let streaming = cache.stream("string-1");
-        expect(fetch).not.toHaveBeenCalled();
+        expect(load).not.toHaveBeenCalled();
         expect(streaming.value).toEqual([1]);
 
-        // Verify other values fetch independently
+        // Verify other values load independently
         streaming = cache.stream("string-2");
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string-2");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string-2");
         expect(streaming.value).toBeUndefined();
+      });
+    });
+
+    describe("read", () => {
+      it("should resolve once the underlying cache resolves", async () => {
+        let promise = null;
+        try {
+          cache.read("string");
+        } catch (thrown) {
+          promise = thrown;
+        }
+        expect(promise).not.toBe(null);
+
+        let resolved: any;
+        (promise as PromiseLike<any>).then((data) => {
+          resolved = data;
+        });
+
+        const options = optionsMap.get("string")!;
+        options.update([1, 2], 0.66);
+        options.update([1, 2, 3, 4], 1);
+        options.resolve();
+
+        await promise;
+
+        expect(resolved?.data).toBeUndefined();
+        expect(resolved?.value).toEqual([1, 2, 3, 4]);
+      });
+
+      it("should throw if the underlying cache errors", async () => {
+        let promise = null;
+        try {
+          cache.read("string");
+        } catch (thrown) {
+          promise = thrown;
+        }
+        expect(promise).not.toBe(null);
+
+        let errorMessage: any;
+        let status: any;
+        (promise as PromiseLike<any>).then(
+          () => {
+            status = "resolved";
+          },
+          (error) => {
+            status = "rejected";
+            errorMessage = error;
+          }
+        );
+
+        const options = optionsMap.get("string")!;
+        options.reject("failure");
+
+        try {
+          await promise;
+        } catch (error) {}
+
+        expect(status).toBe("rejected");
+        expect(errorMessage).toBe("failure");
+      });
+
+      it("should not suspend for resolved caches", async () => {
+        load.mockImplementation((options) => {
+          options.update([1, 2, 3], 1);
+          options.resolve();
+        });
+
+        const { data, value } = cache.read("string");
+        expect(data).toBeUndefined();
+        expect(value).toEqual([1, 2, 3]);
       });
     });
 
@@ -250,17 +320,16 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and completion", async () => {
         const promise = cache.readAsync("string");
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const options = optionsMap.get("string")!;
         options.update([1, 2], 0.66);
         options.update([1, 2, 3, 4], 1);
         options.resolve();
 
-        const { status, value } = await promise;
+        const { value } = await promise;
 
-        expect(status).toEqual(STATUS_RESOLVED);
         expect(value).toEqual([1, 2, 3, 4]);
       });
 
@@ -273,8 +342,8 @@ describe("createStreamingCache", () => {
           () => {}
         );
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const options = optionsMap.get("string")!;
         options.update([1]);
@@ -291,7 +360,7 @@ describe("createStreamingCache", () => {
       });
 
       it("automatically reject the stream if the loading function throws", async () => {
-        fetch.mockImplementation(() => {
+        load.mockImplementation(() => {
           throw Error("Expected");
         });
 
@@ -303,8 +372,8 @@ describe("createStreamingCache", () => {
           () => {}
         );
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         let didCatch = false;
         try {
@@ -323,16 +392,16 @@ describe("createStreamingCache", () => {
         options.update([1, 2], 1);
         options.resolve();
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         await promise;
         await cache.readAsync("string");
 
-        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledTimes(1);
       });
 
-      it("should support additional data passed by the fetcher", () => {
+      it("should support additional data passed by the loader", () => {
         const streaming = cache.stream("string");
         const options = optionsMap.get("string")!;
 
@@ -348,8 +417,8 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and completion", async () => {
         const streaming = cache.stream("string");
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -386,8 +455,8 @@ describe("createStreamingCache", () => {
           () => {}
         );
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         streaming.subscribe(subscription);
@@ -416,7 +485,7 @@ describe("createStreamingCache", () => {
       });
 
       it("automatically reject the stream if the loading function throws", async () => {
-        fetch.mockImplementation(() => {
+        load.mockImplementation(() => {
           throw Error("Expected");
         });
 
@@ -428,8 +497,8 @@ describe("createStreamingCache", () => {
           () => {}
         );
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         expect(streaming.status).toBe(STATUS_REJECTED);
       });
@@ -441,14 +510,14 @@ describe("createStreamingCache", () => {
         options.update([1, 2], 1);
         options.resolve();
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const streaming = cache.stream("string");
 
         expect(streaming.complete).toBe(true);
         expect(streaming.value).toEqual([1, 2]);
-        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledTimes(1);
       });
 
       it("manages streams and subscriptions independently", () => {
@@ -492,8 +561,8 @@ describe("createStreamingCache", () => {
       it("does not notify of updates after a subscriber unsubscribes", () => {
         const streaming = cache.stream("string");
 
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith(expect.anything(), "string");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
         const subscription = jest.fn();
         const unsubscribe = streaming.subscribe(subscription);
@@ -510,7 +579,7 @@ describe("createStreamingCache", () => {
         expect(subscription).toHaveBeenCalledTimes(1);
       });
 
-      it("should support additional data passed by the fetcher", () => {
+      it("should support additional data passed by the loader", () => {
         const streaming = cache.stream("string");
         const options = optionsMap.get("string")!;
 
@@ -527,7 +596,7 @@ describe("createStreamingCache", () => {
     type Value = number[];
 
     let cache: StreamingCache<[string], Value>;
-    let fetch: jest.Mock<
+    let load: jest.Mock<
       void,
       [options: StreamingCacheLoadOptions<Value>, key: string]
     >;
@@ -540,8 +609,8 @@ describe("createStreamingCache", () => {
       getKey = jest.fn();
       getKey.mockImplementation((string) => string);
 
-      fetch = jest.fn();
-      fetch.mockImplementation(
+      load = jest.fn();
+      load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value>, key: string) => {
           optionsMap.set(key, options);
         }
@@ -550,7 +619,7 @@ describe("createStreamingCache", () => {
       cache = createStreamingCache<[string], Value, any>({
         debugLabel: "cache",
         getKey,
-        load: fetch,
+        load,
       });
     });
 
@@ -599,7 +668,7 @@ describe("createStreamingCache", () => {
         debugLabel: "test-cache",
         debugLogging: true,
         getKey,
-        load: fetch,
+        load,
       });
       expect(consoleMock).toHaveBeenCalled();
       expect(consoleMock.mock.calls[0]).toEqual(

@@ -11,6 +11,7 @@ import {
   StreamingSubscribeCallback,
   StreamingValue,
 } from "../types";
+import { assert } from "../utils/assert";
 import { createDeferred } from "../utils/createDeferred";
 import { log } from "../utils/debugging";
 import { defaultGetKey } from "../utils/defaultGetKey";
@@ -128,6 +129,7 @@ export function createStreamingCache<
       const streamingValues: StreamingValue<Value, AdditionalData> = {
         complete: false,
         data: undefined,
+        error: undefined,
         progress: undefined,
         resolver: deferred.promise,
         status: STATUS_PENDING,
@@ -216,6 +218,7 @@ export function createStreamingCache<
           assertPending();
 
           streamingValues.complete = true;
+          streamingValues.error = error;
           streamingValues.status = STATUS_REJECTED;
 
           notifySubscribers();
@@ -243,10 +246,25 @@ export function createStreamingCache<
     getOrCreateStreamingValue(...params);
   }
 
+  function read(...params: Params) {
+    const { data, error, status, resolver, value } = stream(...params);
+    switch (status) {
+      case STATUS_PENDING:
+        throw resolver;
+      case STATUS_REJECTED:
+        throw error;
+      case STATUS_RESOLVED:
+        assert(value != null);
+        return { data, value };
+      default:
+        throw new Error(`Unexpected cache status "${status}"`);
+    }
+  }
+
   async function readAsync(...params: Params) {
     const { resolver } = stream(...params);
-    const { data, status, value } = await resolver;
-    return { data, status, value };
+    const { data, value } = await resolver;
+    return { data, value };
   }
 
   function stream(...params: Params) {
@@ -278,6 +296,7 @@ export function createStreamingCache<
     evict,
     evictAll,
     prefetch,
+    read,
     readAsync,
     stream,
   };

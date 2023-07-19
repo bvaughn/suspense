@@ -5,7 +5,12 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createStreamingCache } from "../cache/createStreamingCache";
-import { STATUS_ABORTED, STATUS_PENDING, STATUS_RESOLVED } from "../constants";
+import {
+  STATUS_ABORTED,
+  STATUS_PENDING,
+  STATUS_REJECTED,
+  STATUS_RESOLVED,
+} from "../constants";
 import {
   StreamingCache,
   StreamingCacheLoadOptions,
@@ -217,5 +222,28 @@ describe("useStreamingValue", () => {
 
       expect(lastRendered?.status).toEqual(STATUS_ABORTED);
     });
+  });
+
+  it("should return an error if the underlying cache is rejected", async () => {
+    let options: StreamingCacheLoadOptions<string> | null = null;
+    const cache = createStreamingCache<[string], string>({
+      load: (...args) => {
+        options = args[0];
+      },
+    });
+
+    const streaming = cache.stream("test");
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(<Component streaming={streaming} />);
+    });
+    expect(lastRendered?.status).toEqual(STATUS_PENDING);
+
+    act(() => options?.reject("failure"));
+
+    expect(lastRendered?.error).toEqual("failure");
+    expect(lastRendered?.status).toEqual(STATUS_REJECTED);
   });
 });

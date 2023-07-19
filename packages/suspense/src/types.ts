@@ -163,6 +163,7 @@ export type GetPointForValue<Point, Value> = (value: Value) => Point;
 export interface StreamingValue<Value, AdditionalData = undefined> {
   complete: boolean;
   data: AdditionalData | undefined;
+  error: any | undefined;
   progress: number | undefined;
   resolver: PromiseLike<StreamingValue<Value, AdditionalData>>;
   status: Status;
@@ -188,11 +189,12 @@ export interface StreamingCache<
   evict(...params: Params): boolean;
   evictAll(): boolean;
   prefetch(...params: Params): void;
+  read(
+    ...params: Params
+  ): Pick<StreamingValue<Value, AdditionalData>, "data" | "value">;
   readAsync(
     ...params: Params
-  ): PromiseLike<
-    Pick<StreamingValue<Value, AdditionalData>, "data" | "status" | "value">
-  >;
+  ): PromiseLike<Pick<StreamingValue<Value, AdditionalData>, "data" | "value">>;
   stream(...params: Params): StreamingValue<Value, AdditionalData>;
 }
 

@@ -5,7 +5,7 @@ import { StreamingValue } from "../types";
 
 export type StreamingValuePartial<Value, AdditionalData> = Pick<
   StreamingValue<Value, AdditionalData>,
-  "complete" | "data" | "progress" | "status" | "value"
+  "complete" | "data" | "error" | "progress" | "status" | "value"
 >;
 
 type Noop = () => void;
@@ -22,6 +22,7 @@ export function useStreamingValue<Value, AdditionalData = undefined>(
   const ref = useRef<StreamingValuePartial<Value, AdditionalData>>({
     complete: false,
     data: undefined,
+    error: undefined,
     progress: 0,
     status: STATUS_PENDING,
     value: undefined,
@@ -39,6 +40,7 @@ export function useStreamingValue<Value, AdditionalData = undefined>(
       ref.current = {
         complete: streamingValues.complete,
         data: streamingValues.data,
+        error: streamingValues.error,
         progress: streamingValues.progress,
         status: streamingValues.status,
         value: streamingValues.value,
