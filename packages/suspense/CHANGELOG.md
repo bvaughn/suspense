@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.45
+* `createStreamingCache` add convenience method `readAsync` for blocking (async) reads.
+
 ## 0.0.44
 * `createCache` and `createIntervalCache`  methods `subscribeToStatus` renamed to `subscribe` and parameters changed to also include value or error
 * `createCache` subscribers notified after value explicitly cached via `cache`
