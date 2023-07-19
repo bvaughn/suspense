@@ -1,7 +1,11 @@
 # Changelog
 
+## 0.0.46
+* Add convenience `read` method to `createStreamingCache` for blocking (Suspense) reads
+* Add `error` property to `createStreamingCache` values; `useStreamingValue` hook will now return the reason for a streaming failure
+
 ## 0.0.45
-* `createStreamingCache` add convenience method `readAsync` for blocking (async) reads.
+* Add convenience `readAsync` method to `createStreamingCache` for blocking (async) reads
 
 ## 0.0.44
 * `createCache` and `createIntervalCache`  methods `subscribeToStatus` renamed to `subscribe` and parameters changed to also include value or error
