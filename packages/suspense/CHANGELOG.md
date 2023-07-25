@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.47
+* Upgrade Preconstruct to fix missing `suspense.development.cjs.mjs` in the published package.
+
 ## 0.0.46
 * Add convenience `read` method to `createStreamingCache` for blocking (Suspense) reads
 * Add `error` property to `createStreamingCache` values; `useStreamingValue` hook will now return the reason for a streaming failure
