@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.48
+* Fix edge case bug in `useStreamingValue` that sometimes caused updates to be dropped
+
 ## 0.0.47
 * Upgrade Preconstruct to fix missing `suspense.development.cjs.mjs` in the published package.
 
