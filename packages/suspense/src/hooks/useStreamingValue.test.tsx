@@ -22,21 +22,15 @@ describe("useStreamingValue", () => {
   let lastRendered: StreamingValuePartial<any, any> | undefined = undefined;
 
   function Component({
-    simulateRenderDuration = 0,
     streaming,
     throttleUpdatesBy,
   }: {
-    simulateRenderDuration?: number;
     streaming: StreamingValue<any, any>;
     throttleUpdatesBy?: number;
   }): any {
     lastRendered = useStreamingValue(streaming, {
       throttleUpdatesBy,
     });
-
-    if (simulateRenderDuration > 0) {
-      jest.advanceTimersByTime(simulateRenderDuration);
-    }
 
     return null;
   }
@@ -164,16 +158,9 @@ describe("useStreamingValue", () => {
       const container = document.createElement("div");
       const root = createRoot(container);
 
-      // Simulate a render that takes longer than the throttle-by duration.
-      // This ensures that the throttling respects commit boundaries
-      // to avoid overwhelming the scheduler.
       act(() => {
         root.render(
-          <Component
-            simulateRenderDuration={500}
-            streaming={streaming}
-            throttleUpdatesBy={100}
-          />
+          <Component streaming={streaming} throttleUpdatesBy={100} />
         );
       });
 
@@ -190,7 +177,9 @@ describe("useStreamingValue", () => {
       });
       expect(lastRendered?.value).toEqual([1]);
 
-      jest.advanceTimersByTime(50);
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
 
       act(() => {
         options.update([1, 2, 3], 0.75);
