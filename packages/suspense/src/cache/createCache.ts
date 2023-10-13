@@ -196,6 +196,8 @@ export function createCache<Params extends Array<any>, Value>(
         // Don't leave any pending request hanging
         deferred.resolve(value);
 
+        notifySubscribers(params);
+
         return;
       }
     }
