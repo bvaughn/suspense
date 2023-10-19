@@ -588,6 +588,30 @@ describe("createCache", () => {
       });
       expect(callbackA.mock.lastCall[0].value).toEqual(value);
     });
+
+    it("should notify subscribers when an externally cached object replaces a pending record", () => {
+      const cache = createCache<[string], Object>({
+        debugLabel: "cache",
+        load: async () => new Promise(() => {}),
+      });
+
+      cache.readAsync("externally-managed");
+
+      cache.subscribe(callbackA, "externally-managed");
+
+      expect(callbackA).toHaveBeenCalledWith({ status: STATUS_PENDING });
+
+      const value = { id: 123 };
+
+      cache.cache(value, "externally-managed");
+
+      expect(callbackA).toHaveBeenCalledTimes(2);
+      expect(callbackA).toHaveBeenCalledWith({
+        status: STATUS_RESOLVED,
+        value,
+      });
+      expect(callbackA.mock.lastCall[0].value).toEqual(value);
+    });
   });
 
   describe("getCache: LRU Cache", () => {
