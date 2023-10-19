@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.49
+* Notify subscribers when an externally cached object replaces a pending record
+
 ## 0.0.48
 * Fix edge case bug in `useStreamingValue` that sometimes caused updates to be dropped
 
