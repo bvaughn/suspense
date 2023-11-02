@@ -12,3 +12,5 @@ export function useCacheStatus<Params extends Array<any>>(
     () => cache.getStatus(...params)
   );
 }
+
+useCacheStatus.displayName = "useCacheStatus";

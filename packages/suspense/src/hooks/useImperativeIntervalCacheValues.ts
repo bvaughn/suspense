@@ -64,3 +64,6 @@ export function useImperativeIntervalCacheValues<
     value: undefined,
   };
 }
+
+useImperativeIntervalCacheValues.displayName =
+  "useImperativeIntervalCacheValues";

@@ -186,3 +186,5 @@ export function useCacheMutation<Params extends Array<any>, Value>(
     mutateSync,
   };
 }
+
+useCacheMutation.displayName = "useCacheMutation";

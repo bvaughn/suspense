@@ -99,3 +99,5 @@ export function useImperativeCacheValue<
     [error, status, value]
   );
 }
+
+useImperativeCacheValue.displayName = "useImperativeCacheValue";

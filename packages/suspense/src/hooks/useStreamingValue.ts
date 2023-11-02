@@ -63,3 +63,5 @@ export function useStreamingValue<Value, AdditionalData = undefined>(
     getValue
   );
 }
+
+useStreamingValue.displayName = "useStreamingValue";

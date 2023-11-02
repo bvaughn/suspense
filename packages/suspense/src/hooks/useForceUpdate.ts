@@ -10,3 +10,5 @@ export function useForceUpdate(): ForceUpdate {
   );
   return forceUpdate;
 }
+
+useForceUpdate.displayName = "useForceUpdate";

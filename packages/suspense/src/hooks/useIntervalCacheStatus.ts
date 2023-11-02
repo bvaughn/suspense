@@ -14,3 +14,5 @@ export function useIntervalCacheStatus<Point, Params extends Array<any>>(
     () => cache.getStatus(start, end, ...params)
   );
 }
+
+useIntervalCacheStatus.displayName = "useIntervalCacheStatus";
