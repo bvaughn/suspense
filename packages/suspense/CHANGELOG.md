@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.50
+* Add `displayName` property to custom hooks to improve React DevTools display
+
 ## 0.0.49
 * Notify subscribers when an externally cached object replaces a pending record
 
