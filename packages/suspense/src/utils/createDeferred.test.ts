@@ -1,11 +1,14 @@
+import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "..";
 import { createDeferred } from "./createDeferred";
 
 describe("createDeferred", () => {
   it("should resolve with a value", async () => {
     const deferred = createDeferred<string>();
+    expect(deferred.status).toBe(STATUS_PENDING);
 
     setTimeout(() => {
       deferred.resolve("Resolved value");
+      expect(deferred.status).toBe(STATUS_RESOLVED);
     }, 0);
 
     await expect(await deferred.promise).toBe("Resolved value");
@@ -13,8 +16,10 @@ describe("createDeferred", () => {
 
   it("should reject with a value", async () => {
     const deferred = createDeferred<string>();
+    expect(deferred.status).toBe(STATUS_PENDING);
 
     deferred.reject("Expected error");
+    expect(deferred.status).toBe(STATUS_REJECTED);
 
     let caught = null;
 

@@ -92,6 +92,7 @@ export interface Deferred<Type> {
   promise: Promise<Type>;
   reject(error: any): void;
   resolve(value?: Type): void;
+  status: StatusPending | StatusRejected | StatusResolved;
 }
 
 // Cache types
