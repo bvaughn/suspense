@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.51
+* Add `status` field to deferred objects (values created with `createDeferred`)
+
 ## 0.0.50
 * Add `displayName` property to custom hooks to improve React DevTools display
 
