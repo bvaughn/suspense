@@ -38,6 +38,15 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 
+if (getCacheForTypeMutable == null) {
+  throw new Error(
+    "unstable_getCacheForType is not a function.\n\n" +
+      "This probably means that the wrong version of React has been specified as a dependency. " +
+      'The "suspense" package requires the @experimental release of "react" and "react-dom".\n\n' +
+      "For more information, see https://react.dev/community/versioning-policy#experimental-channel"
+  );
+}
+
 export type InternalCache<Params extends Array<any>, Value> = Cache<
   Params,
   Value
