@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.52
+* Add custom error message for non-experimental "react" and "react-dom" dependencies.
+
 ## 0.0.51
 * Add `status` field to deferred objects (values created with `createDeferred`)
 
