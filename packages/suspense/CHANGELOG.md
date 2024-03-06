@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.53
+* `prefetch` method should not thrown an already-cached error
+
 ## 0.0.52
 * Add custom error message for non-experimental "react" and "react-dom" dependencies.
 
