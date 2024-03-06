@@ -364,6 +364,16 @@ describe("createCache", () => {
       expect(load).toHaveBeenCalledWith(["sync-2"], expect.anything());
       expect(cache.getValue("sync-2")).toEqual("sync-2");
     });
+
+    it("should not throw", async () => {
+      // Ensure the error is cached
+      try {
+        await cache.readAsync("error-1");
+      } catch {}
+
+      // This should not throw
+      cache.prefetch("error-1");
+    });
   });
 
   describe("subscribe", () => {
