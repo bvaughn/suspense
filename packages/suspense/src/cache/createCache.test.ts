@@ -366,12 +366,19 @@ describe("createCache", () => {
     });
 
     it("should not throw", async () => {
-      // Ensure the error is cached
+      cache.prefetch("error-1");
+    });
+
+    it("should not throw if a cached response errored", async () => {
+      let didThrow = false;
       try {
         await cache.readAsync("error-1");
-      } catch {}
+      } catch {
+        didThrow = true;
+      }
 
-      // This should not throw
+      expect(didThrow).toBe(true);
+
       cache.prefetch("error-1");
     });
   });

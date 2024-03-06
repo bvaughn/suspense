@@ -383,7 +383,7 @@ export function createCache<Params extends Array<any>, Value>(
         );
       }
     } catch {
-      // Don't let readAsync throw an uncaught error.
+      // Don't throw an already-cached error
     }
   }
 
