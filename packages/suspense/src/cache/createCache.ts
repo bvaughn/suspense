@@ -372,14 +372,18 @@ export function createCache<Params extends Array<any>, Value>(
   function prefetch(...params: Params): void {
     debugLog("prefetch()", params);
 
-    const promiseOrValue = readAsync(...params);
-    if (isPromiseLike(promiseOrValue)) {
-      promiseOrValue.then(
-        () => {},
-        (error) => {
-          // Don't let readAsync throw an uncaught error.
-        }
-      );
+    try {
+      const promiseOrValue = readAsync(...params);
+      if (isPromiseLike(promiseOrValue)) {
+        promiseOrValue.then(
+          () => {},
+          (error) => {
+            // Don't let readAsync throw an uncaught error.
+          }
+        );
+      }
+    } catch {
+      // Don't let readAsync throw an uncaught error.
     }
   }
 
