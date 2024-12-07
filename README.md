@@ -4,7 +4,7 @@ APIs to simplify data loading and caching. Primarily intended for use with [Reac
 
 #### ⚠️ Considerations
 1. Suspense is an experimental, pre-release feature; **these APIs will change** along with React.
-1. This package depends on `react@experimental` and `react-dom@experimental` versions.
+1. This package depends on `react@^19.0.0` and `react-dom@^19.0.0` versions.
 
 
 #### Example

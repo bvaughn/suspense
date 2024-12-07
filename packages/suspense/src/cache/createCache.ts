@@ -1,5 +1,5 @@
 import { isDevelopment } from "#is-development";
-import { unstable_getCacheForType as getCacheForTypeMutable } from "react";
+import { cache as cacheMutable } from "react";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -38,12 +38,11 @@ import {
   isResolvedRecord,
 } from "../utils/isRecordStatus";
 
-if (getCacheForTypeMutable == null) {
+if (cacheMutable == null) {
   throw new Error(
-    "unstable_getCacheForType is not a function.\n\n" +
+    "cache is not a function.\n\n" +
       "This probably means that the wrong version of React has been specified as a dependency. " +
-      'The "suspense" package requires the @experimental release of "react" and "react-dom".\n\n' +
-      "For more information, see https://react.dev/community/versioning-policy#experimental-channel"
+      'The "suspense" package requires release 19 of "react" and "react-dom".'
   );
 }
 
@@ -141,13 +140,11 @@ export function createCache<Params extends Array<any>, Value>(
   // Immutable caches should read from backing cache directly.
   // Only mutable caches should use React-managed cache
   // in order to reduce re-renders when caches are refreshed for mutations.
-  const getCacheForType = immutable ? () => recordMap : getCacheForTypeMutable;
+  const getCacheForType = immutable ? () => recordMap : cacheMutable(createPendingMutationRecordMap);
 
   function abort(...params: Params): boolean {
     const cacheKey = getKey(params);
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     // In-progress mutations aren't guaranteed to be in the recordMap.
     // So we check the mutationAbortControllerMap to infer this.
@@ -189,9 +186,7 @@ export function createCache<Params extends Array<any>, Value>(
     debugLog("cache()", params);
 
     const cacheKey = getKey(params);
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     let record: Record<Value> | undefined = getRecord(...params);
     if (record != null) {
@@ -237,9 +232,7 @@ export function createCache<Params extends Array<any>, Value>(
 
   function evict(...params: Params): boolean {
     const cacheKey = getKey(params);
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     debugLog("evict()", params);
 
@@ -252,9 +245,7 @@ export function createCache<Params extends Array<any>, Value>(
   }
 
   function evictAll(): void {
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     debugLog("evictAll()", undefined);
 
@@ -273,18 +264,14 @@ export function createCache<Params extends Array<any>, Value>(
 
   function getRecord(...params: Params): Record<Value> | undefined {
     const cacheKey = getKey(params);
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     return pendingMutationRecordMap.get(cacheKey) ?? recordMap.get(cacheKey);
   }
 
   function getOrCreateRecord(...params: Params): Record<Value> {
     const cacheKey = getKey(params);
-    const pendingMutationRecordMap = getCacheForType(
-      createPendingMutationRecordMap
-    );
+    const pendingMutationRecordMap = getCacheForType();
 
     let record = getRecord(...params);
     if (record == null) {
