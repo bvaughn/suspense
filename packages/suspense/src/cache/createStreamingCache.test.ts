@@ -1,3 +1,4 @@
+import { describe, beforeEach, expect, it, afterEach, vi, Mock } from "vitest";
 import {
   STATUS_ABORTED,
   STATUS_PENDING,
@@ -12,21 +13,20 @@ describe("createStreamingCache", () => {
   type Value = string;
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("single value (string)", () => {
     let cache: StreamingCache<[string], Value, Metadata>;
-    let load: jest.Mock<
-      void,
-      [options: StreamingCacheLoadOptions<Value, Metadata>, key: string]
+    let load: Mock<
+      (options: StreamingCacheLoadOptions<Value, Metadata>, key: string) => void
     >;
     let optionsMap: Map<string, StreamingCacheLoadOptions<string, Metadata>>;
 
     beforeEach(() => {
       optionsMap = new Map();
 
-      load = jest.fn();
+      load = vi.fn();
       load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value, Metadata>, key: string) => {
           optionsMap.set(key, options);
@@ -45,7 +45,7 @@ describe("createStreamingCache", () => {
       expect(load).toHaveBeenCalledTimes(1);
       expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
-      const subscription = jest.fn();
+      const subscription = vi.fn();
       streaming.subscribe(subscription);
 
       const options = optionsMap.get("string")!;
@@ -78,16 +78,15 @@ describe("createStreamingCache", () => {
     type Value = number[];
 
     let cache: StreamingCache<[string], Value>;
-    let load: jest.Mock<
-      void,
-      [options: StreamingCacheLoadOptions<Value>, key: string]
+    let load: Mock<
+      (options: StreamingCacheLoadOptions<Value>, key: string) => void
     >;
     let optionsMap: Map<string, StreamingCacheLoadOptions<Value, any>>;
 
     beforeEach(() => {
       optionsMap = new Map();
 
-      load = jest.fn();
+      load = vi.fn();
       load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value>, key: string) => {
           optionsMap.set(key, options);
@@ -101,7 +100,7 @@ describe("createStreamingCache", () => {
     });
 
     it("should supply a working default getCacheKey if none is provided", () => {
-      const load = jest.fn();
+      const load = vi.fn();
       const cache = createStreamingCache<[string, number, boolean], string>({
         load,
       });
@@ -336,7 +335,7 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and rejection", async () => {
         const promise = cache.readAsync("string");
 
-        // Prevent Jest from failing due to unhandled promise rejection
+        // Prevent test from failing due to unhandled promise rejection
         promise.then(
           () => {},
           () => {}
@@ -366,7 +365,7 @@ describe("createStreamingCache", () => {
 
         const promise = cache.readAsync("string");
 
-        // Prevent Jest from failing due to unhandled promise rejection
+        // Prevent test from failing due to unhandled promise rejection
         promise.then(
           () => {},
           () => {}
@@ -420,7 +419,7 @@ describe("createStreamingCache", () => {
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
-        const subscription = jest.fn();
+        const subscription = vi.fn();
         streaming.subscribe(subscription);
 
         const options = optionsMap.get("string")!;
@@ -449,7 +448,7 @@ describe("createStreamingCache", () => {
       it("notifies subscriber(s) of progress and rejection", async () => {
         const streaming = cache.stream("string");
 
-        // Prevent Jest from failing due to unhandled promise rejection
+        // Prevent test from failing due to unhandled promise rejection
         streaming.resolver.then(
           () => {},
           () => {}
@@ -458,7 +457,7 @@ describe("createStreamingCache", () => {
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
-        const subscription = jest.fn();
+        const subscription = vi.fn();
         streaming.subscribe(subscription);
 
         const options = optionsMap.get("string")!;
@@ -491,7 +490,7 @@ describe("createStreamingCache", () => {
 
         const streaming = cache.stream("string");
 
-        // Prevent Jest from failing due to unhandled promise rejection
+        // Prevent test from failing due to unhandled promise rejection
         streaming.resolver.then(
           () => {},
           () => {}
@@ -527,8 +526,8 @@ describe("createStreamingCache", () => {
         const optionsA = optionsMap.get("a")!;
         const optionsB = optionsMap.get("b")!;
 
-        const subscriptionA = jest.fn();
-        const subscriptionB = jest.fn();
+        const subscriptionA = vi.fn();
+        const subscriptionB = vi.fn();
 
         streamingA.subscribe(subscriptionA);
         streamingB.subscribe(subscriptionB);
@@ -564,7 +563,7 @@ describe("createStreamingCache", () => {
         expect(load).toHaveBeenCalledTimes(1);
         expect(load).toHaveBeenCalledWith(expect.anything(), "string");
 
-        const subscription = jest.fn();
+        const subscription = vi.fn();
         const unsubscribe = streaming.subscribe(subscription);
 
         const options = optionsMap.get("string")!;
@@ -596,20 +595,19 @@ describe("createStreamingCache", () => {
     type Value = number[];
 
     let cache: StreamingCache<[string], Value>;
-    let load: jest.Mock<
-      void,
-      [options: StreamingCacheLoadOptions<Value>, key: string]
+    let load: Mock<
+      (options: StreamingCacheLoadOptions<Value>, key: string) => void
     >;
-    let getKey: jest.Mock<string, [string]>;
+    let getKey: Mock<(arg: string) => string>;
     let optionsMap: Map<string, StreamingCacheLoadOptions<Value, any>>;
 
     beforeEach(() => {
       optionsMap = new Map();
 
-      getKey = jest.fn();
+      getKey = vi.fn();
       getKey.mockImplementation((string) => string);
 
-      load = jest.fn();
+      load = vi.fn();
       load.mockImplementation(
         (options: StreamingCacheLoadOptions<Value>, key: string) => {
           optionsMap.set(key, options);
@@ -624,7 +622,7 @@ describe("createStreamingCache", () => {
     });
 
     it("should warn if a key contains a stringified object", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
 
       getKey.mockImplementation((string) => `${{ string }}`);
 
@@ -641,7 +639,7 @@ describe("createStreamingCache", () => {
     });
 
     it("warns about invalid progress values", () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
 
       cache.stream("string");
 
@@ -660,9 +658,7 @@ describe("createStreamingCache", () => {
     });
 
     it("logs debug messages to console", () => {
-      const consoleMock = jest
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const consoleMock = vi.spyOn(console, "log").mockImplementation(() => {});
 
       cache = createStreamingCache<[string], Value, any>({
         debugLabel: "test-cache",

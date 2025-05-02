@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
@@ -31,7 +28,9 @@ describe("useCacheMutation", () => {
   let cache: Cache<[string], string>;
   let container: HTMLDivElement | null = null;
   let Component: (props: Props) => any;
-  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
+  let load: Mock<
+    (arg: [string], options: CacheLoadOptions) => Promise<string> | string
+  >;
   let mostRecentRenders: { [cacheKey: string]: Rendered } = {};
   let mutationApi: { [cacheKey: string]: MutationApi<[string], string> } = {};
 
@@ -39,11 +38,11 @@ describe("useCacheMutation", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     container = null;
 
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(async ([cacheKey]) => Promise.resolve(cacheKey));
 
     cache = createCache<[string], string>({
@@ -132,15 +131,15 @@ describe("useCacheMutation", () => {
         load: ([cacheKey]) => cacheKey,
       });
 
-      const ReadFromImmutableCache = jest.fn().mockImplementation(() => {
+      const ReadFromImmutableCache = vi.fn().mockImplementation(() => {
         return immutableCache.read("key");
       });
 
-      const ReadFromMutableCache = jest.fn().mockImplementation(() => {
+      const ReadFromMutableCache = vi.fn().mockImplementation(() => {
         return mutableCache.read("key");
       });
 
-      const ReadFromMainCache = jest.fn().mockImplementation(() => {
+      const ReadFromMainCache = vi.fn().mockImplementation(() => {
         mutationApi.key = useCacheMutation(cache);
         return cache.read("key");
       });
@@ -593,7 +592,7 @@ describe("useCacheMutation", () => {
 
   describe("cache subscriptions", () => {
     let subscriptionMocks: {
-      [cacheKey: string]: jest.Mock<SubscriptionData<string>[]>;
+      [cacheKey: string]: Mock<() => SubscriptionData<string>[]>;
     };
 
     beforeEach(() => {
@@ -603,7 +602,7 @@ describe("useCacheMutation", () => {
         mutationApi[cacheKey] = useCacheMutation(cache);
 
         useLayoutEffect(() => {
-          const mock = jest.fn();
+          const mock = vi.fn();
           subscriptionMocks[cacheKey] = mock;
           return cache.subscribe(mock, cacheKey);
         }, [cacheKey]);

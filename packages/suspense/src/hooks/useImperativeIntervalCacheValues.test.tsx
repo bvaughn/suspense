@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { Component, PropsWithChildren } from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
@@ -32,14 +29,13 @@ function getPointForValue(value: number) {
 
 describe("useImperativeIntervalCacheValues", () => {
   let cache: IntervalCache<number, [id: string], number>;
-  let load: jest.Mock<
-    number[] | PromiseLike<number[]>,
-    [
+  let load: Mock<
+    (
       start: number,
       end: number,
       id: string,
       options: IntervalCacheLoadOptions<number>
-    ]
+    ) => number[] | PromiseLike<number[]>
   >;
 
   let container: HTMLDivElement | null = null;
@@ -94,7 +90,7 @@ describe("useImperativeIntervalCacheValues", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(async (start, end, text, options) => {
       const deferred = createDeferred<number[]>();
 

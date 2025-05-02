@@ -1,12 +1,13 @@
+import { describe, beforeEach, afterEach, expect, it, vi, Mock } from 'vitest'
 import { configure } from "./configure";
 import { Utilities } from "./types";
 
 describe("array-sorting-utilities", () => {
-  let compare: jest.Mock<number, [a: number, b: number]>;
+  let compare: Mock<(a: number, b: number) => number>;
   let utilities: Utilities<number>;
 
   beforeEach(() => {
-    compare = jest.fn();
+    compare = vi.fn();
     compare.mockImplementation((a: number, b: number) => {
       if (a === b) {
         return 0;

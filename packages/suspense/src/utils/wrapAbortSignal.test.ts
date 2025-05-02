@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { wrapAbortSignal } from "./wrapAbortSignal";
 
 describe("wrapAbortSignal", () => {

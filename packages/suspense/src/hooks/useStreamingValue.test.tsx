@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { createStreamingCache } from "../cache/createStreamingCache";
@@ -39,7 +36,7 @@ describe("useStreamingValue", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   describe("single value (string)", () => {
@@ -86,7 +83,7 @@ describe("useStreamingValue", () => {
         options.update("abcd", 1);
         options.resolve();
 
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
       });
 
       expect(lastRendered).toEqual({
@@ -140,7 +137,7 @@ describe("useStreamingValue", () => {
         options.update([1, 2, 3, 4], 1);
         options.resolve();
 
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
       });
 
       expect(lastRendered).toEqual({
@@ -178,7 +175,7 @@ describe("useStreamingValue", () => {
       expect(lastRendered?.value).toEqual([1]);
 
       act(() => {
-        jest.advanceTimersByTime(50);
+        vi.advanceTimersByTime(50);
       });
 
       act(() => {
@@ -187,7 +184,7 @@ describe("useStreamingValue", () => {
       expect(lastRendered?.value).toEqual([1]);
 
       act(() => {
-        jest.advanceTimersByTime(50);
+        vi.advanceTimersByTime(50);
       });
 
       expect(lastRendered?.value).toEqual([1, 2, 3]);
@@ -207,7 +204,7 @@ describe("useStreamingValue", () => {
         cache.abort("test");
       });
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(lastRendered?.status).toEqual(STATUS_ABORTED);
     });

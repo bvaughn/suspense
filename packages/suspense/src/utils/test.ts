@@ -1,4 +1,5 @@
 import LRUCache from "lru-cache";
+import { expect, vi } from "vitest";
 
 export type WeakRefArray<Value> = MockWeakRefInterface<Value>[];
 export interface MockWeakRefInterface<Value> {
@@ -72,7 +73,7 @@ export async function waitForGC(
   conditional: () => boolean = () => true,
   timeout: number = 5000
 ): Promise<void> {
-  const finalizer = jest.fn();
+  const finalizer = vi.fn();
   const finalizationRegistry = new FinalizationRegistry(finalizer);
   finalizationRegistry.register({}, "control");
 

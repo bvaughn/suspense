@@ -1,12 +1,13 @@
+import { describe, expect, it, vi } from "vitest";
 import { parallelize } from "./parallelize";
 
 describe("parallelize", () => {
   it("should call all callbacks before re-throwing any thrown value", () => {
-    const callbackA = jest.fn();
-    const callbackB = jest.fn().mockImplementation(() => {
+    const callbackA = vi.fn();
+    const callbackB = vi.fn().mockImplementation(() => {
       throw Error("Expected error");
     });
-    const callbackC = jest.fn();
+    const callbackC = vi.fn();
 
     expect(() => {
       parallelize(callbackA, callbackB, callbackC);

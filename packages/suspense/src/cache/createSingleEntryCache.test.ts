@@ -1,3 +1,4 @@
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { createSingleEntryCache } from "./createSingleEntryCache";
 import { Cache, CacheLoadOptions } from "../types";
 import { isPromiseLike } from "../utils/isPromiseLike";
@@ -5,24 +6,25 @@ import { isPromiseLike } from "../utils/isPromiseLike";
 // Minimal testing of this cache is okay since it's just a wrapper around createCache.
 describe("createSingleEntryCache", () => {
   let cache: Cache<[], string>;
-  let load: jest.Mock<Promise<string> | string, [[], CacheLoadOptions]>;
+  let load: Mock<
+    (_: [], options: CacheLoadOptions) => Promise<string> | string
+  >;
 
   beforeEach(() => {
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(() => Promise.resolve("value"));
 
     cache = createSingleEntryCache<[], string>({ load });
   });
 
   it("should throw if a getKey function is provided", () => {
-    expect(() =>
-      createSingleEntryCache({
+    expect(() => {
+      const options = {
         load,
-
-        // @ts-ignore
         getKey: () => "test",
-      })
-    ).toThrowError();
+      };
+      createSingleEntryCache(options);
+    }).toThrowError();
   });
 
   describe("cache", () => {

@@ -1,3 +1,4 @@
+import { describe, beforeEach, afterEach, expect, it, Mock, vi } from "vitest";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -26,14 +27,16 @@ function defaultLoad(
 
 describe("createCache", () => {
   let cache: Cache<[string], string>;
-  let getCacheKey: jest.Mock<string, [[string]]>;
-  let load: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
+  let getCacheKey: Mock<(arg: [string]) => string>;
+  let load: Mock<
+    (arg: [string], options: CacheLoadOptions) => Promise<string> | string
+  >;
 
   beforeEach(() => {
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(defaultLoad);
 
-    getCacheKey = jest.fn();
+    getCacheKey = vi.fn();
     getCacheKey.mockImplementation(([key]) => key.toString());
 
     cache = createCache<[string], string>({
@@ -44,7 +47,7 @@ describe("createCache", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   async function fakeSuspend(read: () => any) {
@@ -384,12 +387,12 @@ describe("createCache", () => {
   });
 
   describe("subscribe", () => {
-    let callbackA: jest.Mock;
-    let callbackB: jest.Mock;
+    let callbackA: Mock<(...args: any[]) => any>;
+    let callbackB: Mock<(...args: any[]) => any>;
 
     beforeEach(() => {
-      callbackA = jest.fn();
-      callbackB = jest.fn();
+      callbackA = vi.fn();
+      callbackB = vi.fn();
     });
 
     it("should subscribe to keys that have not been loaded", async () => {
@@ -603,7 +606,7 @@ describe("createCache", () => {
         status: STATUS_RESOLVED,
         value,
       });
-      expect(callbackA.mock.lastCall[0].value).toEqual(value);
+      expect(callbackA.mock.lastCall![0].value).toEqual(value);
     });
 
     it("should notify subscribers when an externally cached object replaces a pending record", () => {
@@ -627,22 +630,21 @@ describe("createCache", () => {
         status: STATUS_RESOLVED,
         value,
       });
-      expect(callbackA.mock.lastCall[0].value).toEqual(value);
+      expect(callbackA.mock.lastCall![0].value).toEqual(value);
     });
   });
 
   describe("getCache: LRU Cache", () => {
-    let evictFn: jest.Mock<void, [string]>;
-    let loadObject: jest.Mock<
-      Promise<Object> | Object,
-      [[string], CacheLoadOptions]
+    let evictFn: Mock<(arg: string) => void>;
+    let loadObject: Mock<
+      (arg: [string], options: CacheLoadOptions) => Promise<Object> | Object
     >;
     let lruCache: Cache<[string], Object>;
 
     beforeEach(() => {
-      evictFn = jest.fn();
+      evictFn = vi.fn();
 
-      loadObject = jest.fn();
+      loadObject = vi.fn();
       loadObject.mockImplementation(([key]) => {
         if (key.startsWith("async")) {
           return Promise.resolve({ key });
@@ -731,16 +733,18 @@ describe("createCache", () => {
   describe("getCache: WeakRefMap", () => {
     type TestValue = { key: string };
     let gcCache: Cache<[string], TestValue>;
-    let loadObject: jest.Mock<
-      Promise<TestValue> | TestValue,
-      [[string], CacheLoadOptions]
+    let loadObject: Mock<
+      (
+        arg: [string],
+        options: CacheLoadOptions
+      ) => Promise<TestValue> | TestValue
     >;
     let weakRefArray: WeakRefArray<any>;
 
     beforeEach(() => {
       weakRefArray = mockWeakRef();
 
-      loadObject = jest.fn();
+      loadObject = vi.fn();
       loadObject.mockImplementation(([key]) => {
         if (key.startsWith("async")) {
           return Promise.resolve({ key });
@@ -822,7 +826,7 @@ describe("createCache", () => {
 
       expect(gcCache.getValueIfCached("test")).toBeUndefined();
 
-      await expect(await gcCache.readAsync("test")).toEqual({
+      expect(await gcCache.readAsync("test")).toEqual({
         key: "test",
       });
     });
@@ -830,7 +834,7 @@ describe("createCache", () => {
 
   describe("development mode", () => {
     it("should warn if a key contains a stringified object", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
 
       getCacheKey.mockImplementation((string) => `${{ string }}`);
 
@@ -847,9 +851,7 @@ describe("createCache", () => {
     });
 
     it("logs debug messages to console", () => {
-      const consoleMock = jest
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const consoleMock = vi.spyOn(console, "log").mockImplementation(() => {});
 
       cache = createCache<[string], string>({
         debugLabel: "test-cache",

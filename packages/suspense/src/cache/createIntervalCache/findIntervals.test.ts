@@ -1,4 +1,5 @@
 import { configure as configureIntervalUtilities } from "interval-utilities";
+import { describe, expect, it } from "vitest";
 
 import {
   CachedIntervals,

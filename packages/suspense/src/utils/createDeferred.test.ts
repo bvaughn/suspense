@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { STATUS_PENDING, STATUS_REJECTED, STATUS_RESOLVED } from "..";
 import { createDeferred } from "./createDeferred";
 
@@ -11,7 +12,7 @@ describe("createDeferred", () => {
       expect(deferred.status).toBe(STATUS_RESOLVED);
     }, 0);
 
-    await expect(await deferred.promise).toBe("Resolved value");
+    expect(await deferred.promise).toBe("Resolved value");
   });
 
   it("should reject with a value", async () => {

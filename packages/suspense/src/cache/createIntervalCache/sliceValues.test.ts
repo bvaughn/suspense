@@ -1,4 +1,5 @@
 import { configure } from "point-utilities";
+import { describe, expect, it } from "vitest";
 import { sliceValues } from "./sliceValues";
 
 function getPointForValue(value: number) {

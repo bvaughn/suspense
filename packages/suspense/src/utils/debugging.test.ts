@@ -1,18 +1,26 @@
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  expect,
+  it,
+  vi,
+  MockInstance,
+} from "vitest";
 import { disableDebugLogging, enableDebugLogging, log } from "./debugging";
 
 describe("debugging", () => {
-  let consoleMock: jest.SpyInstance<
-    void,
-    [message?: any, ...optionalParams: any[]],
-    any
-  >;
+  let consoleMock: MockInstance<{
+    (...data: any[]): void;
+    (message?: any, ...optionalParams: any[]): void;
+  }>;
 
   beforeEach(() => {
-    consoleMock = jest.spyOn(console, "log").mockImplementation(() => {});
+    consoleMock = vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should honor the debug param", () => {
