@@ -6,7 +6,6 @@ dist
 website/dist
 node_modules
 .cache
-.parcel-cache
 
 .pnp.*
 .yarn/*
