@@ -1,4 +1,4 @@
-name: "[suspense] Jest (node based) unit tests"
+name: "[interval-utilities] Vitest unit tests"
 on: [pull_request]
 jobs:
   tests-e2e:
@@ -14,4 +14,4 @@ jobs:
       - name: Build NPM packages
         run: pnpm run prerelease
       - name: Run tests
-        run: cd packages/suspense && pnpm run test:node
+        run: cd packages/interval-utilities && pnpm run test

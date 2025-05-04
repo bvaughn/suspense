@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "parcel build 'index.html'",
+    "build": "vite build",
     "kill-port": "kill-port ${PORT:-1234}",
     "test": "",
-    "watch": "parcel 'index.html'"
+    "watch": "vite serve"
   },
   "devDependencies": {
     "@types/lodash.shuffle": "^4.2.7",

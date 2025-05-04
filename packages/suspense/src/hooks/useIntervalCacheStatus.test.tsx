@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
@@ -31,14 +28,13 @@ function getPointForValue(value: number) {
 
 describe("useIntervalCacheStatus", () => {
   let cache: IntervalCache<number, [id: string], number>;
-  let load: jest.Mock<
-    PromiseLike<number[]>,
-    [
+  let load: Mock<
+    (
       start: number,
       end: number,
       id: string,
       options: IntervalCacheLoadOptions<number>
-    ]
+    ) => PromiseLike<number[]>
   >;
   let lastRenderedStatus: Status | undefined = undefined;
 
@@ -60,7 +56,7 @@ describe("useIntervalCacheStatus", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(async (start: number, end: number) => {
       return createContiguousArray(start, end);
     });

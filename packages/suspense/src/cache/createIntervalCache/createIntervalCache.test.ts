@@ -1,3 +1,4 @@
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -42,22 +43,21 @@ function getPointForValue(value: number) {
 
 describe("createIntervalCache", () => {
   let cache: IntervalCache<number, [id: string], number>;
-  let getCacheKey: jest.Mock<string, [string]>;
-  let load: jest.Mock<
-    PromiseLike<Array<number> | PartialArray<number>>,
-    [
+  let getCacheKey: Mock<(arg: string) => string>;
+  let load: Mock<
+    (
       start: number,
       end: number,
       id: string,
       options: IntervalCacheLoadOptions<number>
-    ]
+    ) => PromiseLike<Array<number> | PartialArray<number>>
   >;
 
   beforeEach(() => {
-    getCacheKey = jest.fn();
+    getCacheKey = vi.fn();
     getCacheKey.mockImplementation((key) => key);
 
-    load = jest.fn();
+    load = vi.fn();
     load.mockImplementation(async (start: number, end: number, id: string) =>
       createContiguousArray(start, end)
     );
@@ -131,7 +131,7 @@ describe("createIntervalCache", () => {
 
   describe("configuration", () => {
     it("should support bigint points", async () => {
-      const load = jest.fn();
+      const load = vi.fn();
       load.mockImplementation((start: number, end: number, id: string) => [
         start,
       ]);
@@ -802,12 +802,12 @@ describe("createIntervalCache", () => {
   });
 
   describe("subscribe", () => {
-    let callbackA: jest.Mock;
-    let callbackB: jest.Mock;
+    let callbackA: Mock<(...args: any) => any>;
+    let callbackB: Mock<(...args: any) => any>;
 
     beforeEach(() => {
-      callbackA = jest.fn();
-      callbackB = jest.fn();
+      callbackA = vi.fn();
+      callbackB = vi.fn();
     });
 
     it("should subscribe to keys that have not been loaded", async () => {
@@ -1026,7 +1026,7 @@ describe("createIntervalCache", () => {
 
   describe("development mode", () => {
     it("should warn if a key contains a stringified object", async () => {
-      jest.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(console, "warn").mockImplementation(() => {});
 
       getCacheKey.mockImplementation((string) => `${{ string }}`);
 
@@ -1043,9 +1043,7 @@ describe("createIntervalCache", () => {
     });
 
     it("logs debug messages to console", () => {
-      const consoleMock = jest
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const consoleMock = vi.spyOn(console, "log").mockImplementation(() => {});
 
       cache = createIntervalCache<number, [id: string], number>({
         debugLabel: "test-cache",

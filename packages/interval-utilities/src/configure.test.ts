@@ -1,5 +1,6 @@
-import { Utilities } from "./types";
+import { beforeEach, describe, expect, it } from "vitest";
 import { configure } from "./configure";
+import { Utilities } from "./types";
 
 describe("interval-utilities", () => {
   let utilities: Utilities<number>;
@@ -346,7 +347,10 @@ describe("interval-utilities", () => {
         ab: [[1, 5]],
       });
       expect(separate([-10, -2], [-8, -5])).toEqual({
-        a: [[-10, -8], [-5, -2], ,],
+        a: [
+          [-10, -8],
+          [-5, -2],
+        ],
         b: [],
         ab: [[-8, -5]],
       });

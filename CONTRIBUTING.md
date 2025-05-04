@@ -2,7 +2,7 @@
 
 ## Installation
 
-This project uses [PNPM](https://pnpm.io/) for package management and [ParcelJS](https://parceljs.org/) for bundling. Initial setup can be done like so:
+This project uses [PNPM](https://pnpm.io/) for package management and [Vite](https://vite.dev/) for bundling. Initial setup can be done like so:
 
 ```sh
 git clone git@github.com:bvaughn/suspense.git

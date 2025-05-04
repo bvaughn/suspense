@@ -1,3 +1,4 @@
+import { describe, beforeEach, expect, it, vi, Mock } from 'vitest'
 import {
   STATUS_NOT_FOUND,
   STATUS_PENDING,
@@ -11,7 +12,7 @@ describe("createExternallyManagedCache", () => {
   let cache: ExternallyManagedCache<[string], string>;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     cache = createExternallyManagedCache({
       debugLabel: "cache",
@@ -36,10 +37,10 @@ describe("createExternallyManagedCache", () => {
   });
 
   describe("subscribe", () => {
-    let callback: jest.Mock;
+    let callback: Mock<(...args: any[]) => any>;
 
     beforeEach(() => {
-      callback = jest.fn();
+      callback = vi.fn();
     });
 
     it("should update when resolved", async () => {
@@ -75,7 +76,7 @@ describe("createExternallyManagedCache", () => {
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveBeenCalledWith({ status: STATUS_PENDING });
       expect(callback).toHaveBeenCalledWith({ status: STATUS_REJECTED, error });
-      expect(callback.mock.lastCall[0].error).toBe(error);
+      expect(callback.mock.lastCall![0].error).toBe(error);
     });
   });
 
@@ -83,7 +84,7 @@ describe("createExternallyManagedCache", () => {
     it("should reject after the specified timeout", async () => {
       const promise = cache.readAsync("test");
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       await expect(promise).rejects.toEqual("Custom timeout message");
     });
@@ -118,7 +119,7 @@ describe("createExternallyManagedCache", () => {
       });
       cache.readAsync("test");
 
-      jest.advanceTimersByTime(60_000);
+      vi.advanceTimersByTime(60_000);
     });
   });
 });

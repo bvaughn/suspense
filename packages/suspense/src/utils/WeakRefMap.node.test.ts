@@ -1,12 +1,13 @@
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { requestGC, waitForGC } from "./test";
 import { WeakRefMap } from "./WeakRefMap";
 
 describe("WeakRefMap", () => {
-  let finalizer: jest.Mock<FinalizationRegistry<string>>;
+  let finalizer: Mock<() => FinalizationRegistry<string>>;
   let map: WeakRefMap<string, object>;
 
   beforeEach(() => {
-    finalizer = jest.fn();
+    finalizer = vi.fn();
     map = new WeakRefMap(finalizer);
   });
 

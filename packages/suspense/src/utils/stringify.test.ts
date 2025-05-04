@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { stringify } from "./stringify";
 
 describe("stringify", () => {

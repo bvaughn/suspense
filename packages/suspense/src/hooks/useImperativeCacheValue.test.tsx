@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { Component, PropsWithChildren } from "react";
 import { Root, createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
@@ -23,7 +20,9 @@ type Value = { key: string };
 
 describe("useImperativeCacheValue", () => {
   let cache: Cache<[string], Value>;
-  let fetch: jest.Mock<Promise<Value> | Value, [[string], CacheLoadOptions]>;
+  let fetch: Mock<
+    (arg: [string], options: CacheLoadOptions) => Promise<Value> | Value
+  >;
 
   let container: HTMLDivElement | null = null;
   let lastRenderedError: any = undefined;
@@ -73,7 +72,7 @@ describe("useImperativeCacheValue", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    fetch = jest.fn();
+    fetch = vi.fn();
     fetch.mockImplementation(async ([key]) => {
       const deferred = createDeferred<Value>();
 

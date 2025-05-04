@@ -1,7 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
+import { describe, beforeEach, expect, it, vi, Mock } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
@@ -18,8 +15,10 @@ import { createDeferred } from "../utils/createDeferred";
 
 describe("useCacheStatus", () => {
   let cache: Cache<[string], string>;
-  let fetch: jest.Mock<Promise<string> | string, [[string], CacheLoadOptions]>;
-  let getCacheKey: jest.Mock<string, [[string]]>;
+  let fetch: Mock<
+    (arg: [string], options: CacheLoadOptions) => Promise<string> | string
+  >;
+  let getCacheKey: Mock<(arg: [string]) => string>;
   let lastRenderedStatus: Status | undefined = undefined;
 
   function Component({ string }: { string: string }): any {
@@ -31,7 +30,7 @@ describe("useCacheStatus", () => {
     // @ts-ignore
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
-    fetch = jest.fn();
+    fetch = vi.fn();
     fetch.mockImplementation(async ([key]) => {
       if (key.startsWith("async")) {
         return Promise.resolve(key);
@@ -42,7 +41,7 @@ describe("useCacheStatus", () => {
       }
     });
 
-    getCacheKey = jest.fn();
+    getCacheKey = vi.fn();
     getCacheKey.mockImplementation(([key]) => key.toString());
 
     cache = createCache<[string], string>({

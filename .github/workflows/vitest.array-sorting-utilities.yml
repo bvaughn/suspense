@@ -1,4 +1,4 @@
-name: "[array-sorting-utilities] Jest unit tests"
+name: "[array-sorting-utilities] Vitest unit tests"
 on: [pull_request]
 jobs:
   tests-e2e:
